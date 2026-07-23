@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/date_time_pickers.dart';
 import '../widgets/delete_confirm_dialog.dart';
 import '../widgets/feed_list_item.dart';
 import '../widgets/log_feed_sheet.dart';
@@ -34,8 +35,8 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await pickDateSheet(
+      context,
       initialDate: reportDate,
       firstDate: DateTime(2015),
       lastDate: DateTime(2100),

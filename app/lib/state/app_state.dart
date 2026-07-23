@@ -100,14 +100,22 @@ class AppState extends ChangeNotifier {
     await storage.saveReminderDismissed(reminderDismissed);
   }
 
+  /// Scheduling can fail on-device (e.g. exact-alarm permission revoked by
+  /// the OEM after install) — never let that exception stop the caller from
+  /// reaching notifyListeners(), since the in-app state update must not
+  /// depend on the OS notification succeeding.
   Future<void> _rescheduleNotification() async {
-    if (reminderDismissed) {
-      await notifications.cancelReminder();
-    } else {
-      await notifications.scheduleReminder(
-        DateTime.fromMillisecondsSinceEpoch(nextReminderAt),
-        babyName: babyName,
-      );
+    try {
+      if (reminderDismissed) {
+        await notifications.cancelReminder();
+      } else {
+        await notifications.scheduleReminder(
+          DateTime.fromMillisecondsSinceEpoch(nextReminderAt),
+          babyName: babyName,
+        );
+      }
+    } catch (e) {
+      debugPrint('Failed to (re)schedule reminder notification: $e');
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/feed.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import 'date_time_pickers.dart';
 
 /// Opens the "Log a feed" / "Edit feed" bottom sheet. Pass [existing] to
 /// edit an in-place feed, or omit it to log a new one.
@@ -50,11 +51,12 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
       noteController = TextEditingController(text: e.note);
     } else {
       final now = DateTime.now();
-      type = FeedType.formula;
+      final last = widget.appState.feeds.isNotEmpty ? widget.appState.feeds.last : null;
+      type = last?.type ?? FeedType.formula;
       date = DateTime(now.year, now.month, now.day);
       time = TimeOfDay(hour: now.hour, minute: now.minute);
-      amountMl = 120;
-      durationMin = 0;
+      amountMl = last != null && last.amountMl > 0 ? last.amountMl : 120;
+      durationMin = last?.durationMin ?? 0;
       noteController = TextEditingController();
     }
   }
@@ -66,8 +68,8 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await pickDateSheet(
+      context,
       initialDate: date,
       firstDate: DateTime(2015),
       lastDate: DateTime(2100),
@@ -81,7 +83,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(context: context, initialTime: time);
+    final picked = await pickTimeSheet(context, initialTime: time);
     if (picked != null) {
       setState(() {
         time = picked;
