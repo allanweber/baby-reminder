@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/alarm_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 
@@ -104,6 +105,70 @@ class _SettingsSheetState extends State<SettingsSheet> {
                     child: Text(_presetLabel(m), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 22),
+              const Text('Reminder alarm', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              const SizedBox(height: 4),
+              const Text(
+                'Rings like an alarm clock when a feed is due and keeps going until you dismiss it.',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              const Text('SOUND', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: kAlarmSounds.map((s) {
+                  final active = widget.appState.alarmSound == s.id;
+                  return OutlinedButton(
+                    onPressed: () {
+                      widget.appState.setAlarmSound(s.id);
+                      widget.appState.previewAlarm(s.id);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: active ? accent : Colors.white,
+                      foregroundColor: active ? Colors.white : AppColors.gearStroke,
+                      side: active ? BorderSide.none : const BorderSide(color: AppColors.border, width: 1.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(s.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Text('VOLUME', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                  const Spacer(),
+                  Text('${(widget.appState.alarmVolume * 100).round()}%',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => widget.appState.previewAlarm(),
+                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                    label: const Text('Preview', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.reminderTitleText,
+                      backgroundColor: AppColors.settingsBg,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: accent,
+                  thumbColor: accent,
+                  inactiveTrackColor: AppColors.surfaceSecondary,
+                  overlayColor: accent.withOpacity(0.15),
+                ),
+                child: Slider(
+                  value: widget.appState.alarmVolume,
+                  onChanged: (v) => widget.appState.setAlarmVolume(v),
+                ),
               ),
               const SizedBox(height: 18),
               SizedBox(

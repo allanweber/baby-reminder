@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
         final now = appState.now;
         final todayStr = dateStr(now);
         final greeting = appState.babyName.isNotEmpty ? "${appState.babyName}'s feeds" : "Today's feeds";
-        final longDate = DateFormat('EEEE, MMMM d').format(now);
+        final longDate = DateFormat('EEEE, d MMMM').format(now);
         final timePhrase = _timePhrase(now.hour);
 
         final homeFeeds = appState.feedsForDate(todayStr).toList()
@@ -48,8 +48,11 @@ class HomeScreen extends StatelessWidget {
         final reminderLabel = overdue
             ? 'Due now'
             : () {
-                final totalMin = (msLeft / 60000).ceil();
-                return '${totalMin ~/ 60}h ${totalMin % 60}m';
+                final totalSec = (msLeft / 1000).floor();
+                final h = totalSec ~/ 3600;
+                final m = (totalSec % 3600) ~/ 60;
+                final s = totalSec % 60;
+                return h > 0 ? '${h}h ${pad2(m)}m ${pad2(s)}s' : '${m}m ${pad2(s)}s';
               }();
 
         return SafeArea(

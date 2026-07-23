@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/app_shell.dart';
+import 'services/alarm_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'state/app_state.dart';
@@ -10,7 +11,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storage = await StorageService.create();
   final notifications = NotificationService();
-  final appState = AppState(storage, notifications);
+  final alarm = AlarmService();
+  final appState = AppState(storage, notifications, alarm);
   await appState.load();
   runApp(BabyFeedTrackerApp(appState: appState));
 }

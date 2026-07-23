@@ -208,7 +208,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _DateTimeField(label: 'DATE', value: DateFormat.yMd().format(date), onTap: _pickDate)),
+                  Expanded(child: _DateTimeField(label: 'DATE', value: DateFormat('dd/MM/yyyy').format(date), onTap: _pickDate)),
                   const SizedBox(width: 10),
                   Expanded(child: _DateTimeField(label: 'TIME', value: time.format(context), onTap: _pickTime)),
                 ],

@@ -71,7 +71,7 @@ class _ReportScreenState extends State<ReportScreen> {
         final stats = appState.computeStats(appState.feedsForDate(reportDateStr));
 
         final title = appState.babyName.isNotEmpty ? "${appState.babyName}'s daily report" : 'Daily report';
-        final dateLabel = isToday ? 'Today' : DateFormat('EEE, MMM d').format(reportDate);
+        final dateLabel = isToday ? 'Today' : DateFormat('EEE, d MMM').format(reportDate);
 
         return SafeArea(
           bottom: false,

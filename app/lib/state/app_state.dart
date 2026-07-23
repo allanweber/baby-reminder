@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/feed.dart';
+import '../services/alarm_service.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -30,8 +31,9 @@ class DayStats {
 class AppState extends ChangeNotifier {
   final StorageService storage;
   final NotificationService notifications;
+  final AlarmService alarm;
 
-  AppState(this.storage, this.notifications);
+  AppState(this.storage, this.notifications, this.alarm);
 
   List<Feed> feeds = [];
   String babyName = '';
@@ -39,9 +41,14 @@ class AppState extends ChangeNotifier {
   int reminderIntervalMin = 180;
   int nextReminderAt = 0;
   bool reminderDismissed = false;
+  String alarmSound = kDefaultAlarmSound;
+  double alarmVolume = kDefaultAlarmVolume;
   DateTime now = DateTime.now();
 
   Timer? _ticker;
+  bool _alarmRinging = false;
+
+  bool get alarmRinging => _alarmRinging;
 
   Future<void> load() async {
     if (!storage.hasSeeded) {
@@ -56,17 +63,25 @@ class AppState extends ChangeNotifier {
       nextReminderAt = storage.loadNextReminderAt() ??
           DateTime.now().add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
       reminderDismissed = storage.loadReminderDismissed();
+      alarmSound = resolveAlarmSoundId(storage.loadAlarmSound());
+      alarmVolume = storage.loadAlarmVolume();
     }
-    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Tick every second so the home page — the live countdown especially —
+    // stays in sync to the second, and so the alarm fires the moment the
+    // reminder comes due.
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       now = DateTime.now();
+      _evaluateAlarm();
       notifyListeners();
     });
+    _evaluateAlarm();
     notifyListeners();
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
+    alarm.dispose();
     super.dispose();
   }
 
@@ -98,6 +113,24 @@ class AppState extends ChangeNotifier {
     await storage.saveReminderIntervalMin(reminderIntervalMin);
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
+    await storage.saveAlarmSound(alarmSound);
+    await storage.saveAlarmVolume(alarmVolume);
+  }
+
+  /// Starts the in-app alarm the instant the reminder comes due (and keeps it
+  /// going until dismissed/snoozed/logged), or stops it otherwise. When the
+  /// app is open the in-app alarm is authoritative, so we also cancel the
+  /// scheduled OS notification to avoid a double ring.
+  void _evaluateAlarm() {
+    final shouldRing = now.millisecondsSinceEpoch >= nextReminderAt && !reminderDismissed;
+    if (shouldRing && !_alarmRinging) {
+      _alarmRinging = true;
+      alarm.start(soundId: alarmSound, volume: alarmVolume);
+      notifications.cancelReminder();
+    } else if (!shouldRing && _alarmRinging) {
+      _alarmRinging = false;
+      alarm.stop();
+    }
   }
 
   /// Scheduling can fail on-device (e.g. exact-alarm permission revoked by
@@ -112,6 +145,7 @@ class AppState extends ChangeNotifier {
         await notifications.scheduleReminder(
           DateTime.fromMillisecondsSinceEpoch(nextReminderAt),
           babyName: babyName,
+          soundId: alarmSound,
         );
       }
     } catch (e) {
@@ -133,6 +167,7 @@ class AppState extends ChangeNotifier {
     if (isNew) {
       await storage.saveNextReminderAt(nextReminderAt);
       await storage.saveReminderDismissed(reminderDismissed);
+      _evaluateAlarm();
       await _rescheduleNotification();
     }
     notifyListeners();
@@ -160,8 +195,11 @@ class AppState extends ChangeNotifier {
   Future<void> setReminderInterval(int minutes) async {
     reminderIntervalMin = minutes;
     nextReminderAt = DateTime.now().millisecondsSinceEpoch + minutes * 60000;
+    reminderDismissed = false;
     await storage.saveReminderIntervalMin(minutes);
     await storage.saveNextReminderAt(nextReminderAt);
+    await storage.saveReminderDismissed(reminderDismissed);
+    _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -171,6 +209,7 @@ class AppState extends ChangeNotifier {
     reminderDismissed = false;
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
+    _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -178,9 +217,31 @@ class AppState extends ChangeNotifier {
   Future<void> dismissReminder() async {
     reminderDismissed = true;
     await storage.saveReminderDismissed(true);
+    _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();
   }
+
+  Future<void> setAlarmSound(String id) async {
+    alarmSound = resolveAlarmSoundId(id);
+    await storage.saveAlarmSound(alarmSound);
+    if (_alarmRinging) {
+      await alarm.start(soundId: alarmSound, volume: alarmVolume);
+    }
+    await _rescheduleNotification();
+    notifyListeners();
+  }
+
+  Future<void> setAlarmVolume(double volume) async {
+    alarmVolume = volume.clamp(0.0, 1.0);
+    await storage.saveAlarmVolume(alarmVolume);
+    await alarm.setVolume(alarmVolume);
+    notifyListeners();
+  }
+
+  /// Plays a short, non-looping preview of the given (or current) sound.
+  Future<void> previewAlarm([String? id]) =>
+      alarm.previewSound(soundId: id ?? alarmSound, volume: alarmVolume);
 
   double mlToDisplayUnit(int ml) => unitPref == 'oz' ? ml / mlPerOz : ml.toDouble();
 

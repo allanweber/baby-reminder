@@ -13,6 +13,8 @@ class StorageService {
   static const _kReminderIntervalMin = 'reminderIntervalMin';
   static const _kNextReminderAt = 'nextReminderAt';
   static const _kReminderDismissed = 'reminderDismissed';
+  static const _kAlarmSound = 'alarmSound';
+  static const _kAlarmVolume = 'alarmVolume';
   static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
@@ -52,4 +54,10 @@ class StorageService {
 
   bool loadReminderDismissed() => _prefs.getBool(_kReminderDismissed) ?? false;
   Future<void> saveReminderDismissed(bool dismissed) => _prefs.setBool(_kReminderDismissed, dismissed);
+
+  String? loadAlarmSound() => _prefs.getString(_kAlarmSound);
+  Future<void> saveAlarmSound(String id) => _prefs.setString(_kAlarmSound, id);
+
+  double loadAlarmVolume() => _prefs.getDouble(_kAlarmVolume) ?? 0.8;
+  Future<void> saveAlarmVolume(double v) => _prefs.setDouble(_kAlarmVolume, v);
 }

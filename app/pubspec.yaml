@@ -44,6 +44,10 @@ dependencies:
   flutter_svg: ^2.0.16
   intl: ^0.19.0
   uuid: ^4.5.1
+  # In-app alarm playback (looping, volume-controlled) when the reminder is due
+  # while the app is open. The scheduled OS notification is the fallback for
+  # when it isn't.
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +70,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/sounds/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
+import '../state/app_state.dart' show pad2;
 import '../theme/app_theme.dart';
 
 /// Custom replacement for [showDatePicker]: a calendar grid where tapping a
@@ -22,9 +25,10 @@ Future<DateTime?> pickDateSheet(
   );
 }
 
-/// Custom replacement for [showTimePicker]: tap an hour, then tap a minute —
-/// selecting the minute immediately confirms and closes the sheet. Values
-/// are laid out in a well-spaced grid instead of a cramped 24-value dial.
+/// Custom replacement for [showTimePicker]: an analog clock face. Tapping or
+/// dragging on the dial sets the active field (hour, then minute). Unlike the
+/// stock 24-value dial, only 12 well-spaced numbers sit on the ring at a time
+/// (12-hour with an AM/PM toggle), so nothing is cramped.
 Future<TimeOfDay?> pickTimeSheet(BuildContext context, {required TimeOfDay initialTime}) {
   return showModalBottomSheet<TimeOfDay>(
     context: context,
@@ -213,6 +217,8 @@ class _DayCell extends StatelessWidget {
   }
 }
 
+enum _TimeField { hour, minute }
+
 class _TimePickerSheet extends StatefulWidget {
   final TimeOfDay initialTime;
   const _TimePickerSheet({required this.initialTime});
@@ -222,22 +228,48 @@ class _TimePickerSheet extends StatefulWidget {
 }
 
 class _TimePickerSheetState extends State<_TimePickerSheet> {
-  late int _step; // 0 = pick hour, 1 = pick minute
-  late int _hour;
+  late int _hour24; // 0..23
+  late int _minute; // 0..59
+  _TimeField _field = _TimeField.hour;
 
   @override
   void initState() {
     super.initState();
-    _step = 0;
-    _hour = widget.initialTime.hour;
+    _hour24 = widget.initialTime.hour;
+    _minute = widget.initialTime.minute;
   }
 
-  void _pickHour(int hour) => setState(() {
-        _hour = hour;
-        _step = 1;
+  bool get _isPm => _hour24 >= 12;
+
+  int get _hour12 {
+    final h = _hour24 % 12;
+    return h == 0 ? 12 : h;
+  }
+
+  void _setHour12(int h12) {
+    final base = h12 % 12; // 12 -> 0
+    setState(() => _hour24 = _isPm ? base + 12 : base);
+  }
+
+  void _setAmPm(bool pm) => setState(() {
+        final base = _hour24 % 12;
+        _hour24 = pm ? base + 12 : base;
       });
 
-  void _pickMinute(int minute) => Navigator.of(context).pop(TimeOfDay(hour: _hour, minute: minute));
+  /// [turns] is the tapped/dragged angle clockwise from the top, in [0, 1).
+  void _onDialAngle(double turns) {
+    if (_field == _TimeField.hour) {
+      final idx = (turns * 12).round() % 12; // 0 == 12 o'clock
+      _setHour12(idx == 0 ? 12 : idx);
+    } else {
+      setState(() => _minute = (turns * 60).round() % 60);
+    }
+  }
+
+  /// After the user lifts their finger on the hour ring, advance to minutes.
+  void _onDialReleased() {
+    if (_field == _TimeField.hour) setState(() => _field = _TimeField.minute);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -245,81 +277,263 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const Text(
+            'Select time',
+            style: TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (_step == 1)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: _NavArrow(icon: Icons.chevron_left, onTap: () => setState(() => _step = 0)),
-                ),
-              Text(
-                _step == 0 ? 'Select hour' : 'Select minute for ${_hour.toString().padLeft(2, '0')}h',
-                style: const TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              _TimeFieldChip(
+                text: pad2(_hour12),
+                active: _field == _TimeField.hour,
+                onTap: () => setState(() => _field = _TimeField.hour),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(':', style: TextStyle(fontFamily: balooFamily, fontSize: 34, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              ),
+              _TimeFieldChip(
+                text: pad2(_minute),
+                active: _field == _TimeField.minute,
+                onTap: () => setState(() => _field = _TimeField.minute),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _AmPmChip(label: 'AM', active: !_isPm, onTap: () => _setAmPm(false)),
+                  const SizedBox(height: 6),
+                  _AmPmChip(label: 'PM', active: _isPm, onTap: () => _setAmPm(true)),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (_step == 0)
-            _NumberGrid(count: 24, crossAxisCount: 6, selected: _hour, onTap: _pickHour)
-          else
-            SizedBox(
-              height: 260,
-              child: _NumberGrid(count: 60, crossAxisCount: 6, selected: null, onTap: _pickMinute, scrollable: true),
-            ),
+          const SizedBox(height: 18),
+          _ClockDial(
+            hourMode: _field == _TimeField.hour,
+            selectedValue: _field == _TimeField.hour ? _hour12 : _minute,
+            onAngle: _onDialAngle,
+            onReleased: _onDialReleased,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 46,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.settingsBg,
+                      foregroundColor: AppColors.reminderTitleText,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 46,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(TimeOfDay(hour: _hour24, minute: _minute)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentBlush,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _NumberGrid extends StatelessWidget {
-  final int count;
-  final int crossAxisCount;
-  final int? selected;
-  final ValueChanged<int> onTap;
-  final bool scrollable;
-  const _NumberGrid({
-    required this.count,
-    required this.crossAxisCount,
-    required this.selected,
-    required this.onTap,
-    this.scrollable = false,
-  });
+class _TimeFieldChip extends StatelessWidget {
+  final String text;
+  final bool active;
+  final VoidCallback onTap;
+  const _TimeFieldChip({required this.text, required this.active, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: scrollable ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1,
-      ),
-      itemCount: count,
-      itemBuilder: (context, i) {
-        final active = selected == i;
-        return Material(
-          color: active ? AppColors.accentBlush : AppColors.surfaceSecondary,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => onTap(i),
-            child: Center(
-              child: Text(
-                i.toString().padLeft(2, '0'),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: active ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
+    return Material(
+      color: active ? AppColors.accentBlush.withOpacity(0.16) : AppColors.surfaceSecondary,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          width: 76,
+          height: 60,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: active ? AppColors.accentBlush : Colors.transparent, width: 2),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontFamily: balooFamily,
+              fontSize: 34,
+              fontWeight: FontWeight.w700,
+              color: active ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+}
+
+class _AmPmChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _AmPmChip({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active ? AppColors.accentBlush : AppColors.surfaceSecondary,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Container(
+          width: 46,
+          height: 27,
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.textSecondary),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The circular clock face. Twelve numbers sit on the ring; tapping or dragging
+/// anywhere reports the angle (clockwise turns from the top) back to the parent.
+class _ClockDial extends StatelessWidget {
+  final bool hourMode;
+  final int selectedValue; // hour 1..12, or minute 0..59
+  final ValueChanged<double> onAngle;
+  final VoidCallback onReleased;
+  const _ClockDial({
+    required this.hourMode,
+    required this.selectedValue,
+    required this.onAngle,
+    required this.onReleased,
+  });
+
+  static const double _size = 268;
+  static const double _numberRadius = 106;
+
+  void _report(Offset local) {
+    const center = Offset(_size / 2, _size / 2);
+    final v = local - center;
+    if (v.distance < 4) return;
+    // atan2(x, -y): 0 at the top, increasing clockwise.
+    var turns = math.atan2(v.dx, -v.dy) / (2 * math.pi);
+    if (turns < 0) turns += 1;
+    onAngle(turns);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Angle (turns from top) of the currently selected value, for the hand.
+    final selectedTurns = hourMode ? (selectedValue % 12) / 12 : selectedValue / 60;
+
+    final numbers = <Widget>[];
+    for (var i = 0; i < 12; i++) {
+      final value = hourMode ? (i == 0 ? 12 : i) : i * 5;
+      final turns = i / 12;
+      final theta = turns * 2 * math.pi;
+      final dx = _numberRadius * math.sin(theta);
+      final dy = -_numberRadius * math.cos(theta);
+      final isSelected = value == selectedValue;
+      numbers.add(Positioned(
+        left: _size / 2 + dx - 20,
+        top: _size / 2 + dy - 20,
+        width: 40,
+        height: 40,
+        child: Center(
+          child: Text(
+            hourMode ? '$value' : pad2(value),
+            style: TextStyle(
+              fontFamily: balooFamily,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: isSelected ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ));
+    }
+
+    return GestureDetector(
+      onTapDown: (d) => _report(d.localPosition),
+      onPanStart: (d) => _report(d.localPosition),
+      onPanUpdate: (d) => _report(d.localPosition),
+      onPanEnd: (_) => onReleased(),
+      onTapUp: (_) => onReleased(),
+      child: SizedBox(
+        width: _size,
+        height: _size,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ClockFacePainter(selectedTurns: selectedTurns, numberRadius: _numberRadius),
+              ),
+            ),
+            IgnorePointer(child: Stack(children: numbers)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ClockFacePainter extends CustomPainter {
+  final double selectedTurns;
+  final double numberRadius;
+  const _ClockFacePainter({required this.selectedTurns, required this.numberRadius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final face = Paint()..color = AppColors.surfaceSecondary;
+    canvas.drawCircle(center, size.width / 2, face);
+
+    final theta = selectedTurns * 2 * math.pi;
+    final knob = center + Offset(numberRadius * math.sin(theta), -numberRadius * math.cos(theta));
+
+    final accent = Paint()..color = AppColors.accentBlush;
+    // Hand.
+    final hand = Paint()
+      ..color = AppColors.accentBlush
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(center, knob, hand);
+    // Selection knob + center hub.
+    canvas.drawCircle(knob, 21, accent);
+    canvas.drawCircle(center, 5, accent);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ClockFacePainter old) =>
+      old.selectedTurns != selectedTurns || old.numberRadius != numberRadius;
 }
