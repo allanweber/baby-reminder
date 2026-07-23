@@ -11,3 +11,11 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Intentionally tracked: a shared release keystore so every build (local and
+# CI) signs identically and Android can update an installed app in place. This
+# is a throwaway key for a personal, sideloaded app that is NOT published to
+# the Play Store. If this app is ever published, generate a private keystore,
+# move it to CI secrets, and delete these two lines.
+!key.properties
+!app/upload-keystore.jks
