@@ -126,7 +126,7 @@ class NotificationService {
       color: const Color(0xFFE39C8B),
       // Show on the lock screen so the "Stop" action is reachable there.
       visibility: NotificationVisibility.public,
-      actions: <AndroidNotificationAction>[
+      actions: const <AndroidNotificationAction>[
         AndroidNotificationAction(
           _dismissAlarmActionId,
           'Stop',
