@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../services/alarm_service.dart';
 import '../state/app_state.dart';
@@ -38,6 +43,62 @@ class _SettingsSheetState extends State<SettingsSheet> {
   }
 
   String _presetLabel(int minutes) => minutes % 60 == 0 ? '${minutes ~/ 60}h' : '${(minutes / 60).toStringAsFixed(1)}h';
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _exportBackup() async {
+    final bytes = Uint8List.fromList(utf8.encode(widget.appState.exportData()));
+    final name = 'baby-feed-backup-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.json';
+    try {
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save backup',
+        fileName: name,
+        bytes: bytes,
+        type: FileType.custom,
+        allowedExtensions: const ['json'],
+      );
+      if (path != null) _toast('Backup saved');
+    } catch (_) {
+      _toast('Could not save the backup');
+    }
+  }
+
+  Future<void> _importBackup() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Restore from backup?'),
+        content: const Text('This replaces the feeds and settings currently on this device with the contents of the backup file.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Restore')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Choose a backup file',
+        type: FileType.custom,
+        allowedExtensions: const ['json'],
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final data = result.files.first.bytes;
+      if (data == null) {
+        _toast('Could not read that file');
+        return;
+      }
+      final count = await widget.appState.importData(utf8.decode(data));
+      _toast(count == null ? "That file isn't a valid backup" : 'Restored $count feeds');
+    } catch (_) {
+      _toast('Could not import the backup');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +230,51 @@ class _SettingsSheetState extends State<SettingsSheet> {
                   value: widget.appState.alarmVolume,
                   onChanged: (v) => widget.appState.setAlarmVolume(v),
                 ),
+              ),
+              const SizedBox(height: 22),
+              const Text('Backup & restore', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              const SizedBox(height: 4),
+              const Text(
+                'Feeds are stored only on this device. Save a backup file to keep your history safe before uninstalling or switching phones.',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 46,
+                      child: OutlinedButton.icon(
+                        onPressed: _exportBackup,
+                        icon: const Icon(Icons.upload_file_rounded, size: 18),
+                        label: const Text('Export', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.gearStroke,
+                          side: const BorderSide(color: AppColors.border, width: 1.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 46,
+                      child: OutlinedButton.icon(
+                        onPressed: _importBackup,
+                        icon: const Icon(Icons.download_rounded, size: 18),
+                        label: const Text('Import', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.gearStroke,
+                          side: const BorderSide(color: AppColors.border, width: 1.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
               SizedBox(

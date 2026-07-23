@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -242,6 +243,53 @@ class AppState extends ChangeNotifier {
   /// Plays a short, non-looping preview of the given (or current) sound.
   Future<void> previewAlarm([String? id]) =>
       alarm.previewSound(soundId: id ?? alarmSound, volume: alarmVolume);
+
+  // --- Backup & restore ------------------------------------------------------
+  // All state is on-device, so an uninstall (or the one-time signing-key
+  // reinstall) would otherwise wipe it. These let the user save everything to
+  // a JSON file they keep, and read it back.
+
+  static const backupVersion = 1;
+
+  /// Serialises every feed and setting to a portable JSON string.
+  String exportData() => jsonEncode({
+        'app': 'baby_feed_tracker',
+        'version': backupVersion,
+        'exportedAt': DateTime.now().toIso8601String(),
+        'babyName': babyName,
+        'unitPref': unitPref,
+        'reminderIntervalMin': reminderIntervalMin,
+        'alarmSound': alarmSound,
+        'alarmVolume': alarmVolume,
+        'feeds': feeds.map((f) => f.toJson()).toList(),
+      });
+
+  /// Restores from a backup produced by [exportData]. Returns the number of
+  /// feeds imported, or null if the file could not be parsed.
+  Future<int?> importData(String raw) async {
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final rawFeeds = (data['feeds'] as List<dynamic>? ?? const []);
+      final imported = rawFeeds
+          .map((e) => Feed.fromJson(e as Map<String, dynamic>))
+          .toList()
+        ..sort((a, b) => a.sortKey.compareTo(b.sortKey));
+
+      feeds = imported;
+      babyName = (data['babyName'] as String?) ?? babyName;
+      unitPref = (data['unitPref'] as String?) ?? unitPref;
+      reminderIntervalMin = (data['reminderIntervalMin'] as int?) ?? reminderIntervalMin;
+      alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
+      alarmVolume = ((data['alarmVolume'] as num?)?.toDouble() ?? alarmVolume).clamp(0.0, 1.0);
+
+      await _persistAll();
+      notifyListeners();
+      return imported.length;
+    } catch (e) {
+      debugPrint('Failed to import backup: $e');
+      return null;
+    }
+  }
 
   double mlToDisplayUnit(int ml) => unitPref == 'oz' ? ml / mlPerOz : ml.toDouble();
 

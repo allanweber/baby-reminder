@@ -48,6 +48,9 @@ dependencies:
   # while the app is open. The scheduled OS notification is the fallback for
   # when it isn't.
   audioplayers: ^6.1.0
+  # Manual backup/restore: save all data to a JSON file the user keeps, and
+  # read it back — so data survives an uninstall or a signing-key change.
+  file_picker: ^8.1.6
 
 dev_dependencies:
   flutter_test:

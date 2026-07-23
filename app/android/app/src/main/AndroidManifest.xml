@@ -12,7 +12,11 @@
     <application
         android:label="Baby Feed Tracker"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true"><!-- Auto-back up app data (incl. the
+             SharedPreferences store) to the user's cloud, so a reinstall on the
+             same account + signing key restores feeds automatically. Manual
+             export/import (Settings) covers the rest, incl. key changes. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
