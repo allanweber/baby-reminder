@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 
 import '../models/feed.dart';
 import '../services/alarm_service.dart';
-import '../services/backup_service.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
@@ -34,9 +33,8 @@ class AppState extends ChangeNotifier {
   final StorageService storage;
   final NotificationService notifications;
   final AlarmService alarm;
-  final BackupService backup;
 
-  AppState(this.storage, this.notifications, this.alarm, this.backup);
+  AppState(this.storage, this.notifications, this.alarm);
 
   List<Feed> feeds = [];
   String babyName = '';
@@ -46,10 +44,7 @@ class AppState extends ChangeNotifier {
   bool reminderDismissed = false;
   String alarmSound = kDefaultAlarmSound;
   double alarmVolume = kDefaultAlarmVolume;
-  String? backupDirUri; // persistable SAF folder for automatic backups
   DateTime now = DateTime.now();
-
-  bool get autoBackupOn => backupDirUri != null;
 
   Timer? _ticker;
   bool _alarmRinging = false;
@@ -71,7 +66,6 @@ class AppState extends ChangeNotifier {
       reminderDismissed = storage.loadReminderDismissed();
       alarmSound = resolveAlarmSoundId(storage.loadAlarmSound());
       alarmVolume = storage.loadAlarmVolume();
-      backupDirUri = storage.loadBackupDirUri();
     }
     // Tick every second so the home page — the live countdown especially —
     // stays in sync to the second, and so the alarm fires the moment the
@@ -183,14 +177,12 @@ class AppState extends ChangeNotifier {
       _evaluateAlarm();
       await _rescheduleNotification();
     }
-    await _autoBackup();
     notifyListeners();
   }
 
   Future<void> deleteFeed(String id) async {
     feeds = feeds.where((f) => f.id != id).toList();
     await storage.saveFeeds(feeds);
-    await _autoBackup();
     notifyListeners();
   }
 
@@ -198,14 +190,12 @@ class AppState extends ChangeNotifier {
     babyName = name;
     await storage.saveBabyName(name);
     await _rescheduleNotification();
-    await _autoBackup();
     notifyListeners();
   }
 
   Future<void> setUnitPref(String unit) async {
     unitPref = unit;
     await storage.saveUnitPref(unit);
-    await _autoBackup();
     notifyListeners();
   }
 
@@ -218,7 +208,6 @@ class AppState extends ChangeNotifier {
     await storage.saveReminderDismissed(reminderDismissed);
     _evaluateAlarm();
     await _rescheduleNotification();
-    await _autoBackup();
     notifyListeners();
   }
 
@@ -247,7 +236,6 @@ class AppState extends ChangeNotifier {
       await alarm.start(soundId: alarmSound, volume: alarmVolume);
     }
     await _rescheduleNotification();
-    await _autoBackup();
     notifyListeners();
   }
 
@@ -255,7 +243,6 @@ class AppState extends ChangeNotifier {
     alarmVolume = volume.clamp(0.0, 1.0);
     await storage.saveAlarmVolume(alarmVolume);
     await alarm.setVolume(alarmVolume);
-    await _autoBackup();
     notifyListeners();
   }
 
@@ -302,42 +289,11 @@ class AppState extends ChangeNotifier {
       alarmVolume = ((data['alarmVolume'] as num?)?.toDouble() ?? alarmVolume).clamp(0.0, 1.0);
 
       await _persistAll();
-      await _autoBackup();
       notifyListeners();
       return imported.length;
     } catch (e) {
       debugPrint('Failed to import backup: $e');
       return null;
-    }
-  }
-
-  // --- Automatic folder backup ----------------------------------------------
-  // When a folder is configured, every meaningful change silently rewrites the
-  // backup file into it. The grant is lost on uninstall, so after a reinstall
-  // the user re-picks the folder (and is offered the backup it still holds).
-
-  /// Turns on automatic backup for [dirUri] and writes the current data once.
-  Future<void> enableAutoBackup(String dirUri) async {
-    backupDirUri = dirUri;
-    await storage.saveBackupDirUri(dirUri);
-    await _autoBackup();
-    notifyListeners();
-  }
-
-  Future<void> disableAutoBackup() async {
-    backupDirUri = null;
-    await storage.saveBackupDirUri(null);
-    notifyListeners();
-  }
-
-  /// Best-effort write of the current data to the configured backup folder.
-  Future<void> _autoBackup() async {
-    final uri = backupDirUri;
-    if (uri == null) return;
-    try {
-      await backup.write(uri, exportData());
-    } catch (e) {
-      debugPrint('Auto-backup write failed: $e');
     }
   }
 

@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:baby_feed_tracker/main.dart';
 import 'package:baby_feed_tracker/services/alarm_service.dart';
-import 'package:baby_feed_tracker/services/backup_service.dart';
 import 'package:baby_feed_tracker/services/notification_service.dart';
 import 'package:baby_feed_tracker/services/storage_service.dart';
 import 'package:baby_feed_tracker/state/app_state.dart';
@@ -12,7 +11,7 @@ void main() {
   testWidgets('Home screen shows the log button and today\'s feeds', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     final storage = await StorageService.create();
-    final appState = AppState(storage, NotificationService(), AlarmService(), BackupService());
+    final appState = AppState(storage, NotificationService(), AlarmService());
     await appState.load();
 
     await tester.pumpWidget(BabyFeedTrackerApp(appState: appState));

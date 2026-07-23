@@ -15,7 +15,6 @@ class StorageService {
   static const _kReminderDismissed = 'reminderDismissed';
   static const _kAlarmSound = 'alarmSound';
   static const _kAlarmVolume = 'alarmVolume';
-  static const _kBackupDirUri = 'backupDirUri';
   static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
@@ -61,8 +60,4 @@ class StorageService {
 
   double loadAlarmVolume() => _prefs.getDouble(_kAlarmVolume) ?? 0.8;
   Future<void> saveAlarmVolume(double v) => _prefs.setDouble(_kAlarmVolume, v);
-
-  String? loadBackupDirUri() => _prefs.getString(_kBackupDirUri);
-  Future<void> saveBackupDirUri(String? uri) =>
-      uri == null ? _prefs.remove(_kBackupDirUri) : _prefs.setString(_kBackupDirUri, uri);
 }
