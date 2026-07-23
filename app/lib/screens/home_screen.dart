@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/custom_timer_banner.dart';
 import '../widgets/delete_confirm_dialog.dart';
 import '../widgets/feed_list_item.dart';
 import '../widgets/log_feed_sheet.dart';
 import '../widgets/reminder_banner.dart';
 import '../widgets/settings_sheet.dart';
 import '../widgets/stats_row.dart';
+import '../widgets/timer_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
   final AppState appState;
@@ -43,17 +45,20 @@ class HomeScreen extends StatelessWidget {
           ..sort((a, b) => b.time.compareTo(a.time));
         final stats = appState.computeStats(appState.feedsForDate(todayStr));
 
-        final msLeft = appState.nextReminderAt - now.millisecondsSinceEpoch;
+        String fmtCountdown(int msLeft) {
+          final totalSec = (msLeft / 1000).floor();
+          final h = totalSec ~/ 3600;
+          final m = (totalSec % 3600) ~/ 60;
+          final s = totalSec % 60;
+          return h > 0 ? '${h}h ${pad2(m)}m ${pad2(s)}s' : '${m}m ${pad2(s)}s';
+        }
+
+        // A running custom timer takes over the countdown; otherwise it tracks
+        // the feed reminder.
+        final customActive = appState.customTimerActive;
+        final msLeft = appState.effectiveReminderAt - now.millisecondsSinceEpoch;
         final overdue = msLeft <= 0;
-        final reminderLabel = overdue
-            ? 'Due now'
-            : () {
-                final totalSec = (msLeft / 1000).floor();
-                final h = totalSec ~/ 3600;
-                final m = (totalSec % 3600) ~/ 60;
-                final s = totalSec % 60;
-                return h > 0 ? '${h}h ${pad2(m)}m ${pad2(s)}s' : '${m}m ${pad2(s)}s';
-              }();
+        final reminderLabel = overdue ? 'Due now' : fmtCountdown(msLeft);
 
         return SafeArea(
           bottom: false,
@@ -91,6 +96,25 @@ class HomeScreen extends StatelessWidget {
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
+                          onTap: () => showTimerSheet(context, appState),
+                          child: Tooltip(
+                            message: 'Set a timer',
+                            child: SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: const Center(
+                                child: Icon(Icons.timer_outlined, size: 22, color: AppColors.gearStroke),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Material(
+                        color: AppColors.settingsBg,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
                           onTap: () => showSettingsSheet(context, appState),
                           child: Tooltip(
                             message: 'Settings',
@@ -105,15 +129,24 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                ReminderBanner(
-                  showCountdown: !appState.reminderDismissed,
-                  overdue: overdue,
-                  reminderLabel: reminderLabel,
-                  accentColor: AppColors.accentBlush,
-                  onLogNow: () => showLogFeedSheet(context, appState),
-                  onSnooze: () => appState.snoozeReminder(),
-                  onDismiss: () => appState.dismissReminder(),
-                ),
+                if (customActive)
+                  CustomTimerBanner(
+                    label: appState.customTimerLabel,
+                    countdownLabel: overdue ? "Time's up" : fmtCountdown(msLeft),
+                    overdue: overdue,
+                    onAddFive: () => appState.extendCustomTimer(const Duration(minutes: 5)),
+                    onCancel: () => appState.cancelCustomTimer(),
+                  )
+                else
+                  ReminderBanner(
+                    showCountdown: !appState.reminderDismissed,
+                    overdue: overdue,
+                    reminderLabel: reminderLabel,
+                    accentColor: AppColors.accentBlush,
+                    onLogNow: () => showLogFeedSheet(context, appState),
+                    onSnooze: () => appState.snoozeReminder(),
+                    onDismiss: () => appState.dismissReminder(),
+                  ),
                 StatsRow(
                   totalLabel: "TODAY'S INTAKE",
                   totalValue: stats.totalDisplay,

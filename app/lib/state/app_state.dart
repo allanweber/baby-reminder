@@ -46,10 +46,26 @@ class AppState extends ChangeNotifier {
   double alarmVolume = kDefaultAlarmVolume;
   DateTime now = DateTime.now();
 
+  /// An on-demand countdown the user sets themselves. When active it takes over
+  /// the reminder banner and the alarm in place of the feed reminder; the feed
+  /// reminder is left untouched underneath and resumes once this is cancelled
+  /// or dismissed. Null means no custom timer is running.
+  int? customTimerAt;
+  String customTimerLabel = 'Timer';
+
   Timer? _ticker;
   bool _alarmRinging = false;
 
   bool get alarmRinging => _alarmRinging;
+  bool get customTimerActive => customTimerAt != null;
+
+  /// The countdown target the UI and alarm should track right now: the custom
+  /// timer when one is set, otherwise the feed reminder.
+  int get effectiveReminderAt => customTimerAt ?? nextReminderAt;
+
+  /// True when the currently ringing/pending alarm is a user timer rather than
+  /// the feed reminder.
+  bool get alarmIsCustomTimer => customTimerAt != null;
 
   Future<void> load() async {
     if (!storage.hasSeeded) {
@@ -66,6 +82,8 @@ class AppState extends ChangeNotifier {
       reminderDismissed = storage.loadReminderDismissed();
       alarmSound = resolveAlarmSoundId(storage.loadAlarmSound());
       alarmVolume = storage.loadAlarmVolume();
+      customTimerAt = storage.loadCustomTimerAt();
+      customTimerLabel = storage.loadCustomTimerLabel() ?? 'Timer';
     }
     // Tick every second so the home page — the live countdown especially —
     // stays in sync to the second, and so the alarm fires the moment the
@@ -116,6 +134,8 @@ class AppState extends ChangeNotifier {
     await storage.saveReminderDismissed(reminderDismissed);
     await storage.saveAlarmSound(alarmSound);
     await storage.saveAlarmVolume(alarmVolume);
+    await storage.saveCustomTimerAt(customTimerAt);
+    await storage.saveCustomTimerLabel(customTimerLabel);
   }
 
   /// Starts the in-app alarm the instant the reminder comes due (and keeps it
@@ -123,7 +143,11 @@ class AppState extends ChangeNotifier {
   /// app is open the in-app alarm is authoritative, so we also cancel the
   /// scheduled OS notification to avoid a double ring.
   void _evaluateAlarm() {
-    final shouldRing = now.millisecondsSinceEpoch >= nextReminderAt && !reminderDismissed;
+    // A running custom timer supersedes the feed reminder and is never treated
+    // as "dismissed" (it is cancelled/cleared instead of dismissed).
+    final shouldRing = customTimerAt != null
+        ? now.millisecondsSinceEpoch >= customTimerAt!
+        : now.millisecondsSinceEpoch >= nextReminderAt && !reminderDismissed;
     if (shouldRing && !_alarmRinging) {
       _alarmRinging = true;
       alarm.start(soundId: alarmSound, volume: alarmVolume);
@@ -140,7 +164,15 @@ class AppState extends ChangeNotifier {
   /// depend on the OS notification succeeding.
   Future<void> _rescheduleNotification() async {
     try {
-      if (reminderDismissed) {
+      if (customTimerAt != null) {
+        await notifications.scheduleReminder(
+          DateTime.fromMillisecondsSinceEpoch(customTimerAt!),
+          babyName: babyName,
+          soundId: alarmSound,
+          title: customTimerLabel.isNotEmpty ? customTimerLabel : 'Timer',
+          body: 'Your timer is up.',
+        );
+      } else if (reminderDismissed) {
         await notifications.cancelReminder();
       } else {
         await notifications.scheduleReminder(
@@ -212,6 +244,13 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> snoozeReminder() async {
+    // While a custom timer is up, snoozing re-arms the timer itself for another
+    // 15 minutes rather than touching the feed reminder underneath.
+    if (customTimerAt != null) {
+      customTimerAt = DateTime.now().millisecondsSinceEpoch;
+      await extendCustomTimer(const Duration(minutes: 15));
+      return;
+    }
     nextReminderAt = DateTime.now().millisecondsSinceEpoch + 15 * 60000;
     reminderDismissed = false;
     await storage.saveNextReminderAt(nextReminderAt);
@@ -222,8 +261,69 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> dismissReminder() async {
+    // Dismissing a ringing custom timer clears it (a one-shot), which uncovers
+    // the feed reminder again. Re-evaluate so the feed reminder can take over.
+    if (customTimerAt != null) {
+      await cancelCustomTimer();
+      return;
+    }
     reminderDismissed = true;
     await storage.saveReminderDismissed(true);
+    _evaluateAlarm();
+    await _rescheduleNotification();
+    notifyListeners();
+  }
+
+  // --- Custom on-demand timer -----------------------------------------------
+
+  /// Starts (or replaces) a user-set countdown of [duration]. It immediately
+  /// takes over the reminder banner and the alarm; any custom timer already
+  /// running is replaced.
+  Future<void> startCustomTimer(Duration duration, {String label = 'Timer'}) async {
+    // Clearing the ringing flag lets _evaluateAlarm restart the alarm cleanly
+    // if the new target is already in the past (e.g. a 0-length timer).
+    if (_alarmRinging) {
+      _alarmRinging = false;
+      await alarm.stop();
+    }
+    customTimerAt = DateTime.now().millisecondsSinceEpoch + duration.inMilliseconds;
+    customTimerLabel = label.trim().isEmpty ? 'Timer' : label.trim();
+    await storage.saveCustomTimerAt(customTimerAt);
+    await storage.saveCustomTimerLabel(customTimerLabel);
+    _evaluateAlarm();
+    await _rescheduleNotification();
+    notifyListeners();
+  }
+
+  /// Cancels the custom timer (whether counting down or ringing) and restores
+  /// the feed reminder.
+  Future<void> cancelCustomTimer() async {
+    if (customTimerAt == null) return;
+    customTimerAt = null;
+    if (_alarmRinging) {
+      _alarmRinging = false;
+      await alarm.stop();
+    }
+    await storage.saveCustomTimerAt(null);
+    _evaluateAlarm();
+    await _rescheduleNotification();
+    notifyListeners();
+  }
+
+  /// Adds [extra] to a running custom timer (used by the "+ N min" actions).
+  Future<void> extendCustomTimer(Duration extra) async {
+    if (customTimerAt == null) return;
+    // Anchor the extension to now when the timer has already fired, so the user
+    // gets the full extra time rather than an already-elapsed target.
+    final base = customTimerAt! < DateTime.now().millisecondsSinceEpoch
+        ? DateTime.now().millisecondsSinceEpoch
+        : customTimerAt!;
+    customTimerAt = base + extra.inMilliseconds;
+    if (_alarmRinging) {
+      _alarmRinging = false;
+      await alarm.stop();
+    }
+    await storage.saveCustomTimerAt(customTimerAt);
     _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();

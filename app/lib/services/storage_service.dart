@@ -15,6 +15,8 @@ class StorageService {
   static const _kReminderDismissed = 'reminderDismissed';
   static const _kAlarmSound = 'alarmSound';
   static const _kAlarmVolume = 'alarmVolume';
+  static const _kCustomTimerAt = 'customTimerAt';
+  static const _kCustomTimerLabel = 'customTimerLabel';
   static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
@@ -60,4 +62,16 @@ class StorageService {
 
   double loadAlarmVolume() => _prefs.getDouble(_kAlarmVolume) ?? 0.8;
   Future<void> saveAlarmVolume(double v) => _prefs.setDouble(_kAlarmVolume, v);
+
+  int? loadCustomTimerAt() => _prefs.getInt(_kCustomTimerAt);
+  Future<void> saveCustomTimerAt(int? millis) async {
+    if (millis == null) {
+      await _prefs.remove(_kCustomTimerAt);
+    } else {
+      await _prefs.setInt(_kCustomTimerAt, millis);
+    }
+  }
+
+  String? loadCustomTimerLabel() => _prefs.getString(_kCustomTimerLabel);
+  Future<void> saveCustomTimerLabel(String label) => _prefs.setString(_kCustomTimerLabel, label);
 }

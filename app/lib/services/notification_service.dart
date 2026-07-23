@@ -101,13 +101,16 @@ class NotificationService {
     DateTime at, {
     required String babyName,
     required String soundId,
+    String? title,
+    String? body,
   }) async {
     await init();
     await _plugin.cancel(_reminderNotificationId);
     if (at.isBefore(DateTime.now())) return;
 
     final id = resolveAlarmSoundId(soundId);
-    final title = babyName.isNotEmpty ? "$babyName's next feed" : 'Feed reminder';
+    final resolvedTitle = title ?? (babyName.isNotEmpty ? "$babyName's next feed" : 'Feed reminder');
+    final resolvedBody = body ?? "It's about time for the next feed.";
 
     final androidDetails = AndroidNotificationDetails(
       _channelIdFor(id),
@@ -138,8 +141,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       _reminderNotificationId,
-      title,
-      "It's about time for the next feed.",
+      resolvedTitle,
+      resolvedBody,
       tz.TZDateTime.from(at, tz.local),
       NotificationDetails(
         android: androidDetails,

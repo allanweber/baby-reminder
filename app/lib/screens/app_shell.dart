@@ -102,8 +102,12 @@ class _AlarmOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTimer = appState.alarmIsCustomTimer;
     final name = appState.babyName;
-    final title = name.isNotEmpty ? '$name is due for a feed' : 'Time for a feed';
+    final title = isTimer
+        ? '${appState.customTimerLabel} done'
+        : (name.isNotEmpty ? '$name is due for a feed' : 'Time for a feed');
+    final subtitle = isTimer ? 'Your timer is up' : 'Your feed alarm is playing';
     return Positioned.fill(
       child: Material(
         color: AppColors.overdue,
@@ -121,10 +125,10 @@ class _AlarmOverlay extends StatelessWidget {
                   style: const TextStyle(fontFamily: balooFamily, fontSize: 30, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Your feed alarm is playing',
+                Text(
+                  subtitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70),
                 ),
                 const Spacer(),
                 SizedBox(
@@ -138,7 +142,8 @@ class _AlarmOverlay extends StatelessWidget {
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     ),
-                    child: const Text('Dismiss alarm', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                    child: Text(isTimer ? 'Stop timer' : 'Dismiss alarm',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -154,7 +159,8 @@ class _AlarmOverlay extends StatelessWidget {
                             side: const BorderSide(color: Colors.white70, width: 1.5),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
-                          child: const Text('Snooze 15m', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                          child: Text(isTimer ? '+15 min' : 'Snooze 15m',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                         ),
                       ),
                     ),
