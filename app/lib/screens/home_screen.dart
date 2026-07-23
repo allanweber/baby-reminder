@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../state/app_state.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_icons.dart';
+import '../widgets/delete_confirm_dialog.dart';
+import '../widgets/feed_list_item.dart';
+import '../widgets/log_feed_sheet.dart';
+import '../widgets/reminder_banner.dart';
+import '../widgets/settings_sheet.dart';
+import '../widgets/stats_row.dart';
+
+class HomeScreen extends StatelessWidget {
+  final AppState appState;
+  const HomeScreen({super.key, required this.appState});
+
+  String _timePhrase(int hour) {
+    if (hour < 12) return 'Off to a gentle start this morning';
+    if (hour < 18) return 'Cruising through the afternoon';
+    return 'Winding down for the evening';
+  }
+
+  Future<void> _handleDelete(BuildContext context, String id) async {
+    final confirmed = await showDeleteConfirmDialog(context);
+    if (confirmed) {
+      await appState.deleteFeed(id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        final now = appState.now;
+        final todayStr = dateStr(now);
+        final greeting = appState.babyName.isNotEmpty ? "${appState.babyName}'s feeds" : "Today's feeds";
+        final longDate = DateFormat('EEEE, MMMM d').format(now);
+        final timePhrase = _timePhrase(now.hour);
+
+        final homeFeeds = appState.feedsForDate(todayStr).toList()
+          ..sort((a, b) => b.time.compareTo(a.time));
+        final stats = appState.computeStats(appState.feedsForDate(todayStr));
+
+        final msLeft = appState.nextReminderAt - now.millisecondsSinceEpoch;
+        final overdue = msLeft <= 0;
+        final reminderLabel = overdue
+            ? 'Due now'
+            : () {
+                final totalMin = (msLeft / 60000).ceil();
+                return '${totalMin ~/ 60}h ${totalMin % 60}m';
+              }();
+
+        return SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(greeting,
+                                style: const TextStyle(
+                                    fontFamily: balooFamily, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                            const SizedBox(height: 2),
+                            Text(longDate,
+                                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Text(timePhrase,
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w600,
+                                    fontStyle: FontStyle.italic)),
+                          ],
+                        ),
+                      ),
+                      Material(
+                        color: AppColors.settingsBg,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => showSettingsSheet(context, appState),
+                          child: Tooltip(
+                            message: 'Settings',
+                            child: SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Center(child: AppIcons.gear(color: AppColors.gearStroke)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ReminderBanner(
+                  showCountdown: !appState.reminderDismissed,
+                  overdue: overdue,
+                  reminderLabel: reminderLabel,
+                  accentColor: AppColors.accentBlush,
+                  onLogNow: () => showLogFeedSheet(context, appState),
+                  onSnooze: () => appState.snoozeReminder(),
+                  onDismiss: () => appState.dismissReminder(),
+                ),
+                StatsRow(
+                  totalLabel: "TODAY'S INTAKE",
+                  totalValue: stats.totalDisplay,
+                  feedsLabel: 'FEEDS TODAY',
+                  feedCountValue: '${stats.feedCount}',
+                  avgGapValue: stats.avgIntervalDisplay,
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
+                  child: Text("Today's feeds",
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                  child: homeFeeds.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+                          child: Center(
+                            child: Text('No feeds logged yet today.',
+                                style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
+                          ),
+                        )
+                      : Column(
+                          children: homeFeeds
+                              .map((f) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: FeedListItem(
+                                      feed: f,
+                                      state: appState,
+                                      onEdit: () => showLogFeedSheet(context, appState, existing: f),
+                                      onDelete: () => _handleDelete(context, f.id),
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
