@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; background:#F3EDE6; font-family:'Nunito',sans-serif; }
+    @keyframes slideUp { from{ transform:translateY(24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+    @keyframes fadeIn { from{ opacity:0; } to{ opacity:1; } }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+  </style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px;box-sizing:border-box;font-family:'Nunito',sans-serif;">
+  <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="412px,892px">
+    <div style="position:relative;height:100%;width:100%;background:#FFF8F2;display:flex;flex-direction:column;overflow:hidden;">
+
+      <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;">
+          <div style="padding:20px 20px 8px;display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:700;color:#4A3B36;">{{ greeting }}</div>
+              <div style="font-size:14px;color:#9C8A82;margin-top:2px;font-weight:600;">{{ todayLongDate }}</div>
+              <div style="font-size:13px;color:#B7A79E;margin-top:4px;font-weight:600;font-style:italic;">{{ timePhrase }}</div>
+            </div>
+            <button onClick="{{ openSettings }}" style="width:40px;height:40px;border-radius:20px;border:none;background:#EFE4DB;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" aria-label="Settings">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8B7A73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"></path>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.14.59.63 1.04 1.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"></path>
+              </svg>
+            </button>
+          </div>
+
+          <sc-if value="{{ showReminderBanner }}" hint-placeholder-val="{{ true }}">
+            <div style="margin:12px 20px 0;padding:16px;border-radius:24px;background:{{ reminderBg }};display:flex;flex-direction:column;gap:12px;animation:fadeIn 0.3s ease-out;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:10px;height:10px;border-radius:50%;background:{{ reminderDotColor }};animation:{{ reminderPulse }};flex-shrink:0;"></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;color:#7A6A62;font-weight:700;letter-spacing:0.2px;">{{ reminderTitle }}</div>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:#4A3B36;">{{ reminderLabel }}</div>
+                </div>
+              </div>
+              <button onClick="{{ logNowFromReminder }}" style="width:100%;padding:16px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:800;font-size:17px;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 6px 16px rgba(227,156,139,0.4);">Log feed now</button>
+              <div style="display:flex;gap:8px;">
+                <button onClick="{{ snoozeReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:#ffffffaa;color:#4A3B36;font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Snooze 15m</button>
+                <button onClick="{{ dismissReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:transparent;color:#9C8A82;font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Dismiss</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ !showReminderBanner }}" hint-placeholder-val="{{ false }}">
+            <div style="margin:12px 20px 0;padding:16px;border-radius:24px;background:#F3EDE6;display:flex;flex-direction:column;gap:4px;">
+              <button onClick="{{ openNewLog }}" style="width:100%;padding:16px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:800;font-size:17px;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 6px 16px rgba(227,156,139,0.4);">Log feed now</button>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;gap:10px;padding:16px 20px 4px;">
+            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ todayStats.totalMlDisplay }}</div>
+              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">TODAY'S INTAKE</div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ todayStats.feedCount }}</div>
+              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">FEEDS TODAY</div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ todayStats.avgIntervalDisplay }}</div>
+              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">AVG GAP</div>
+            </div>
+          </div>
+
+          <div style="padding:18px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:#4A3B36;">Today's feeds</div>
+          <div style="padding:4px 20px 100px;display:flex;flex-direction:column;gap:10px;">
+            <sc-if value="{{ hasHomeFeeds }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ homeFeeds }}" as="feed" hint-placeholder-count="3">
+                <div style="background:#fff;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
+                  <div style="width:38px;height:38px;border-radius:14px;background:{{ feed.typeColorSoft }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:{{ feed.typeColor }};"></div>
+                  </div>
+                  <div onClick="{{ feed.onEdit }}" style="flex:1;min-width:0;">
+                    <div style="font-size:15px;font-weight:700;color:#4A3B36;">{{ feed.displayAmount }} <span style="color:#B7A79E;font-weight:700;">· {{ feed.typeLabel }}</span></div>
+                    <div style="font-size:12.5px;color:#9C8A82;font-weight:600;margin-top:2px;">{{ feed.displayTimeStr }}{{ feed.noteSuffix }}</div>
+                  </div>
+                  <button onClick="{{ feed.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:#F3EDE6;color:#B7726A;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ !hasHomeFeeds }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:30px 10px;color:#B7A79E;font-weight:600;font-size:14px;">No feeds logged yet today.</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ !isHome }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;">
+          <div style="padding:20px 20px 8px;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:#4A3B36;">{{ reportTitle }}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 12px;">
+            <button onClick="{{ prevDay }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#fff;box-shadow:0 2px 8px rgba(74,59,54,0.08);font-size:16px;color:#4A3B36;cursor:pointer;">‹</button>
+            <label style="position:relative;font-weight:700;color:#4A3B36;font-size:15px;cursor:pointer;">
+              {{ reportDateLabel }}
+              <input type="date" value="{{ reportDate }}" onChange="{{ onReportDateChange }}" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"/>
+            </label>
+            <button onClick="{{ nextDay }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#fff;box-shadow:0 2px 8px rgba(74,59,54,0.08);font-size:16px;color:#4A3B36;cursor:pointer;">›</button>
+          </div>
+          <sc-if value="{{ showTodayButton }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:center;padding:0 20px 8px;">
+              <button onClick="{{ goToday }}" style="padding:7px 16px;border-radius:14px;border:none;background:#EFE4DB;color:#7A6A62;font-weight:700;font-size:12.5px;font-family:'Nunito',sans-serif;cursor:pointer;">Jump to today</button>
+            </div>
+          </sc-if>
+          <div style="display:flex;gap:10px;padding:0 20px 4px;">
+            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ reportStats.totalMlDisplay }}</div>
+              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">TOTAL INTAKE</div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ reportStats.feedCount }}</div>
+              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">FEEDS</div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ reportStats.avgIntervalDisplay }}</div>
+              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">AVG GAP</div>
+            </div>
+          </div>
+          <div style="padding:16px 20px 100px;display:flex;flex-direction:column;gap:10px;">
+            <sc-if value="{{ hasReportFeeds }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ reportFeeds }}" as="feed" hint-placeholder-count="4">
+                <div style="background:#fff;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
+                  <div style="width:38px;height:38px;border-radius:14px;background:{{ feed.typeColorSoft }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:{{ feed.typeColor }};"></div>
+                  </div>
+                  <div onClick="{{ feed.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
+                    <div style="font-size:15px;font-weight:700;color:#4A3B36;">{{ feed.displayAmount }} <span style="color:#B7A79E;font-weight:700;">· {{ feed.typeLabel }}</span></div>
+                    <div style="font-size:12.5px;color:#9C8A82;font-weight:600;margin-top:2px;">{{ feed.displayTimeStr }}{{ feed.noteSuffix }}</div>
+                  </div>
+                  <button onClick="{{ feed.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:#F3EDE6;color:#B7726A;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ !hasReportFeeds }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:30px 10px;color:#B7A79E;font-weight:600;font-size:14px;">No feeds logged this day.</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <button onClick="{{ openNewLog }}" style="position:absolute;right:20px;bottom:78px;width:62px;height:62px;border-radius:31px;border:none;background:{{ accentColor }};box-shadow:0 8px 20px rgba(227,156,139,0.5);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 2h4"></path>
+          <path d="M10 2v3.2c0 .4-.15.78-.42 1.08L8.2 7.9A2 2 0 007.5 9.4V20a2 2 0 002 2h5a2 2 0 002-2V9.4a2 2 0 00-.7-1.5L14.42 6.3a1.6 1.6 0 01-.42-1.08V2"></path>
+          <path d="M7.5 13h9"></path>
+        </svg>
+        <div style="position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+          <div style="position:relative;width:12px;height:12px;">
+            <div style="position:absolute;top:4.5px;left:0;width:12px;height:2.4px;border-radius:2px;background:{{ accentColor }};"></div>
+            <div style="position:absolute;left:4.8px;top:0;width:2.4px;height:12px;border-radius:2px;background:{{ accentColor }};"></div>
+          </div>
+        </div>
+      </button>
+
+      <div style="flex-shrink:0;display:flex;background:#fff;border-top:1px solid #F0E6DD;padding:8px 20px 10px;">
+        <button onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12.5px;color:{{ homeTabColor }};cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10a1 1 0 001 1h4a1 1 0 001-1v-4a1 1 0 011-1h0a1 1 0 011 1v4a1 1 0 001 1h4a1 1 0 001-1V10"></path></svg>
+          Home
+        </button>
+        <button onClick="{{ goReport }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12.5px;color:{{ reportTabColor }};cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18"></path><path d="M8 2v4"></path><path d="M16 2v4"></path><path d="M8 13h.01"></path><path d="M12 13h.01"></path><path d="M16 13h.01"></path><path d="M8 17h.01"></path><path d="M12 17h.01"></path></svg>
+          Daily report
+        </button>
+      </div>
+
+      <sc-if value="{{ confirmingDeleteId }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.4);z-index:30;display:flex;align-items:center;justify-content:center;padding:0 30px;animation:fadeIn 0.15s ease-out;">
+          <div style="width:100%;background:#FFF8F2;border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:#4A3B36;margin-bottom:6px;">Delete this feed?</div>
+            <div style="font-size:13.5px;color:#9C8A82;font-weight:600;margin-bottom:18px;">This can't be undone.</div>
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ cancelDelete }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:#EFE4DB;color:#7A6A62;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ confirmDelete }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:#C9695C;color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Delete</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
+          <div style="width:100%;max-height:92%;overflow:auto;background:#FFF8F2;border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:#E4D5CB;margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;margin-bottom:14px;">{{ sheetTitle }}</div>
+
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <sc-for list="{{ feedTypeOptions }}" as="opt" hint-placeholder-count="3">
+                <button onClick="{{ opt.onSelect }}" style="flex:1;padding:10px 4px;border-radius:16px;font-size:12.5px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ opt.buttonStyle }}">{{ opt.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#9C8A82;margin-bottom:6px;">DATE</div>
+                <input type="date" value="{{ draft.date }}" onChange="{{ onDateChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-weight:700;color:#4A3B36;font-size:14px;background:#fff;"/>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#9C8A82;margin-bottom:6px;">TIME</div>
+                <input type="time" value="{{ draft.time }}" onChange="{{ onTimeChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-weight:700;color:#4A3B36;font-size:14px;background:#fff;"/>
+              </div>
+            </div>
+
+            <sc-if value="{{ showAmountField }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#fff;border-radius:20px;padding:14px 16px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <div style="font-size:12px;font-weight:700;color:#9C8A82;">AMOUNT</div>
+                  <div style="display:flex;background:#F3EDE6;border-radius:12px;padding:3px;">
+                    <button onClick="{{ setUnitMl }}" style="border:none;border-radius:9px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;{{ mlPillStyle }}">ml</button>
+                    <button onClick="{{ setUnitOz }}" style="border:none;border-radius:9px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;{{ ozPillStyle }}">oz</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:center;gap:22px;">
+                  <button onClick="{{ decAmount }}" style="width:44px;height:44px;border-radius:22px;border:none;background:#F3EDE6;color:#4A3B36;font-size:22px;font-weight:700;cursor:pointer;">–</button>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:32px;font-weight:700;color:#4A3B36;min-width:100px;text-align:center;">{{ amountDisplay }}</div>
+                  <button onClick="{{ incAmount }}" style="width:44px;height:44px;border-radius:22px;border:none;background:{{ accentColor }};color:#fff;font-size:22px;font-weight:700;cursor:pointer;">+</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="background:#fff;border-radius:20px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#9C8A82;">{{ durationLabel }}</div>
+                <div style="font-size:11px;color:#C4B6AC;font-weight:600;margin-top:1px;">{{ durationHint }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;">
+                <button onClick="{{ decDuration }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#F3EDE6;color:#4A3B36;font-size:18px;font-weight:700;cursor:pointer;">–</button>
+                <div style="font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:700;color:#4A3B36;min-width:56px;text-align:center;">{{ durationDisplay }}</div>
+                <button onClick="{{ incDuration }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#F3EDE6;color:#4A3B36;font-size:18px;font-weight:700;cursor:pointer;">+</button>
+              </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:12px;font-weight:700;color:#9C8A82;margin-bottom:6px;">NOTE (OPTIONAL)</div>
+              <textarea value="{{ draft.note }}" onChange="{{ onNoteChange }}" placeholder="e.g. spit up a little, fussy before feed…" rows="2" style="width:100%;box-sizing:border-box;padding:12px;border-radius:16px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-size:13.5px;color:#4A3B36;resize:none;background:#fff;"></textarea>
+            </div>
+
+            <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+              <div style="color:#B7726A;font-size:13px;font-weight:700;margin-bottom:10px;">{{ formError }}</div>
+            </sc-if>
+
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ closeSheet }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:#EFE4DB;color:#7A6A62;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ saveFeed }}" style="flex:2;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Save feed</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
+          <div style="width:100%;background:#FFF8F2;border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:#E4D5CB;margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;margin-bottom:4px;">Baby's name</div>
+            <input type="text" value="{{ babyName }}" onChange="{{ onBabyNameChange }}" placeholder="e.g. Mia" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:16px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-weight:700;color:#4A3B36;font-size:14px;background:#fff;margin-bottom:20px;"/>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;margin-bottom:4px;">Feed reminder</div>
+            <div style="font-size:13px;color:#9C8A82;font-weight:600;margin-bottom:16px;">Get nudged when it's about time for the next bottle.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
+              <sc-for list="{{ intervalOptions }}" as="opt" hint-placeholder-count="5">
+                <button onClick="{{ opt.onSelect }}" style="padding:10px 16px;border-radius:16px;font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ opt.buttonStyle }}">{{ opt.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ closeSettings }}" style="width:100%;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Done</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+  <div style="font-size:12.5px;color:#B0A69F;font-weight:600;max-width:412px;text-align:center;">Prototype — Android/iOS app packaging via CI comes after design sign-off.</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:940},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#E39C8B&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#E39C8B&quot;,&quot;#7FA377&quot;,&quot;#A98FC4&quot;,&quot;#D9A441&quot;]},&quot;reminderIntervalMinutes&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:180,&quot;min&quot;:30,&quot;max&quot;:360,&quot;step&quot;:15,&quot;tsType&quot;:&quot;number&quot;},&quot;defaultFeedType&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;formula&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;formula&quot;,&quot;breastBottle&quot;,&quot;breastfeeding&quot;]}}">
+const ML_PER_OZ = 29.5735;
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function dateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function timeStr(d){ return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function dtToMs(dateS, timeS){ return new Date(dateS+'T'+timeS+':00').getTime(); }
+function display12h(timeS){
+  const [h,m] = timeS.split(':').map(Number);
+  const ampm = h>=12 ? 'PM':'AM';
+  let h12 = h%12; if(h12===0) h12=12;
+  return h12+':'+pad(m)+' '+ampm;
+}
+const TYPE_META = {
+  formula: { label:'Formula', color:'#E39C8B', soft:'#FBEAE5' },
+  breastBottle: { label:'Breast milk', color:'#7FA377', soft:'#EAF1E6' },
+  breastfeeding: { label:'Breastfeeding', color:'#A98FC4', soft:'#EFE7F5' },
+};
+
+class Component extends DCLogic {
+  state = (() => {
+    const now = new Date();
+    const t3 = new Date(now.getTime() - 40*60000);
+    const yest = new Date(now.getTime() - 24*60*60000);
+    const feeds = [
+      { id:'y1', date:dateStr(yest), time:'07:00', type:'formula', amountMl:110, durationMin:0, note:'', isLast:false },
+      { id:'y2', date:dateStr(yest), time:'10:15', type:'breastfeeding', amountMl:0, durationMin:18, note:'', isLast:false },
+      { id:'y3', date:dateStr(yest), time:'13:30', type:'formula', amountMl:120, durationMin:0, note:'', isLast:false },
+      { id:'y4', date:dateStr(yest), time:'16:45', type:'breastBottle', amountMl:100, durationMin:0, note:'', isLast:false },
+      { id:'y5', date:dateStr(yest), time:'19:50', type:'formula', amountMl:130, durationMin:20, note:'Settled quickly after' },
+      { id:'t1', date:dateStr(now), time:'06:30', type:'formula', amountMl:120, durationMin:0, note:'', isLast:false },
+      { id:'t2', date:dateStr(now), time:'09:45', type:'breastBottle', amountMl:100, durationMin:0, note:'', isLast:false },
+      { id:'t3', date:dateStr(t3), time:timeStr(t3), type:'formula', amountMl:130, durationMin:22, note:'Fussy, took a bit longer', isLast:false },
+    ];
+    return {
+      feeds,
+      view: 'home',
+      reportDate: dateStr(now),
+      unitPref: 'ml',
+      reminderIntervalMin: this.props && this.props.reminderIntervalMinutes || 180,
+      nextReminderAt: t3.getTime() + ((this.props && this.props.reminderIntervalMinutes) || 180)*60000,
+      reminderDismissed: false,
+      now: Date.now(),
+      sheetOpen: false,
+      editingId: null,
+      draft: null,
+      formError: null,
+      settingsOpen: false,
+      confirmingDeleteId: null,
+      babyName: '',
+    };
+  })();
+
+  componentDidMount(){
+    this._tick = setInterval(() => this.setState({ now: Date.now() }), 30000);
+    this.updateTitle();
+  }
+  componentDidUpdate(){ this.updateTitle(); }
+  componentWillUnmount(){ clearInterval(this._tick); }
+  updateTitle(){ document.title = this.state.babyName ? this.state.babyName+"'s Feeds" : 'Baby Feed Tracker'; }
+  onBabyNameChange(e){ this.setState({ babyName: e.target.value }); }
+
+  setDraft(patch){ this.setState(s => ({ draft: { ...s.draft, ...patch }, formError: null })); }
+
+  freshDraft(){
+    const now = new Date();
+    return {
+      type: this.props.defaultFeedType || 'formula',
+      date: dateStr(now), time: timeStr(now),
+      amountMl: 120, durationMin: 0, note: '',
+    };
+  }
+
+  openNewLog(){ this.setState({ sheetOpen:true, editingId:null, draft:this.freshDraft(), formError:null }); }
+  openEdit(id){
+    const f = this.state.feeds.find(x=>x.id===id);
+    if(!f) return;
+    this.setState({ sheetOpen:true, editingId:id, draft:{ type:f.type,date:f.date,time:f.time,amountMl:f.amountMl,durationMin:f.durationMin,note:f.note }, formError:null });
+  }
+  closeSheet(){ this.setState({ sheetOpen:false, draft:null, formError:null }); }
+  requestDelete(id){ this.setState({ confirmingDeleteId:id }); }
+  cancelDelete(){ this.setState({ confirmingDeleteId:null }); }
+  confirmDelete(){ const id=this.state.confirmingDeleteId; this.setState(s => ({ feeds: s.feeds.filter(f=>f.id!==id), confirmingDeleteId:null })); }
+
+  saveFeed(){
+    const d = this.state.draft;
+    if(!d.date || !d.time){ this.setState({ formError:'Date and time are required.' }); return; }
+    const needsAmount = d.type==='formula' || d.type==='breastBottle';
+    if(needsAmount && (!d.amountMl || d.amountMl<=0)){ this.setState({ formError:'Enter an amount.' }); return; }
+    if(d.type==='breastfeeding' && (!d.durationMin || d.durationMin<=0)){ this.setState({ formError:'Enter how long the feed took.' }); return; }
+
+    const id = this.state.editingId || ('f'+Date.now());
+    const newFeed = { id, date:d.date, time:d.time, type:d.type, amountMl: needsAmount ? d.amountMl : 0, durationMin:d.durationMin||0, note:d.note||'' };
+    this.setState(s => {
+      let feeds = s.editingId ? s.feeds.map(f=>f.id===id?newFeed:f) : [...s.feeds, newFeed];
+      feeds = feeds.sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+      const patch = { feeds, sheetOpen:false, draft:null, formError:null };
+      if(!s.editingId){
+        patch.nextReminderAt = dtToMs(d.date,d.time) + s.reminderIntervalMin*60000;
+        patch.reminderDismissed = false;
+      }
+      return patch;
+    });
+  }
+
+  snoozeReminder(){ this.setState(s=>({ nextReminderAt: s.now + 15*60000, reminderDismissed:false })); }
+  dismissReminder(){ this.setState({ reminderDismissed:true }); }
+  logNowFromReminder(){ this.openNewLog(); }
+
+  setUnitMl(){ this.setState({ unitPref:'ml' }); }
+  setUnitOz(){ this.setState({ unitPref:'oz' }); }
+  incAmount(){ const step = this.state.unitPref==='oz'?15:10; this.setDraft({ amountMl: Math.min(400, (this.state.draft.amountMl||0)+step) }); }
+  decAmount(){ const step = this.state.unitPref==='oz'?15:10; this.setDraft({ amountMl: Math.max(0, (this.state.draft.amountMl||0)-step) }); }
+  incDuration(){ this.setDraft({ durationMin: Math.min(90, (this.state.draft.durationMin||0)+1) }); }
+  decDuration(){ this.setDraft({ durationMin: Math.max(0, (this.state.draft.durationMin||0)-1) }); }
+  onDateChange(e){ this.setDraft({ date: e.target.value }); }
+  onTimeChange(e){ this.setDraft({ time: e.target.value }); }
+  onNoteChange(e){ this.setDraft({ note: e.target.value }); }
+  selectType(t){ this.setDraft({ type:t }); }
+
+  goHome(){ this.setState({ view:'home' }); }
+  goReport(){ this.setState({ view:'report' }); }
+  openSettings(){ this.setState({ settingsOpen:true }); }
+  closeSettings(){ this.setState({ settingsOpen:false }); }
+  setInterval_(mins){ this.setState(s=>({ reminderIntervalMin:mins, nextReminderAt: s.now + mins*60000 })); }
+  prevDay(){ this.setState(s=>{ const d=new Date(s.reportDate+'T00:00:00'); d.setDate(d.getDate()-1); return { reportDate:dateStr(d) }; }); }
+  nextDay(){ this.setState(s=>{ const d=new Date(s.reportDate+'T00:00:00'); d.setDate(d.getDate()+1); return { reportDate:dateStr(d) }; }); }
+  onReportDateChange(e){
+    const v = e.target.value;
+    if(!v || isNaN(new Date(v+'T00:00:00').getTime())){ this.setState({ reportDate: dateStr(new Date()) }); return; }
+    this.setState({ reportDate: v });
+  }
+  goToday(){ this.setState({ reportDate: dateStr(new Date()) }); }
+
+  computeStats(list){
+    const withAmount = list.filter(f=>f.amountMl>0);
+    const totalMl = withAmount.reduce((a,f)=>a+f.amountMl,0);
+    const totalDisplay = this.state.unitPref==='oz' ? (totalMl/ML_PER_OZ).toFixed(1)+' oz' : totalMl+' ml';
+    let avgDisplay = '—';
+    if(list.length>=2){
+      const sorted = [...list].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+      let gaps=0, count=0;
+      for(let i=1;i<sorted.length;i++){
+        gaps += (dtToMs(sorted[i].date,sorted[i].time) - dtToMs(sorted[i-1].date,sorted[i-1].time))/60000;
+        count++;
+      }
+      const avgMin = Math.round(gaps/count);
+      avgDisplay = Math.floor(avgMin/60)+'h '+(avgMin%60)+'m';
+    }
+    return { totalMlDisplay: list.length? totalDisplay : '0 ml', feedCount: list.length, avgIntervalDisplay: avgDisplay };
+  }
+
+  enrichFeed(f, onEditFn){
+    const meta = TYPE_META[f.type];
+    const amountDisplay = f.type==='breastfeeding'
+      ? f.durationMin+' min'
+      : (this.state.unitPref==='oz' ? (f.amountMl/ML_PER_OZ).toFixed(1)+' oz' : f.amountMl+' ml');
+    return {
+      ...f,
+      typeLabel: meta.label, typeColor: meta.color, typeColorSoft: meta.soft,
+      displayAmount: amountDisplay,
+      displayTimeStr: display12h(f.time),
+      noteSuffix: f.note ? ' · '+f.note : (f.durationMin>0 && f.type!=='breastfeeding' ? ' · '+f.durationMin+' min' : ''),
+      onEdit: () => onEditFn(f.id),
+      onDelete: () => this.requestDelete(f.id),
+    };
+  }
+
+  renderVals(){
+    const s = this.state;
+    const accentColor = this.props.accentColor || '#E39C8B';
+    const now = new Date(s.now);
+    const todayStr = dateStr(now);
+    const hour = now.getHours();
+    const timePhrase = hour<12 ? 'Off to a gentle start this morning' : hour<18 ? 'Cruising through the afternoon' : 'Winding down for the evening';
+    const greeting = s.babyName ? s.babyName+"'s feeds" : "Today's feeds";
+    const todayLongDate = now.toLocaleDateString(undefined,{ weekday:'long', month:'long', day:'numeric' });
+
+    const homeFeedsRaw = s.feeds.filter(f=>f.date===todayStr).sort((a,b)=>b.time.localeCompare(a.time));
+    const homeFeeds = homeFeedsRaw.map(f=>this.enrichFeed(f, id=>this.openEdit(id)));
+    const todayStats = this.computeStats(s.feeds.filter(f=>f.date===todayStr));
+
+    const reportFeedsRaw = s.feeds.filter(f=>f.date===s.reportDate).sort((a,b)=>a.time.localeCompare(b.time));
+    const reportFeeds = reportFeedsRaw.map(f=>this.enrichFeed(f, id=>this.openEdit(id)));
+    const reportStats = this.computeStats(s.feeds.filter(f=>f.date===s.reportDate));
+    const reportDateObj = new Date(s.reportDate+'T00:00:00');
+    const reportDateLabel = s.reportDate===todayStr ? 'Today' : reportDateObj.toLocaleDateString(undefined,{ weekday:'short', month:'short', day:'numeric' });
+
+    const msLeft = s.nextReminderAt - s.now;
+    const overdue = msLeft <= 0;
+    let reminderLabel;
+    if(overdue){ reminderLabel = 'Due now'; }
+    else {
+      const totalMin = Math.ceil(msLeft/60000);
+      reminderLabel = Math.floor(totalMin/60)+'h '+(totalMin%60)+'m';
+    }
+
+    const typeOptions = ['formula','breastBottle','breastfeeding'].map(t=>{
+      const meta = TYPE_META[t];
+      const active = s.draft && s.draft.type===t;
+      return {
+        key:t, label:meta.label,
+        onSelect: () => this.selectType(t),
+        buttonStyle: active ? `background:${meta.color};color:#fff;border:none;` : `background:#fff;color:#8B7A73;border:1.5px solid #EFE4DB;`,
+      };
+    });
+
+    const intervalPresets = [90,120,180,240,300];
+    const intervalOptions = intervalPresets.map(m=>{
+      const active = s.reminderIntervalMin===m;
+      const label = m%60===0 ? (m/60)+'h' : (m/60).toFixed(1)+'h';
+      return { key:m, label, onSelect: () => this.setInterval_(m), buttonStyle: active ? `background:${accentColor};color:#fff;border:none;` : `background:#fff;color:#8B7A73;border:1.5px solid #EFE4DB;` };
+    });
+
+    const draft = s.draft || this.freshDraft();
+    const amountDisplay = s.unitPref==='oz' ? (draft.amountMl/ML_PER_OZ).toFixed(1)+' oz' : draft.amountMl+' ml';
+    const showAmountField = draft.type!=='breastfeeding';
+    const durationLabel = draft.type==='breastfeeding' ? 'DURATION (MIN)' : 'DURATION (OPTIONAL)';
+    const durationHint = draft.type==='breastfeeding' ? 'How long the feed took' : 'How long the feed took, if you tracked it';
+
+    return {
+      isHome: s.view==='home',
+      greeting, todayLongDate, timePhrase,
+      babyName: s.babyName, onBabyNameChange: (e)=>this.onBabyNameChange(e),
+      reportTitle: s.babyName ? s.babyName+"'s daily report" : 'Daily report',
+      accentColor,
+      homeFeeds, hasHomeFeeds: homeFeeds.length>0,
+      todayStats,
+      showReminderBanner: !s.reminderDismissed,
+      reminderBg: overdue ? '#F9E2DC' : '#F3EDE6',
+      reminderDotColor: overdue ? '#D97B67' : accentColor,
+      reminderPulse: overdue ? 'pulse 1.2s ease-in-out infinite' : 'none',
+      reminderTitle: overdue ? 'Feed overdue' : 'Next feed in',
+      reminderLabel,
+      logNowFromReminder: () => this.logNowFromReminder(),
+      snoozeReminder: () => this.snoozeReminder(),
+      dismissReminder: () => this.dismissReminder(),
+      openNewLog: () => this.openNewLog(),
+      openSettings: () => this.openSettings(),
+
+      reportDateLabel, reportStats, reportFeeds, hasReportFeeds: reportFeeds.length>0,
+      reportDate: s.reportDate, onReportDateChange: (e)=>this.onReportDateChange(e),
+      showTodayButton: s.reportDate!==todayStr, goToday: () => this.goToday(),
+      prevDay: () => this.prevDay(), nextDay: () => this.nextDay(),
+
+      goHome: () => this.goHome(), goReport: () => this.goReport(),
+      homeTabColor: s.view==='home' ? accentColor : '#B7A79E',
+      reportTabColor: s.view==='report' ? accentColor : '#B7A79E',
+
+      sheetOpen: s.sheetOpen,
+      sheetTitle: s.editingId ? 'Edit feed' : 'Log a feed',
+      feedTypeOptions: typeOptions,
+      draft,
+      onDateChange: (e)=>this.onDateChange(e), onTimeChange: (e)=>this.onTimeChange(e), onNoteChange: (e)=>this.onNoteChange(e),
+      showAmountField,
+      setUnitMl: () => this.setUnitMl(), setUnitOz: () => this.setUnitOz(),
+      mlPillStyle: s.unitPref==='ml' ? `background:#fff;color:${accentColor};` : 'background:transparent;color:#9C8A82;',
+      ozPillStyle: s.unitPref==='oz' ? `background:#fff;color:${accentColor};` : 'background:transparent;color:#9C8A82;',
+      decAmount: () => this.decAmount(), incAmount: () => this.incAmount(),
+      amountDisplay,
+      durationLabel, durationHint,
+      decDuration: () => this.decDuration(), incDuration: () => this.incDuration(),
+      durationDisplay: draft.durationMin+' m',
+      formError: s.formError,
+      closeSheet: () => this.closeSheet(), saveFeed: () => this.saveFeed(),
+      confirmingDeleteId: s.confirmingDeleteId,
+      cancelDelete: () => this.cancelDelete(), confirmDelete: () => this.confirmDelete(),
+
+      settingsOpen: s.settingsOpen,
+      intervalOptions,
+      closeSettings: () => this.closeSettings(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
