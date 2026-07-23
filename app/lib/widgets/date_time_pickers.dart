@@ -239,32 +239,8 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
     _minute = widget.initialTime.minute;
   }
 
-  bool get _isPm => _hour24 >= 12;
-
-  int get _hour12 {
-    final h = _hour24 % 12;
-    return h == 0 ? 12 : h;
-  }
-
-  void _setHour12(int h12) {
-    final base = h12 % 12; // 12 -> 0
-    setState(() => _hour24 = _isPm ? base + 12 : base);
-  }
-
-  void _setAmPm(bool pm) => setState(() {
-        final base = _hour24 % 12;
-        _hour24 = pm ? base + 12 : base;
-      });
-
-  /// [turns] is the tapped/dragged angle clockwise from the top, in [0, 1).
-  void _onDialAngle(double turns) {
-    if (_field == _TimeField.hour) {
-      final idx = (turns * 12).round() % 12; // 0 == 12 o'clock
-      _setHour12(idx == 0 ? 12 : idx);
-    } else {
-      setState(() => _minute = (turns * 60).round() % 60);
-    }
-  }
+  void _setHour(int h) => setState(() => _hour24 = h % 24);
+  void _setMinute(int m) => setState(() => _minute = m % 60);
 
   /// After the user lifts their finger on the hour ring, advance to minutes.
   void _onDialReleased() {
@@ -278,7 +254,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'Select time',
+            'Select time (24h)',
             style: TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 14),
@@ -287,7 +263,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _TimeFieldChip(
-                text: pad2(_hour12),
+                text: pad2(_hour24),
                 active: _field == _TimeField.hour,
                 onTap: () => setState(() => _field = _TimeField.hour),
               ),
@@ -300,22 +276,15 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                 active: _field == _TimeField.minute,
                 onTap: () => setState(() => _field = _TimeField.minute),
               ),
-              const SizedBox(width: 12),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _AmPmChip(label: 'AM', active: !_isPm, onTap: () => _setAmPm(false)),
-                  const SizedBox(height: 6),
-                  _AmPmChip(label: 'PM', active: _isPm, onTap: () => _setAmPm(true)),
-                ],
-              ),
             ],
           ),
           const SizedBox(height: 18),
           _ClockDial(
             hourMode: _field == _TimeField.hour,
-            selectedValue: _field == _TimeField.hour ? _hour12 : _minute,
-            onAngle: _onDialAngle,
+            hour24: _hour24,
+            minute: _minute,
+            onHour: _setHour,
+            onMinute: _setMinute,
             onReleased: _onDialReleased,
           ),
           const SizedBox(height: 20),
@@ -396,97 +365,96 @@ class _TimeFieldChip extends StatelessWidget {
   }
 }
 
-class _AmPmChip extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _AmPmChip({required this.label, required this.active, required this.onTap});
+/// 24-hour clock face. In hour mode two rings are shown — 00–11 on the outer
+/// ring, 12–23 on the inner ring — so all 24 hours fit without crowding; in
+/// minute mode a single ring of 5-minute marks is shown. Tapping or dragging
+/// picks the nearest value (and, for hours, the nearer ring).
+class _ClockDial extends StatelessWidget {
+  final bool hourMode;
+  final int hour24; // 0..23
+  final int minute; // 0..59
+  final ValueChanged<int> onHour;
+  final ValueChanged<int> onMinute;
+  final VoidCallback onReleased;
+  const _ClockDial({
+    required this.hourMode,
+    required this.hour24,
+    required this.minute,
+    required this.onHour,
+    required this.onMinute,
+    required this.onReleased,
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: active ? AppColors.accentBlush : AppColors.surfaceSecondary,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Container(
-          width: 46,
-          height: 27,
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.textSecondary),
+  static const double _size = 288;
+  static const double _rOuter = 118;
+  static const double _rInner = 78;
+
+  void _handle(Offset local) {
+    const center = Offset(_size / 2, _size / 2);
+    final v = local - center;
+    final dist = v.distance;
+    if (dist < 4) return;
+    // atan2(x, -y): 0 at the top, increasing clockwise.
+    var turns = math.atan2(v.dx, -v.dy) / (2 * math.pi);
+    if (turns < 0) turns += 1;
+    if (hourMode) {
+      final idx = (turns * 12).round() % 12; // 0 == top
+      final inner = dist < (_rOuter + _rInner) / 2;
+      onHour(inner ? idx + 12 : idx);
+    } else {
+      onMinute((turns * 60).round() % 60);
+    }
+  }
+
+  Offset _pos(double turns, double r) => Offset(
+        _size / 2 + r * math.sin(turns * 2 * math.pi),
+        _size / 2 - r * math.cos(turns * 2 * math.pi),
+      );
+
+  Widget _number(int value, double turns, double r, bool selected, double fontSize, Color unselected) {
+    final p = _pos(turns, r);
+    return Positioned(
+      left: p.dx - 20,
+      top: p.dy - 20,
+      width: 40,
+      height: 40,
+      child: Center(
+        child: Text(
+          pad2(value),
+          style: TextStyle(
+            fontFamily: balooFamily,
+            fontSize: fontSize,
+            fontWeight: FontWeight.w700,
+            color: selected ? Colors.white : unselected,
           ),
         ),
       ),
     );
   }
-}
-
-/// The circular clock face. Twelve numbers sit on the ring; tapping or dragging
-/// anywhere reports the angle (clockwise turns from the top) back to the parent.
-class _ClockDial extends StatelessWidget {
-  final bool hourMode;
-  final int selectedValue; // hour 1..12, or minute 0..59
-  final ValueChanged<double> onAngle;
-  final VoidCallback onReleased;
-  const _ClockDial({
-    required this.hourMode,
-    required this.selectedValue,
-    required this.onAngle,
-    required this.onReleased,
-  });
-
-  static const double _size = 268;
-  static const double _numberRadius = 106;
-
-  void _report(Offset local) {
-    const center = Offset(_size / 2, _size / 2);
-    final v = local - center;
-    if (v.distance < 4) return;
-    // atan2(x, -y): 0 at the top, increasing clockwise.
-    var turns = math.atan2(v.dx, -v.dy) / (2 * math.pi);
-    if (turns < 0) turns += 1;
-    onAngle(turns);
-  }
 
   @override
   Widget build(BuildContext context) {
-    // Angle (turns from top) of the currently selected value, for the hand.
-    final selectedTurns = hourMode ? (selectedValue % 12) / 12 : selectedValue / 60;
-
     final numbers = <Widget>[];
-    for (var i = 0; i < 12; i++) {
-      final value = hourMode ? (i == 0 ? 12 : i) : i * 5;
-      final turns = i / 12;
-      final theta = turns * 2 * math.pi;
-      final dx = _numberRadius * math.sin(theta);
-      final dy = -_numberRadius * math.cos(theta);
-      final isSelected = value == selectedValue;
-      numbers.add(Positioned(
-        left: _size / 2 + dx - 20,
-        top: _size / 2 + dy - 20,
-        width: 40,
-        height: 40,
-        child: Center(
-          child: Text(
-            hourMode ? '$value' : pad2(value),
-            style: TextStyle(
-              fontFamily: balooFamily,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : AppColors.textPrimary,
-            ),
-          ),
-        ),
-      ));
+    if (hourMode) {
+      for (var i = 0; i < 12; i++) {
+        final turns = i / 12;
+        numbers.add(_number(i, turns, _rOuter, hour24 == i, 16, AppColors.textPrimary));
+        numbers.add(_number(i + 12, turns, _rInner, hour24 == i + 12, 13, AppColors.textSecondary));
+      }
+    } else {
+      for (var i = 0; i < 12; i++) {
+        final value = i * 5;
+        numbers.add(_number(value, i / 12, _rOuter, minute == value, 16, AppColors.textPrimary));
+      }
     }
 
+    final handTurns = hourMode ? (hour24 % 12) / 12 : minute / 60;
+    final handRadius = hourMode ? (hour24 < 12 ? _rOuter : _rInner) : _rOuter;
+
     return GestureDetector(
-      onTapDown: (d) => _report(d.localPosition),
-      onPanStart: (d) => _report(d.localPosition),
-      onPanUpdate: (d) => _report(d.localPosition),
+      onTapDown: (d) => _handle(d.localPosition),
+      onPanStart: (d) => _handle(d.localPosition),
+      onPanUpdate: (d) => _handle(d.localPosition),
       onPanEnd: (_) => onReleased(),
       onTapUp: (_) => onReleased(),
       child: SizedBox(
@@ -496,7 +464,7 @@ class _ClockDial extends StatelessWidget {
           children: [
             Positioned.fill(
               child: CustomPaint(
-                painter: _ClockFacePainter(selectedTurns: selectedTurns, numberRadius: _numberRadius),
+                painter: _ClockFacePainter(handTurns: handTurns, handRadius: handRadius),
               ),
             ),
             IgnorePointer(child: Stack(children: numbers)),
@@ -508,32 +476,32 @@ class _ClockDial extends StatelessWidget {
 }
 
 class _ClockFacePainter extends CustomPainter {
-  final double selectedTurns;
-  final double numberRadius;
-  const _ClockFacePainter({required this.selectedTurns, required this.numberRadius});
+  final double handTurns;
+  final double handRadius;
+  const _ClockFacePainter({required this.handTurns, required this.handRadius});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final face = Paint()..color = AppColors.surfaceSecondary;
-    canvas.drawCircle(center, size.width / 2, face);
+    canvas.drawCircle(center, size.width / 2, Paint()..color = AppColors.surfaceSecondary);
 
-    final theta = selectedTurns * 2 * math.pi;
-    final knob = center + Offset(numberRadius * math.sin(theta), -numberRadius * math.cos(theta));
+    final theta = handTurns * 2 * math.pi;
+    final knob = center + Offset(handRadius * math.sin(theta), -handRadius * math.cos(theta));
 
     final accent = Paint()..color = AppColors.accentBlush;
-    // Hand.
-    final hand = Paint()
-      ..color = AppColors.accentBlush
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(center, knob, hand);
-    // Selection knob + center hub.
-    canvas.drawCircle(knob, 21, accent);
+    canvas.drawLine(
+      center,
+      knob,
+      Paint()
+        ..color = AppColors.accentBlush
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawCircle(knob, 19, accent);
     canvas.drawCircle(center, 5, accent);
   }
 
   @override
   bool shouldRepaint(covariant _ClockFacePainter old) =>
-      old.selectedTurns != selectedTurns || old.numberRadius != numberRadius;
+      old.handTurns != handTurns || old.handRadius != handRadius;
 }

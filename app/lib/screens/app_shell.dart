@@ -24,6 +24,24 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild on every state change so the alarm overlay appears/disappears the
+    // moment the reminder starts or is dismissed.
+    return AnimatedBuilder(
+      animation: widget.appState,
+      builder: (context, _) => Stack(
+        children: [
+          _buildShell(context),
+          if (widget.appState.alarmRinging)
+            _AlarmOverlay(
+              appState: widget.appState,
+              onLog: () => showLogFeedSheet(context, widget.appState),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
     const accent = AppColors.accentBlush;
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -68,6 +86,98 @@ class _AppShellState extends State<AppShell> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-screen "alarm playing" state shown over the whole app while the feed
+/// reminder is ringing, with an immediate way to stop it.
+class _AlarmOverlay extends StatelessWidget {
+  final AppState appState;
+  final VoidCallback onLog;
+  const _AlarmOverlay({required this.appState, required this.onLog});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = appState.babyName;
+    final title = name.isNotEmpty ? '$name is due for a feed' : 'Time for a feed';
+    return Positioned.fill(
+      child: Material(
+        color: AppColors.overdue,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            child: Column(
+              children: [
+                const Spacer(),
+                const Icon(Icons.notifications_active_rounded, size: 96, color: Colors.white),
+                const SizedBox(height: 24),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontFamily: balooFamily, fontSize: 30, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Your feed alarm is playing',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70),
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  height: 58,
+                  child: ElevatedButton(
+                    onPressed: () => appState.dismissReminder(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.overdue,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: const Text('Dismiss alarm', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () => appState.snoozeReminder(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white70, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('Snooze 15m', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: onLog,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white70, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('Log feed', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
       ),

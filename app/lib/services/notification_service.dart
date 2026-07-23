@@ -2,10 +2,28 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'alarm_service.dart';
+
+/// Action id for the "Stop" button on the alarm notification.
+const _dismissAlarmActionId = 'dismiss_alarm';
+
+/// Handles a tap on the notification's "Stop" action — including from the lock
+/// screen and when the app process is dead. The action itself cancels the
+/// notification (which stops the insistent alarm sound); here we also persist
+/// the dismissed flag so the app doesn't immediately re-ring when next opened.
+/// Runs in its own isolate, so it can only touch SharedPreferences directly.
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) async {
+  if (response.actionId == _dismissAlarmActionId) {
+    final prefs = await SharedPreferences.getInstance();
+    // Key must match StorageService._kReminderDismissed.
+    await prefs.setBool('reminderDismissed', true);
+  }
+}
 
 /// Schedules the "next feed" reminder as a real OS-level local notification
 /// that behaves like an alarm clock: it uses a full-screen intent, the alarm
@@ -44,6 +62,8 @@ class NotificationService {
     );
     await _plugin.initialize(
       const InitializationSettings(android: androidInit, iOS: iosInit),
+      onDidReceiveNotificationResponse: notificationTapBackground,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
     final androidImpl = _plugin.resolvePlatformSpecificImplementation<
@@ -104,6 +124,16 @@ class NotificationService {
       audioAttributesUsage: AudioAttributesUsage.alarm,
       additionalFlags: _insistentFlags,
       color: const Color(0xFFE39C8B),
+      // Show on the lock screen so the "Stop" action is reachable there.
+      visibility: NotificationVisibility.public,
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          _dismissAlarmActionId,
+          'Stop',
+          cancelNotification: true,
+          showsUserInterface: false,
+        ),
+      ],
     );
 
     await _plugin.zonedSchedule(

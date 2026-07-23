@@ -166,12 +166,18 @@ class AppState extends ChangeNotifier {
   Future<void> saveFeed(Feed feed, {required bool isNew}) async {
     feeds = isNew ? [...feeds, feed] : feeds.map((f) => f.id == feed.id ? feed : f).toList();
     feeds.sort((a, b) => a.sortKey.compareTo(b.sortKey));
-    if (isNew) {
-      nextReminderAt = dtToMs(feed.date, feed.time) + reminderIntervalMin * 60000;
+    // Logging a *recent* feed restarts the countdown to the next one. A feed
+    // back-filled from far enough in the past that its reminder would already
+    // be due (e.g. 3h+ ago with a 3h interval) is treated as history: it must
+    // not start or reschedule an alarm, and it leaves any running reminder be.
+    final candidate = dtToMs(feed.date, feed.time) + reminderIntervalMin * 60000;
+    final startsReminder = isNew && candidate > DateTime.now().millisecondsSinceEpoch;
+    if (startsReminder) {
+      nextReminderAt = candidate;
       reminderDismissed = false;
     }
     await storage.saveFeeds(feeds);
-    if (isNew) {
+    if (startsReminder) {
       await storage.saveNextReminderAt(nextReminderAt);
       await storage.saveReminderDismissed(reminderDismissed);
       _evaluateAlarm();
