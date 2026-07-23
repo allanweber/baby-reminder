@@ -19,9 +19,14 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.babyfeedtracker.baby_feed_tracker"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Several plugins (audioplayers, flutter_local_notifications, saf_*, …)
+    // require this NDK; pin it rather than Flutter's older default.
+    ndkVersion = "25.1.8937393"
 
     compileOptions {
+        // flutter_local_notifications relies on java.time APIs, which need
+        // core library desugaring on the minSdk this app targets.
+        coreLibraryDesugaringEnabled true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -64,4 +69,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 }
