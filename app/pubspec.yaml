@@ -53,9 +53,10 @@ dependencies:
   file_picker: ^8.1.6
   # Automatic backup: a persistable Android folder grant (SAF) so the app can
   # silently rewrite a backup file to a user-chosen folder on every change and
-  # read it back after a reinstall.
-  saf_util: ^3.1.0
-  saf_stream: ^3.1.0
+  # read it back after a reinstall. Pinned to the 2.x line — 3.x requires Dart
+  # >=3.12, but Flutter 3.24.5 ships Dart 3.5.4.
+  saf_util: ^2.2.0
+  saf_stream: ^2.0.0
 
 dev_dependencies:
   flutter_test:
