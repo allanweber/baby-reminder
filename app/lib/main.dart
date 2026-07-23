@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/app_shell.dart';
 import 'services/alarm_service.dart';
+import 'services/backup_service.dart';
 import 'services/notification_service.dart';
 import 'services/storage_service.dart';
 import 'state/app_state.dart';
@@ -12,7 +13,8 @@ Future<void> main() async {
   final storage = await StorageService.create();
   final notifications = NotificationService();
   final alarm = AlarmService();
-  final appState = AppState(storage, notifications, alarm);
+  final backup = BackupService();
+  final appState = AppState(storage, notifications, alarm, backup);
   await appState.load();
   runApp(BabyFeedTrackerApp(appState: appState));
 }

@@ -100,6 +100,45 @@ class _SettingsSheetState extends State<SettingsSheet> {
     }
   }
 
+  Future<void> _setupAutoBackup() async {
+    final uri = await widget.appState.backup.pickFolder();
+    if (uri == null || !mounted) return;
+
+    final existing = await widget.appState.backup.existingBackupUri(uri);
+    if (!mounted) return;
+
+    if (existing != null) {
+      final choice = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Backup found in this folder'),
+          content: const Text('Restore that backup onto this device, or replace it with the data currently on this device?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop('cancel'), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.of(context).pop('replace'), child: const Text('Replace')),
+            TextButton(onPressed: () => Navigator.of(context).pop('restore'), child: const Text('Restore')),
+          ],
+        ),
+      );
+      if (choice == 'restore') {
+        final content = await widget.appState.backup.read(existing);
+        if (content == null) {
+          _toast('Could not read the existing backup');
+          return;
+        }
+        final count = await widget.appState.importData(content);
+        await widget.appState.enableAutoBackup(uri);
+        _toast(count == null ? 'Backup file was invalid' : 'Restored $count feeds · auto-backup on');
+        return;
+      } else if (choice != 'replace') {
+        return; // cancelled
+      }
+    }
+
+    await widget.appState.enableAutoBackup(uri);
+    _toast('Auto-backup is on');
+  }
+
   @override
   Widget build(BuildContext context) {
     const accent = AppColors.accentBlush;
@@ -235,10 +274,94 @@ class _SettingsSheetState extends State<SettingsSheet> {
               const Text('Backup & restore', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               const SizedBox(height: 4),
               const Text(
-                'Feeds are stored only on this device. Save a backup file to keep your history safe before uninstalling or switching phones.',
+                'Feeds are stored only on this device. Keep your history safe against uninstalls and new phones.',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          widget.appState.autoBackupOn ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+                          size: 20,
+                          color: widget.appState.autoBackupOn ? AppColors.accentSage : AppColors.textMuted,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            widget.appState.autoBackupOn ? 'Automatic backup is on' : 'Automatic backup is off',
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Silently saves a backup to a folder you pick (e.g. Google Drive) whenever something changes, and offers to restore it when you re-pick that folder after a reinstall.',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 10),
+                    if (widget.appState.autoBackupOn)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _setupAutoBackup,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.gearStroke,
+                                side: const BorderSide(color: AppColors.border, width: 1.5),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Change folder', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                await widget.appState.disableAutoBackup();
+                                _toast('Auto-backup turned off');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.errorText,
+                                side: const BorderSide(color: AppColors.border, width: 1.5),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Turn off', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _setupAutoBackup,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: accent,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('Turn on auto-backup', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('OR SAVE A ONE-OFF FILE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(

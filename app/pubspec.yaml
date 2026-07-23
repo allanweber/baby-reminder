@@ -51,6 +51,11 @@ dependencies:
   # Manual backup/restore: save all data to a JSON file the user keeps, and
   # read it back — so data survives an uninstall or a signing-key change.
   file_picker: ^8.1.6
+  # Automatic backup: a persistable Android folder grant (SAF) so the app can
+  # silently rewrite a backup file to a user-chosen folder on every change and
+  # read it back after a reinstall.
+  saf_util: ^3.1.0
+  saf_stream: ^3.1.0
 
 dev_dependencies:
   flutter_test:
