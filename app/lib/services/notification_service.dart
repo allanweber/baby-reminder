@@ -132,6 +132,54 @@ class NotificationService {
     );
   }
 
+  /// Schedules the alarm at [at] as an OS-level notification that survives the
+  /// app being closed. Prefers [AndroidScheduleMode.alarmClock] (AlarmManager's
+  /// setAlarmClock — Doze-proof, lock-screen, status-bar alarm icon), but that
+  /// requires the exact-alarm permission on Android 12+; if it's not granted
+  /// the plugin throws. Rather than swallow that and schedule nothing (the bug
+  /// that made alarms only ring while the app was open), fall back to an
+  /// inexact-while-idle alarm, which needs no permission and still fires with
+  /// the app closed — just not to the exact second.
+  Future<void> _scheduleAlarm({
+    required int notificationId,
+    required String title,
+    required String body,
+    required DateTime at,
+    required String soundId,
+  }) async {
+    final when = tz.TZDateTime.from(at, tz.local);
+    final details = NotificationDetails(
+      android: _alarmAndroidDetails(soundId),
+      iOS: DarwinNotificationDetails(
+        sound: '$soundId.wav',
+        interruptionLevel: InterruptionLevel.timeSensitive,
+      ),
+    );
+    try {
+      await _plugin.zonedSchedule(
+        notificationId,
+        title,
+        body,
+        when,
+        details,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (_) {
+      await _plugin.zonedSchedule(
+        notificationId,
+        title,
+        body,
+        when,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+  }
+
   Future<void> scheduleReminder(
     DateTime at, {
     required String babyName,
@@ -147,24 +195,12 @@ class NotificationService {
     final resolvedTitle = title ?? (babyName.isNotEmpty ? "$babyName's next feed" : 'Feed reminder');
     final resolvedBody = body ?? "It's about time for the next feed.";
 
-    await _plugin.zonedSchedule(
-      _reminderNotificationId,
-      resolvedTitle,
-      resolvedBody,
-      tz.TZDateTime.from(at, tz.local),
-      NotificationDetails(
-        android: _alarmAndroidDetails(id),
-        iOS: DarwinNotificationDetails(
-          sound: '$id.wav',
-          interruptionLevel: InterruptionLevel.timeSensitive,
-        ),
-      ),
-      // alarmClock uses AlarmManager.setAlarmClock() under the hood: it fires
-      // even in Doze / battery-saver and while the app is closed — exactly how
-      // a real alarm-clock app behaves — and surfaces on the lock screen.
-      androidScheduleMode: AndroidScheduleMode.alarmClock,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+    await _scheduleAlarm(
+      notificationId: _reminderNotificationId,
+      title: resolvedTitle,
+      body: resolvedBody,
+      at: at,
+      soundId: id,
     );
   }
 
@@ -177,23 +213,12 @@ class NotificationService {
     required String soundId,
   }) async {
     await init();
-    final id = resolveAlarmSoundId(soundId);
-    final at = DateTime.now().add(delay);
-    await _plugin.zonedSchedule(
-      _testNotificationId,
-      'Test alarm',
-      'If you can see and hear this with the app closed, real reminders will work too.',
-      tz.TZDateTime.from(at, tz.local),
-      NotificationDetails(
-        android: _alarmAndroidDetails(id),
-        iOS: DarwinNotificationDetails(
-          sound: '$id.wav',
-          interruptionLevel: InterruptionLevel.timeSensitive,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.alarmClock,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+    await _scheduleAlarm(
+      notificationId: _testNotificationId,
+      title: 'Test alarm',
+      body: 'If you can see and hear this with the app closed, real reminders will work too.',
+      at: DateTime.now().add(delay),
+      soundId: resolveAlarmSoundId(soundId),
     );
   }
 
