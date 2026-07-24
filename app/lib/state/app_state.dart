@@ -173,6 +173,7 @@ class AppState extends ChangeNotifier {
           DateTime.fromMillisecondsSinceEpoch(customTimerAt!),
           babyName: babyName,
           soundId: alarmSound,
+          volume: alarmVolume,
           title: customTimerLabel.isNotEmpty ? customTimerLabel : 'Timer',
           body: 'Your timer is up.',
         );
@@ -183,6 +184,7 @@ class AppState extends ChangeNotifier {
           DateTime.fromMillisecondsSinceEpoch(nextReminderAt),
           babyName: babyName,
           soundId: alarmSound,
+          volume: alarmVolume,
         );
       }
     } catch (e) {

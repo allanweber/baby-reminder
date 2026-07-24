@@ -9,6 +9,13 @@
     <!-- Lets the due-feed reminder surface as a full-screen alarm even over
          the lock screen (see NotificationService). -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- Required by the `alarm` package: it plays the reminder through a
+         media-playback foreground service so the sound + vibration fire even
+         when the app is closed or its process has been killed. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <application
         android:label="Baby Feed Tracker"
         android:name="${applicationName}"

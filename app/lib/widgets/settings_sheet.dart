@@ -80,8 +80,10 @@ class _SettingsSheetState extends State<SettingsSheet> {
     // notification platform call is what was crashing the app on this button.
     await ErrorLog.breadcrumb('test: button tapped');
     try {
-      await widget.appState.notifications
-          .scheduleTest(soundId: widget.appState.alarmSound);
+      await widget.appState.notifications.scheduleTest(
+        soundId: widget.appState.alarmSound,
+        volume: widget.appState.alarmVolume,
+      );
       _toast('Test alarm set for 10s from now — lock your phone and wait.');
     } catch (e, st) {
       await ErrorLog.record(e, st);
