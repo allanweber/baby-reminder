@@ -81,7 +81,7 @@ class CustomTimerBanner extends StatelessWidget {
                   child: TextButton(
                     onPressed: onAddFive,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.67),
+                      backgroundColor: Colors.white.withValues(alpha: 0.67),
                       foregroundColor: AppColors.textPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),

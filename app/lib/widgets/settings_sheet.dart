@@ -352,7 +352,7 @@ class _SettingsSheetState extends State<SettingsSheet> {
                   activeTrackColor: accent,
                   thumbColor: accent,
                   inactiveTrackColor: AppColors.surfaceSecondary,
-                  overlayColor: accent.withOpacity(0.15),
+                  overlayColor: accent.withValues(alpha: 0.15),
                 ),
                 child: Slider(
                   value: widget.appState.alarmVolume,

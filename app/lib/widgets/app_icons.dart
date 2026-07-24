@@ -4,8 +4,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 /// Line-drawn icons ported 1:1 from the inline SVGs in the prototype
 /// (`Baby Feed Tracker.dc.html`) — gear, house, calendar, feeding bottle.
 class AppIcons {
-  static String _hex(Color c) =>
-      '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+  static String _hex(Color c) {
+    String h(double v) => ((v * 255.0).round() & 0xff).toRadixString(16).padLeft(2, '0');
+    return '#${h(c.r)}${h(c.g)}${h(c.b)}';
+  }
 
   static Widget gear({double size = 19, required Color color}) {
     final stroke = _hex(color);

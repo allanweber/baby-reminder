@@ -76,11 +76,11 @@ List<BoxShadow> smallCardShadow() => [
     ];
 
 List<BoxShadow> primaryCtaShadow(Color accent) => [
-      BoxShadow(color: accent.withOpacity(0.4), blurRadius: 16, offset: const Offset(0, 6)),
+      BoxShadow(color: accent.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 6)),
     ];
 
 List<BoxShadow> fabShadow(Color accent) => [
-      BoxShadow(color: accent.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 8)),
+      BoxShadow(color: accent.withValues(alpha: 0.5), blurRadius: 20, offset: const Offset(0, 8)),
     ];
 
 ThemeData buildAppTheme(Color accent) {

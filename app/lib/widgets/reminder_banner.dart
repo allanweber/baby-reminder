@@ -87,7 +87,7 @@ class ReminderBanner extends StatelessWidget {
                   child: TextButton(
                     onPressed: onSnooze,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.67),
+                      backgroundColor: Colors.white.withValues(alpha: 0.67),
                       foregroundColor: AppColors.textPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
@@ -136,7 +136,7 @@ class _LogNowButton extends StatelessWidget {
           elevation: 0,
           shadowColor: Colors.transparent,
         ).copyWith(
-          shadowColor: WidgetStateProperty.all(accentColor.withOpacity(0.4)),
+          shadowColor: WidgetStateProperty.all(accentColor.withValues(alpha: 0.4)),
         ),
         child: const Text('Log feed now', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
       ),

@@ -337,7 +337,7 @@ class _TimeFieldChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? AppColors.accentBlush.withOpacity(0.16) : AppColors.surfaceSecondary,
+      color: active ? AppColors.accentBlush.withValues(alpha: 0.16) : AppColors.surfaceSecondary,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),

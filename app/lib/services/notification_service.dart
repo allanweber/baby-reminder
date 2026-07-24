@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -24,8 +26,19 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
+  // Under `flutter test` there are no platform channels: the alarm plugin's
+  // pigeon calls block forever waiting for a native reply that never arrives
+  // (and hang the widget test's fake-async clock). Skip all native work in
+  // that environment so the pure state logic stays testable.
+  static final bool _inFlutterTest =
+      Platform.environment.containsKey('FLUTTER_TEST');
+
   Future<void> init() async {
     if (_initialized) return;
+    if (_inFlutterTest) {
+      _initialized = true;
+      return;
+    }
 
     await ErrorLog.breadcrumb('init: Alarm.init');
     // Guarded so a platform failure (e.g. under `flutter test`, where plugin
@@ -109,6 +122,7 @@ class NotificationService {
     String? title,
     String? body,
   }) async {
+    if (_inFlutterTest) return;
     await init();
     await Alarm.stop(_reminderAlarmId);
     // A time in the past can't be scheduled; when the reminder is already due
@@ -142,6 +156,7 @@ class NotificationService {
     required String soundId,
     required double volume,
   }) async {
+    if (_inFlutterTest) return;
     await init();
     await Alarm.stop(_testAlarmId);
     await ErrorLog.breadcrumb('test: Alarm.set');
@@ -159,6 +174,7 @@ class NotificationService {
   }
 
   Future<void> cancelReminder() async {
+    if (_inFlutterTest) return;
     await Alarm.stop(_reminderAlarmId);
   }
 
