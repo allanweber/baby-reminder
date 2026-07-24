@@ -18,7 +18,7 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <application
         android:label="Baby Feed Tracker"
-        android:name="${applicationName}"
+        android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"><!-- Auto-back up app data (incl. the
              SharedPreferences store) to the user's cloud, so a reinstall on the

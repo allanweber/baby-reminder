@@ -27,6 +27,9 @@ Future<void> main() async {
     };
 
     final storage = await StorageService.create();
+    // Surface any native crash captured on the previous run (see
+    // MyApplication.kt) so the Settings diagnostics show why the app closed.
+    await ErrorLog.promoteNativeCrash();
     final notifications = NotificationService();
     // Set up channels and ask for notification / exact-alarm permissions up
     // front so the alarm can fire (and show on the lock screen) even when the

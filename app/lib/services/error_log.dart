@@ -7,6 +7,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ErrorLog {
   static const _key = 'lastError';
   static const _crumbKey = 'lastStep';
+  // Written from the native side (MyApplication.kt) when the process crashes
+  // below the Dart layer — e.g. a foreground-service or notification exception
+  // thrown by a plugin, which the app can't otherwise see.
+  static const _nativeKey = 'nativeCrash';
+
+  /// If the native layer captured a crash on the previous run, promote it into
+  /// the visible "last error" slot (shown by the Settings diagnostics) and
+  /// clear the native slot. Call once at startup.
+  static Future<void> promoteNativeCrash() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final crash = prefs.getString(_nativeKey);
+      if (crash == null || crash.isEmpty) return;
+      final ts = DateTime.now().toIso8601String();
+      await prefs.setString(_key, '[$ts] NATIVE CRASH (Android)\n$crash');
+      await prefs.remove(_nativeKey);
+    } catch (_) {}
+  }
 
   /// Fire-and-forget: never throws, so it is safe to call from error handlers.
   static Future<void> record(Object error, StackTrace? stack) async {
