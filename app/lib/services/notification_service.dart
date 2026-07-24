@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:alarm/alarm.dart';
@@ -20,11 +21,16 @@ import 'error_log.dart';
 /// diagnostics in Settings (checking / requesting the notification and
 /// exact-alarm permissions); it no longer schedules anything.
 class NotificationService {
-  static const _reminderAlarmId = 1;
+  /// Shared by the feed reminder and the custom timer (only ever one of them is
+  /// armed at a time). Exposed so [AppState] can tell whether the currently
+  /// ringing alarm is ours.
+  static const reminderAlarmId = 1;
+  static const _reminderAlarmId = reminderAlarmId;
   static const _testAlarmId = 2;
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  StreamSubscription<dynamic>? _ringingSub;
 
   // Under `flutter test` there are no platform channels: the alarm plugin's
   // pigeon calls block forever waiting for a native reply that never arrives
@@ -80,6 +86,24 @@ class NotificationService {
     _initialized = true;
   }
 
+  /// Subscribes to the native alarm's ringing state and reports the set of
+  /// currently ringing alarm ids. This is the single source of truth for
+  /// whether an alarm is sounding — the same whether the app is in the
+  /// foreground, was launched by the alarm's full-screen intent over the lock
+  /// screen, or is resumed while an alarm is still looping. No-ops in tests.
+  void onRinging(void Function(Set<int> ringingIds) callback) {
+    if (_inFlutterTest) return;
+    _ringingSub?.cancel();
+    _ringingSub = Alarm.ringing.listen((alarmSet) {
+      callback(alarmSet.alarms.map((a) => a.id).toSet());
+    });
+  }
+
+  Future<void> dispose() async {
+    await _ringingSub?.cancel();
+    _ringingSub = null;
+  }
+
   /// Builds the alarm shared by the real reminder and the diagnostic test, so a
   /// passing test genuinely exercises the same sound / vibration / lock-screen
   /// delivery the feed reminder uses.
@@ -97,12 +121,13 @@ class NotificationService {
       assetAudioPath: 'assets/sounds/${resolveAlarmSoundId(soundId)}.wav',
       loopAudio: true,
       vibrate: true,
-      // An Android/iOS "app was killed" warning notification needs an extra
-      // service; we don't use it. (This flag is primarily an iOS feature.)
-      warningNotificationOnKill: false,
-      // Keep it a notification with sound + vibration, not a full-screen alarm
-      // takeover — that's what was asked for.
-      androidFullScreenIntent: false,
+      // Warn the user if Android kills the alarm's foreground service, so a
+      // due feed can't silently disappear.
+      warningNotificationOnKill: true,
+      // Take over the whole screen like the OS alarm clock — this is what
+      // surfaces it over the lock screen and keeps it up until the user
+      // dismisses it or adds more time.
+      androidFullScreenIntent: true,
       volumeSettings: VolumeSettings.fixed(volume: volume.clamp(0.0, 1.0)),
       notificationSettings: NotificationSettings(
         title: title,
@@ -125,10 +150,13 @@ class NotificationService {
     if (_inFlutterTest) return;
     await init();
     await Alarm.stop(_reminderAlarmId);
-    // A time in the past can't be scheduled; when the reminder is already due
-    // the app is open (this is only reached from the running app), so the
-    // in-app alarm covers it.
-    if (!at.isAfter(DateTime.now())) return;
+    // A time in the past can't be scheduled directly. When the reminder is
+    // already overdue (e.g. the app was closed past the due time and is now
+    // reopening), fire almost immediately so it still rings through the real
+    // alarm engine — full screen, sound and vibration — instead of silently
+    // doing nothing.
+    final now = DateTime.now();
+    final fireAt = at.isAfter(now) ? at : now.add(const Duration(seconds: 2));
 
     final resolvedTitle =
         title ?? (babyName.isNotEmpty ? "$babyName's next feed" : 'Feed reminder');
@@ -138,7 +166,7 @@ class NotificationService {
     await Alarm.set(
       alarmSettings: _buildAlarm(
         id: _reminderAlarmId,
-        at: at,
+        at: fireAt,
         title: resolvedTitle,
         body: resolvedBody,
         soundId: soundId,

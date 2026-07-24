@@ -86,14 +86,23 @@ class AppState extends ChangeNotifier {
       customTimerLabel = storage.loadCustomTimerLabel() ?? 'Timer';
     }
     // Tick every second so the home page — the live countdown especially —
-    // stays in sync to the second, and so the alarm fires the moment the
-    // reminder comes due.
+    // stays in sync to the second.
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       now = DateTime.now();
-      _evaluateAlarm();
       notifyListeners();
     });
-    _evaluateAlarm();
+    // The native alarm engine is the single source of truth for whether an
+    // alarm is sounding: it rings whether the app is open, closed, or was
+    // launched over the lock screen by the full-screen intent. Mirror its
+    // ringing state into the in-app overlay instead of running a second,
+    // competing alarm here.
+    notifications.onRinging((ids) {
+      final ringing = ids.contains(NotificationService.reminderAlarmId);
+      if (ringing != _alarmRinging) {
+        _alarmRinging = ringing;
+        notifyListeners();
+      }
+    });
     // Make sure a real OS alarm is armed for any pending reminder/timer, so it
     // still fires when the app is later closed — previously the notification
     // was only (re)scheduled when the user changed something.
@@ -104,6 +113,7 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _ticker?.cancel();
+    notifications.dispose();
     alarm.dispose();
     super.dispose();
   }
@@ -142,24 +152,13 @@ class AppState extends ChangeNotifier {
     await storage.saveCustomTimerLabel(customTimerLabel);
   }
 
-  /// Starts the in-app alarm the instant the reminder comes due (and keeps it
-  /// going until dismissed/snoozed/logged), or stops it otherwise. When the
-  /// app is open the in-app alarm is authoritative, so we also cancel the
-  /// scheduled OS notification to avoid a double ring.
-  void _evaluateAlarm() {
-    // A running custom timer supersedes the feed reminder and is never treated
-    // as "dismissed" (it is cancelled/cleared instead of dismissed).
-    final shouldRing = customTimerAt != null
-        ? now.millisecondsSinceEpoch >= customTimerAt!
-        : now.millisecondsSinceEpoch >= nextReminderAt && !reminderDismissed;
-    if (shouldRing && !_alarmRinging) {
-      _alarmRinging = true;
-      alarm.start(soundId: alarmSound, volume: alarmVolume);
-      notifications.cancelReminder();
-    } else if (!shouldRing && _alarmRinging) {
-      _alarmRinging = false;
-      alarm.stop();
-    }
+  /// Stops a currently sounding alarm immediately. Clears the in-app overlay
+  /// flag for a snappy response and stops the native alarm; the ringing-stream
+  /// subscription will confirm the change. Callers reschedule (or dismiss) the
+  /// underlying reminder separately.
+  Future<void> _stopRinging() async {
+    _alarmRinging = false;
+    await notifications.cancelReminder();
   }
 
   /// Scheduling can fail on-device (e.g. exact-alarm permission revoked by
@@ -212,7 +211,6 @@ class AppState extends ChangeNotifier {
     if (startsReminder) {
       await storage.saveNextReminderAt(nextReminderAt);
       await storage.saveReminderDismissed(reminderDismissed);
-      _evaluateAlarm();
       await _rescheduleNotification();
     }
     notifyListeners();
@@ -244,7 +242,7 @@ class AppState extends ChangeNotifier {
     await storage.saveReminderIntervalMin(minutes);
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
-    _evaluateAlarm();
+    _alarmRinging = false;
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -261,7 +259,7 @@ class AppState extends ChangeNotifier {
     reminderDismissed = false;
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
-    _evaluateAlarm();
+    await _stopRinging();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -275,7 +273,7 @@ class AppState extends ChangeNotifier {
     }
     reminderDismissed = true;
     await storage.saveReminderDismissed(true);
-    _evaluateAlarm();
+    await _stopRinging();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -286,17 +284,11 @@ class AppState extends ChangeNotifier {
   /// takes over the reminder banner and the alarm; any custom timer already
   /// running is replaced.
   Future<void> startCustomTimer(Duration duration, {String label = 'Timer'}) async {
-    // Clearing the ringing flag lets _evaluateAlarm restart the alarm cleanly
-    // if the new target is already in the past (e.g. a 0-length timer).
-    if (_alarmRinging) {
-      _alarmRinging = false;
-      await alarm.stop();
-    }
+    _alarmRinging = false;
     customTimerAt = DateTime.now().millisecondsSinceEpoch + duration.inMilliseconds;
     customTimerLabel = label.trim().isEmpty ? 'Timer' : label.trim();
     await storage.saveCustomTimerAt(customTimerAt);
     await storage.saveCustomTimerLabel(customTimerLabel);
-    _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -306,12 +298,8 @@ class AppState extends ChangeNotifier {
   Future<void> cancelCustomTimer() async {
     if (customTimerAt == null) return;
     customTimerAt = null;
-    if (_alarmRinging) {
-      _alarmRinging = false;
-      await alarm.stop();
-    }
+    _alarmRinging = false;
     await storage.saveCustomTimerAt(null);
-    _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -325,12 +313,8 @@ class AppState extends ChangeNotifier {
         ? DateTime.now().millisecondsSinceEpoch
         : customTimerAt!;
     customTimerAt = base + extra.inMilliseconds;
-    if (_alarmRinging) {
-      _alarmRinging = false;
-      await alarm.stop();
-    }
+    _alarmRinging = false;
     await storage.saveCustomTimerAt(customTimerAt);
-    _evaluateAlarm();
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -338,9 +322,7 @@ class AppState extends ChangeNotifier {
   Future<void> setAlarmSound(String id) async {
     alarmSound = resolveAlarmSoundId(id);
     await storage.saveAlarmSound(alarmSound);
-    if (_alarmRinging) {
-      await alarm.start(soundId: alarmSound, volume: alarmVolume);
-    }
+    // Re-arm the pending alarm so it picks up the new sound.
     await _rescheduleNotification();
     notifyListeners();
   }
@@ -348,7 +330,8 @@ class AppState extends ChangeNotifier {
   Future<void> setAlarmVolume(double volume) async {
     alarmVolume = volume.clamp(0.0, 1.0);
     await storage.saveAlarmVolume(alarmVolume);
-    await alarm.setVolume(alarmVolume);
+    // Applies to the next time the alarm is (re)armed; the value is read at
+    // schedule time. Avoids rescheduling on every slider movement.
     notifyListeners();
   }
 

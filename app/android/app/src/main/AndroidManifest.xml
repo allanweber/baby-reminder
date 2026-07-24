@@ -46,6 +46,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Required by the `alarm` package for warningNotificationOnKill: it
+             posts a warning notification if Android kills the app while an
+             alarm is armed. The plugin's AlarmService/AlarmReceiver are merged
+             from the plugin manifest automatically, but this one must be
+             declared by the app (see the package's example). -->
+        <service android:name="com.gdelataillade.alarm.services.NotificationOnKillService" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
