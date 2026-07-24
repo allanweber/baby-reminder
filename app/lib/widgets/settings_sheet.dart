@@ -3,9 +3,11 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../services/alarm_service.dart';
+import '../services/error_log.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 
@@ -33,12 +35,21 @@ class _SettingsSheetState extends State<SettingsSheet> {
   // Live permission state for the diagnostics panel; null = still checking.
   bool? _notifOk;
   bool? _exactOk;
+  // Most recent recorded crash/error, if any.
+  String? _lastError;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.appState.babyName);
     _refreshPermissions();
+    _loadLastError();
+  }
+
+  Future<void> _loadLastError() async {
+    final err = await ErrorLog.read();
+    if (!mounted) return;
+    setState(() => _lastError = err);
   }
 
   Future<void> _refreshPermissions() async {
@@ -343,6 +354,58 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 'For the alarm to ring while the app is closed or your phone is locked, Android needs these two permissions. If the alarm only sounds when the app is open, one of these is off.',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
+              if (_lastError != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDECE7),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFD9694F), width: 1.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Last recorded error', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFFB84A32))),
+                      const SizedBox(height: 6),
+                      Text(_lastError!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: _lastError!));
+                              _toast('Error copied — paste it to me.');
+                            },
+                            icon: const Icon(Icons.copy_rounded, size: 16),
+                            label: const Text('Copy', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.reminderTitleText,
+                              backgroundColor: AppColors.settingsBg,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () async {
+                              await ErrorLog.clear();
+                              if (!mounted) return;
+                              setState(() => _lastError = null);
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.textSecondary,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            ),
+                            child: const Text('Clear', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               _permissionRow(
                 label: 'Show notifications',
                 badWhy: 'Off — alarms fire silently with nothing on screen.',
