@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.0+4
+version: 1.1.1+5
 
 environment:
   sdk: ^3.5.4
@@ -40,9 +40,10 @@ dependencies:
   # Reliable alarm that rings (sound + vibration + lock-screen notification)
   # even when the app is closed or the process is killed — backed by a
   # foreground service + AlarmManager. This is what actually fires the feed
-  # reminder while the app isn't open. Pinned to 5.4.1: it's the newest release
-  # still compatible with our Flutter 3.24.5 (5.5.0 requires Flutter >= 3.41).
-  alarm: 5.4.1
+  # reminder while the app isn't open. Pinned to 5.4.0: it's the newest release
+  # still compatible with our Dart 3.5.4 — 5.4.1 pulls in flutter_fgbg 0.8.0
+  # (which needs Dart 3.8) and 5.5.0 requires Flutter >= 3.41.
+  alarm: 5.4.0
   # Kept only for the notification/exact-alarm permission diagnostics in
   # Settings; no longer used to schedule anything.
   flutter_local_notifications: ^18.0.1
