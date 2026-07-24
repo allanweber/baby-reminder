@@ -36,9 +36,6 @@ class _SettingsSheetState extends State<SettingsSheet> {
   bool? _exactOk;
   // Most recent recorded crash/error, if any.
   String? _lastError;
-  // Last step the app reached before it was last closed/crashed. Survives a
-  // native crash, so it pinpoints the crashing call.
-  String? _lastStep;
 
   @override
   void initState() {
@@ -50,11 +47,9 @@ class _SettingsSheetState extends State<SettingsSheet> {
 
   Future<void> _loadLastError() async {
     final err = await ErrorLog.read();
-    final step = await ErrorLog.readBreadcrumb();
     if (!mounted) return;
     setState(() {
       _lastError = err;
-      _lastStep = step;
     });
   }
 
@@ -73,24 +68,6 @@ class _SettingsSheetState extends State<SettingsSheet> {
       _notifOk = notif;
       _exactOk = exact;
     });
-  }
-
-  Future<void> _sendTestAlarm() async {
-    // Every path here must swallow its own errors: an uncaught exception from a
-    // notification platform call is what was crashing the app on this button.
-    await ErrorLog.breadcrumb('test: button tapped');
-    try {
-      await widget.appState.notifications.scheduleTest(
-        soundId: widget.appState.alarmSound,
-        volume: widget.appState.alarmVolume,
-      );
-      _toast('Test alarm set for 10s from now — lock your phone and wait.');
-    } catch (e, st) {
-      await ErrorLog.record(e, st);
-      _toast('Test alarm failed: $e');
-    }
-    // Refresh the breadcrumb readout so the panel reflects how far it got.
-    await _loadLastError();
   }
 
   @override
@@ -234,12 +211,16 @@ class _SettingsSheetState extends State<SettingsSheet> {
     return AnimatedBuilder(
       animation: widget.appState,
       builder: (context, _) {
-        return Container(
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.92,
+          ),
+          child: Container(
           decoration: const BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
           ),
-          padding: EdgeInsets.fromLTRB(20, 18, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,6 +233,13 @@ class _SettingsSheetState extends State<SettingsSheet> {
                   decoration: BoxDecoration(color: AppColors.dragHandle, borderRadius: BorderRadius.circular(2)),
                 ),
               ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(bottom: 24 + MediaQuery.of(context).viewInsets.bottom),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               const Text("Baby's name", style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               const SizedBox(height: 4),
               const SizedBox(height: 8),
@@ -366,42 +354,6 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 'For the alarm to ring while the app is closed or your phone is locked, Android needs these two permissions. If the alarm only sounds when the app is open, one of these is off.',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
-              if (_lastStep != null) ...[
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE7F0FD),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFF4F7BD9), width: 1.5),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Last step reached before close/crash',
-                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF32538B))),
-                      const SizedBox(height: 6),
-                      Text(_lastStep!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: _lastStep!));
-                          _toast('Step copied — paste it to me.');
-                        },
-                        icon: const Icon(Icons.copy_rounded, size: 16),
-                        label: const Text('Copy', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.reminderTitleText,
-                          backgroundColor: AppColors.settingsBg,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               if (_lastError != null) ...[
                 const SizedBox(height: 10),
                 Container(
@@ -466,22 +418,6 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 granted: _exactOk,
                 onFix: widget.appState.notifications.requestExactAlarms,
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: OutlinedButton.icon(
-                  onPressed: _sendTestAlarm,
-                  icon: const Icon(Icons.notifications_active_rounded, size: 18),
-                  label: const Text('Test alarm in 10s (lock your phone)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.gearStroke,
-                    side: const BorderSide(color: AppColors.border, width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-              ),
               const SizedBox(height: 22),
               const Text('Backup & restore', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               const SizedBox(height: 4),
@@ -542,7 +478,12 @@ class _SettingsSheetState extends State<SettingsSheet> {
                   child: const Text('Done', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 ),
               ),
+                    ],
+                  ),
+                ),
+              ),
             ],
+          ),
           ),
         );
       },
