@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 class CustomTimerBanner extends StatelessWidget {
   final String label;
   final String countdownLabel;
+  final String? atLabel;
   final bool overdue;
   final VoidCallback onAddFive;
   final VoidCallback onCancel;
@@ -15,6 +16,7 @@ class CustomTimerBanner extends StatelessWidget {
     super.key,
     required this.label,
     required this.countdownLabel,
+    this.atLabel,
     required this.overdue,
     required this.onAddFive,
     required this.onCancel,
@@ -60,6 +62,11 @@ class CustomTimerBanner extends StatelessWidget {
                       style: const TextStyle(
                           fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                     ),
+                    if (atLabel != null)
+                      Text(
+                        atLabel!,
+                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText),
+                      ),
                   ],
                 ),
               ),

@@ -6,6 +6,7 @@ class ReminderBanner extends StatelessWidget {
   final bool showCountdown;
   final bool overdue;
   final String reminderLabel;
+  final String? atLabel;
   final Color accentColor;
   final VoidCallback onLogNow;
   final VoidCallback onSnooze;
@@ -16,6 +17,7 @@ class ReminderBanner extends StatelessWidget {
     required this.showCountdown,
     required this.overdue,
     required this.reminderLabel,
+    this.atLabel,
     required this.accentColor,
     required this.onLogNow,
     required this.onSnooze,
@@ -64,6 +66,11 @@ class ReminderBanner extends StatelessWidget {
                       reminderLabel,
                       style: const TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                     ),
+                    if (atLabel != null)
+                      Text(
+                        atLabel!,
+                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText),
+                      ),
                   ],
                 ),
               ),

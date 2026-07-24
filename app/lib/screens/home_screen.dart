@@ -59,6 +59,11 @@ class HomeScreen extends StatelessWidget {
         final msLeft = appState.effectiveReminderAt - now.millisecondsSinceEpoch;
         final overdue = msLeft <= 0;
         final reminderLabel = overdue ? 'Due now' : fmtCountdown(msLeft);
+        // The wall-clock time the alarm is set to ring (24h), shown alongside
+        // the countdown so it's clear when it will go off.
+        final ringAtLabel = overdue
+            ? null
+            : 'Rings at ${DateFormat('HH:mm').format(DateTime.fromMillisecondsSinceEpoch(appState.effectiveReminderAt))}';
 
         return SafeArea(
           bottom: false,
@@ -97,12 +102,12 @@ class HomeScreen extends StatelessWidget {
                         child: InkWell(
                           customBorder: const CircleBorder(),
                           onTap: () => showTimerSheet(context, appState),
-                          child: Tooltip(
+                          child: const Tooltip(
                             message: 'Set a timer',
                             child: SizedBox(
                               width: 40,
                               height: 40,
-                              child: const Center(
+                              child: Center(
                                 child: Icon(Icons.timer_outlined, size: 22, color: AppColors.gearStroke),
                               ),
                             ),
@@ -133,6 +138,7 @@ class HomeScreen extends StatelessWidget {
                   CustomTimerBanner(
                     label: appState.customTimerLabel,
                     countdownLabel: overdue ? "Time's up" : fmtCountdown(msLeft),
+                    atLabel: ringAtLabel,
                     overdue: overdue,
                     onAddFive: () => appState.extendCustomTimer(const Duration(minutes: 5)),
                     onCancel: () => appState.cancelCustomTimer(),
@@ -142,6 +148,7 @@ class HomeScreen extends StatelessWidget {
                     showCountdown: !appState.reminderDismissed,
                     overdue: overdue,
                     reminderLabel: reminderLabel,
+                    atLabel: ringAtLabel,
                     accentColor: AppColors.accentBlush,
                     onLogNow: () => showLogFeedSheet(context, appState),
                     onSnooze: () => appState.snoozeReminder(),
