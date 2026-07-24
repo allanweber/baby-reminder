@@ -90,12 +90,21 @@ class NotificationService {
       );
     }
 
-    await androidImpl?.requestNotificationsPermission();
-    await androidImpl?.requestExactAlarmsPermission();
+    // Requesting permissions launches system UI/intents that can throw on some
+    // OEMs (e.g. no exact-alarm settings activity). This runs at startup, so a
+    // throw here would crash the app on launch — guard each one.
+    try {
+      await androidImpl?.requestNotificationsPermission();
+    } catch (_) {}
+    try {
+      await androidImpl?.requestExactAlarmsPermission();
+    } catch (_) {}
 
-    final iosImpl = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
-    await iosImpl?.requestPermissions(alert: true, badge: true, sound: true);
+    try {
+      final iosImpl = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      await iosImpl?.requestPermissions(alert: true, badge: true, sound: true);
+    } catch (_) {}
 
     _initialized = true;
   }

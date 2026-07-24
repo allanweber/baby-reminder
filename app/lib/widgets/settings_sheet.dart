@@ -42,8 +42,15 @@ class _SettingsSheetState extends State<SettingsSheet> {
   }
 
   Future<void> _refreshPermissions() async {
-    final notif = await widget.appState.notifications.notificationsEnabled();
-    final exact = await widget.appState.notifications.exactAlarmsAllowed();
+    bool? notif;
+    bool? exact;
+    try {
+      notif = await widget.appState.notifications.notificationsEnabled();
+      exact = await widget.appState.notifications.exactAlarmsAllowed();
+    } catch (_) {
+      // Leave the rows as "checking" rather than letting a platform error
+      // bubble up and take the whole sheet down.
+    }
     if (!mounted) return;
     setState(() {
       _notifOk = notif;
@@ -52,9 +59,15 @@ class _SettingsSheetState extends State<SettingsSheet> {
   }
 
   Future<void> _sendTestAlarm() async {
-    await widget.appState.notifications
-        .scheduleTest(soundId: widget.appState.alarmSound);
-    _toast('Test alarm set for 10s from now — lock your phone and wait.');
+    // Every path here must swallow its own errors: an uncaught exception from a
+    // notification platform call is what was crashing the app on this button.
+    try {
+      await widget.appState.notifications
+          .scheduleTest(soundId: widget.appState.alarmSound);
+      _toast('Test alarm set for 10s from now — lock your phone and wait.');
+    } catch (e) {
+      _toast('Test alarm failed: $e');
+    }
   }
 
   @override
@@ -115,7 +128,11 @@ class _SettingsSheetState extends State<SettingsSheet> {
           if (!ok && !checking)
             TextButton(
               onPressed: () async {
-                await onFix();
+                try {
+                  await onFix();
+                } catch (e) {
+                  _toast('Could not open the setting: $e');
+                }
                 await _refreshPermissions();
               },
               style: TextButton.styleFrom(
