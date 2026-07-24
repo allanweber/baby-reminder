@@ -36,6 +36,9 @@ class _SettingsSheetState extends State<SettingsSheet> {
   bool? _exactOk;
   // Most recent recorded crash/error, if any.
   String? _lastError;
+  // Last step the app reached before it was last closed/crashed. Survives a
+  // native crash, so it pinpoints the crashing call.
+  String? _lastStep;
 
   @override
   void initState() {
@@ -47,8 +50,12 @@ class _SettingsSheetState extends State<SettingsSheet> {
 
   Future<void> _loadLastError() async {
     final err = await ErrorLog.read();
+    final step = await ErrorLog.readBreadcrumb();
     if (!mounted) return;
-    setState(() => _lastError = err);
+    setState(() {
+      _lastError = err;
+      _lastStep = step;
+    });
   }
 
   Future<void> _refreshPermissions() async {
@@ -71,13 +78,17 @@ class _SettingsSheetState extends State<SettingsSheet> {
   Future<void> _sendTestAlarm() async {
     // Every path here must swallow its own errors: an uncaught exception from a
     // notification platform call is what was crashing the app on this button.
+    await ErrorLog.breadcrumb('test: button tapped');
     try {
       await widget.appState.notifications
           .scheduleTest(soundId: widget.appState.alarmSound);
       _toast('Test alarm set for 10s from now — lock your phone and wait.');
-    } catch (e) {
+    } catch (e, st) {
+      await ErrorLog.record(e, st);
       _toast('Test alarm failed: $e');
     }
+    // Refresh the breadcrumb readout so the panel reflects how far it got.
+    await _loadLastError();
   }
 
   @override
@@ -353,6 +364,42 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 'For the alarm to ring while the app is closed or your phone is locked, Android needs these two permissions. If the alarm only sounds when the app is open, one of these is off.',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
+              if (_lastStep != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE7F0FD),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF4F7BD9), width: 1.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Last step reached before close/crash',
+                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: Color(0xFF32538B))),
+                      const SizedBox(height: 6),
+                      Text(_lastStep!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: _lastStep!));
+                          _toast('Step copied — paste it to me.');
+                        },
+                        icon: const Icon(Icons.copy_rounded, size: 16),
+                        label: const Text('Copy', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.reminderTitleText,
+                          backgroundColor: AppColors.settingsBg,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (_lastError != null) ...[
                 const SizedBox(height: 10),
                 Container(

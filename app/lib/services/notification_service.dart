@@ -5,6 +5,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'alarm_service.dart';
+import 'error_log.dart';
 
 /// Action id for the "Stop" button on the alarm notification.
 const _dismissAlarmActionId = 'dismiss_alarm';
@@ -45,6 +46,7 @@ class NotificationService {
 
   Future<void> init() async {
     if (_initialized) return;
+    await ErrorLog.breadcrumb('init: timezones');
     tz_data.initializeTimeZones();
     try {
       tz.setLocalLocation(tz.local);
@@ -61,6 +63,7 @@ class NotificationService {
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
+    await ErrorLog.breadcrumb('init: plugin.initialize');
     await _plugin.initialize(
       const InitializationSettings(android: androidInit, iOS: iosInit),
       onDidReceiveNotificationResponse: notificationTapBackground,
@@ -73,6 +76,7 @@ class NotificationService {
     // One channel per sound: on Android 8+ a channel's sound is fixed at
     // creation, so switching the alarm sound means switching channels. Each is
     // configured to play on the alarm stream at high importance.
+    await ErrorLog.breadcrumb('init: create channels');
     for (final s in kAlarmSounds) {
       await androidImpl?.createNotificationChannel(
         AndroidNotificationChannel(
@@ -91,9 +95,11 @@ class NotificationService {
     // Requesting permissions launches system UI/intents that can throw on some
     // OEMs (e.g. no exact-alarm settings activity). This runs at startup, so a
     // throw here would crash the app on launch — guard each one.
+    await ErrorLog.breadcrumb('init: request notifications permission');
     try {
       await androidImpl?.requestNotificationsPermission();
     } catch (_) {}
+    await ErrorLog.breadcrumb('init: request exact-alarms permission');
     try {
       await androidImpl?.requestExactAlarmsPermission();
     } catch (_) {}
@@ -104,6 +110,7 @@ class NotificationService {
       await iosImpl?.requestPermissions(alert: true, badge: true, sound: true);
     } catch (_) {}
 
+    await ErrorLog.breadcrumb('init: done');
     _initialized = true;
   }
 
@@ -152,6 +159,7 @@ class NotificationService {
       ),
     );
     try {
+      await ErrorLog.breadcrumb('schedule: zonedSchedule(alarmClock)');
       await _plugin.zonedSchedule(
         notificationId,
         title,
@@ -162,7 +170,11 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-    } catch (_) {
+    } catch (e, st) {
+      // A Dart-level failure (e.g. exact-alarm permission denied) is catchable
+      // here; record it, then retry with a permission-free inexact alarm.
+      await ErrorLog.record(e, st);
+      await ErrorLog.breadcrumb('schedule: zonedSchedule(inexact) fallback');
       await _plugin.zonedSchedule(
         notificationId,
         title,
@@ -174,6 +186,7 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     }
+    await ErrorLog.breadcrumb('schedule: done (scheduled OK)');
   }
 
   Future<void> scheduleReminder(
@@ -208,6 +221,7 @@ class NotificationService {
     Duration delay = const Duration(seconds: 10),
     required String soundId,
   }) async {
+    await ErrorLog.breadcrumb('test: scheduleTest entered');
     await init();
     await _scheduleAlarm(
       notificationId: _testNotificationId,
