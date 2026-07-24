@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,23 +25,23 @@ void notificationTapBackground(NotificationResponse response) async {
   }
 }
 
-/// Schedules the "next feed" reminder as a real OS-level local notification
-/// that behaves like an alarm clock: it uses a full-screen intent, the alarm
-/// audio stream and the insistent flag, so the chosen sound loops until the
-/// user dismisses it. This is the fallback for when the app isn't open; the
-/// in-app [AlarmService] handles the case where it is.
+/// Schedules the "next feed" reminder as a plain, high-priority OS notification
+/// with sound and vibration that shows on the lock screen while the app is
+/// closed. Deliberately standard — no full-screen intent, insistent flag or
+/// custom actions, since those are what crashed the notification post on modern
+/// Android. The looping in-app [AlarmService] handles the case where the app is
+/// actually open.
 class NotificationService {
   static const _reminderNotificationId = 1;
   static const _testNotificationId = 2;
 
-  // FLAG_INSISTENT (0x4): Android keeps replaying the notification sound until
-  // the notification is cancelled/dismissed — i.e. it rings like an alarm.
-  static final _insistentFlags = Int32List.fromList(<int>[4]);
-
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  String _channelIdFor(String soundId) => 'feed_alarm_$soundId';
+  // Bumped to v2 when the channel config was simplified: a notification
+  // channel's settings are frozen at creation, so a new id is required for the
+  // new sound/vibration/importance to actually take effect on existing installs.
+  String _channelIdFor(String soundId) => 'feed_reminder_v2_$soundId';
 
   Future<void> init() async {
     if (_initialized) return;
@@ -109,35 +107,24 @@ class NotificationService {
     _initialized = true;
   }
 
-  /// Builds the alarm-clock notification details shared by the real reminder
-  /// and the diagnostic test, so a passing test genuinely exercises the same
-  /// full-screen / insistent / lock-screen config the feed reminder uses.
+  /// Builds the notification details shared by the real reminder and the
+  /// diagnostic test, so a passing test genuinely exercises the same
+  /// sound / vibration / lock-screen config the feed reminder uses.
   AndroidNotificationDetails _alarmAndroidDetails(String id) {
     return AndroidNotificationDetails(
       _channelIdFor(id),
-      'Feed alarm',
+      'Feed reminder',
       channelDescription: 'Rings when it is time for the next feed.',
       importance: Importance.max,
-      priority: Priority.max,
-      category: AndroidNotificationCategory.alarm,
-      fullScreenIntent: true,
-      ongoing: true,
-      autoCancel: false,
+      priority: Priority.high,
+      category: AndroidNotificationCategory.reminder,
       playSound: true,
       sound: RawResourceAndroidNotificationSound(id),
-      audioAttributesUsage: AudioAttributesUsage.alarm,
-      additionalFlags: _insistentFlags,
+      enableVibration: true,
+      autoCancel: true,
       color: const Color(0xFFE39C8B),
-      // Show on the lock screen so the "Stop" action is reachable there.
+      // Show the full content on the lock screen.
       visibility: NotificationVisibility.public,
-      actions: const <AndroidNotificationAction>[
-        AndroidNotificationAction(
-          _dismissAlarmActionId,
-          'Stop',
-          cancelNotification: true,
-          showsUserInterface: false,
-        ),
-      ],
     );
   }
 

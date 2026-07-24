@@ -1,31 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status-bar notification icon: flat white silhouette on transparent, per
-     Android's small-icon guidelines. Same bottle glyph as the in-app FAB
-     (lib/widgets/app_icons.dart), traced as stroked vector paths. -->
+<!-- Status-bar notification icon: a flat, FILLED white silhouette on
+     transparent. Small icons are rendered by SystemUI in a separate process
+     when a notification is posted; stroked vector paths can fail to inflate
+     there and crash the post ("Bad notification posted"), so this uses solid
+     fills only. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+  <!-- Bottle cap -->
   <path
-      android:pathData="M9 2h4"
-      android:strokeColor="#FFFFFF"
-      android:strokeWidth="1.8"
-      android:strokeLineCap="round"
-      android:strokeLineJoin="round"
-      android:fillColor="#00000000"/>
+      android:fillColor="#FFFFFF"
+      android:pathData="M9,3 L15,3 L15,4.6 L9,4.6 Z" />
+  <!-- Bottle body -->
   <path
-      android:pathData="M10 2v3.2c0 .4-.15.78-.42 1.08L8.2 7.9A2 2 0 007.5 9.4V20a2 2 0 002 2h5a2 2 0 002-2V9.4a2 2 0 00-.7-1.5L14.42 6.3a1.6 1.6 0 01-.42-1.08V2"
-      android:strokeColor="#FFFFFF"
-      android:strokeWidth="1.8"
-      android:strokeLineCap="round"
-      android:strokeLineJoin="round"
-      android:fillColor="#00000000"/>
-  <path
-      android:pathData="M7.5 13h9"
-      android:strokeColor="#FFFFFF"
-      android:strokeWidth="1.8"
-      android:strokeLineCap="round"
-      android:strokeLineJoin="round"
-      android:fillColor="#00000000"/>
+      android:fillColor="#FFFFFF"
+      android:pathData="M9.3,6 L14.7,6 C14.7,6.9 15,7.4 15.4,7.8 C15.9,8.3 16.2,8.9 16.2,9.9 L16.2,19.5 C16.2,20.6 15.3,21.5 14.2,21.5 L9.8,21.5 C8.7,21.5 7.8,20.6 7.8,19.5 L7.8,9.9 C7.8,8.9 8.1,8.3 8.6,7.8 C9,7.4 9.3,6.9 9.3,6 Z" />
 </vector>
