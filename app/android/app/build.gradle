@@ -22,6 +22,11 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Required by flutter_local_notifications v18: it relies on java.time
+        // APIs that only exist on newer Android, so they must be desugared for
+        // older devices. Without this the app crashes natively (below the Dart
+        // layer, so nothing is catchable) the moment it schedules a notification.
+        coreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -64,4 +69,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // The desugaring runtime that backs coreLibraryDesugaringEnabled above.
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
 }
