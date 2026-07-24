@@ -94,6 +94,10 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     });
     _evaluateAlarm();
+    // Make sure a real OS alarm is armed for any pending reminder/timer, so it
+    // still fires when the app is later closed — previously the notification
+    // was only (re)scheduled when the user changed something.
+    await _rescheduleNotification();
     notifyListeners();
   }
 

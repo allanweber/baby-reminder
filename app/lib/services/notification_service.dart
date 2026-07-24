@@ -20,8 +20,10 @@ const _dismissAlarmActionId = 'dismiss_alarm';
 void notificationTapBackground(NotificationResponse response) async {
   if (response.actionId == _dismissAlarmActionId) {
     final prefs = await SharedPreferences.getInstance();
-    // Key must match StorageService._kReminderDismissed.
+    // Keys must match StorageService. Mark the feed reminder dismissed and
+    // clear any custom timer, so neither re-rings when the app is next opened.
     await prefs.setBool('reminderDismissed', true);
+    await prefs.remove('customTimerAt');
   }
 }
 
@@ -151,7 +153,10 @@ class NotificationService {
           interruptionLevel: InterruptionLevel.timeSensitive,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // alarmClock uses AlarmManager.setAlarmClock() under the hood: it fires
+      // even in Doze / battery-saver and while the app is closed — exactly how
+      // a real alarm-clock app behaves — and surfaces on the lock screen.
+      androidScheduleMode: AndroidScheduleMode.alarmClock,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
     );

@@ -11,6 +11,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storage = await StorageService.create();
   final notifications = NotificationService();
+  // Set up channels and ask for notification / exact-alarm permissions up front
+  // so the alarm can fire (and show on the lock screen) even when the app is
+  // closed, without waiting for the first feed to be logged.
+  await notifications.init();
   final alarm = AlarmService();
   final appState = AppState(storage, notifications, alarm);
   await appState.load();
