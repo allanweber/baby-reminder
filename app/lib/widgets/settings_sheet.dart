@@ -30,10 +30,31 @@ class _SettingsSheetState extends State<SettingsSheet> {
   late final TextEditingController _nameController;
   static const _presets = [90, 120, 180, 240, 300];
 
+  // Live permission state for the diagnostics panel; null = still checking.
+  bool? _notifOk;
+  bool? _exactOk;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.appState.babyName);
+    _refreshPermissions();
+  }
+
+  Future<void> _refreshPermissions() async {
+    final notif = await widget.appState.notifications.notificationsEnabled();
+    final exact = await widget.appState.notifications.exactAlarmsAllowed();
+    if (!mounted) return;
+    setState(() {
+      _notifOk = notif;
+      _exactOk = exact;
+    });
+  }
+
+  Future<void> _sendTestAlarm() async {
+    await widget.appState.notifications
+        .scheduleTest(soundId: widget.appState.alarmSound);
+    _toast('Test alarm set for 10s from now — lock your phone and wait.');
   }
 
   @override
@@ -43,6 +64,72 @@ class _SettingsSheetState extends State<SettingsSheet> {
   }
 
   String _presetLabel(int minutes) => minutes % 60 == 0 ? '${minutes ~/ 60}h' : '${(minutes / 60).toStringAsFixed(1)}h';
+
+  Widget _permissionRow({
+    required String label,
+    required String badWhy,
+    required bool? granted,
+    required Future<void> Function() onFix,
+  }) {
+    final ok = granted == true;
+    final checking = granted == null;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: ok || checking ? AppColors.border : const Color(0xFFE39C8B),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            checking
+                ? Icons.hourglass_empty_rounded
+                : ok
+                    ? Icons.check_circle_rounded
+                    : Icons.error_rounded,
+            size: 20,
+            color: checking
+                ? AppColors.textSecondary
+                : ok
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFD9694F),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                if (!ok && !checking) ...[
+                  const SizedBox(height: 2),
+                  Text(badWhy, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                ],
+              ],
+            ),
+          ),
+          if (!ok && !checking)
+            TextButton(
+              onPressed: () async {
+                await onFix();
+                await _refreshPermissions();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.reminderTitleText,
+                backgroundColor: AppColors.settingsBg,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Fix', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+            ),
+        ],
+      ),
+    );
+  }
 
   void _toast(String message) {
     if (!mounted) return;
@@ -230,6 +317,41 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 child: Slider(
                   value: widget.appState.alarmVolume,
                   onChanged: (v) => widget.appState.setAlarmVolume(v),
+                ),
+              ),
+              const SizedBox(height: 22),
+              const Text('Notifications & alarm', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              const SizedBox(height: 4),
+              const Text(
+                'For the alarm to ring while the app is closed or your phone is locked, Android needs these two permissions. If the alarm only sounds when the app is open, one of these is off.',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+              _permissionRow(
+                label: 'Show notifications',
+                badWhy: 'Off — alarms fire silently with nothing on screen.',
+                granted: _notifOk,
+                onFix: widget.appState.notifications.requestNotifications,
+              ),
+              _permissionRow(
+                label: 'Alarms & reminders (exact)',
+                badWhy: 'Off — the alarm can be delayed or skipped while idle.',
+                granted: _exactOk,
+                onFix: widget.appState.notifications.requestExactAlarms,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: OutlinedButton.icon(
+                  onPressed: _sendTestAlarm,
+                  icon: const Icon(Icons.notifications_active_rounded, size: 18),
+                  label: const Text('Test alarm in 10s (lock your phone)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppColors.gearStroke,
+                    side: const BorderSide(color: AppColors.border, width: 1.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
                 ),
               ),
               const SizedBox(height: 22),

@@ -34,6 +34,7 @@ void notificationTapBackground(NotificationResponse response) async {
 /// in-app [AlarmService] handles the case where it is.
 class NotificationService {
   static const _reminderNotificationId = 1;
+  static const _testNotificationId = 2;
 
   // FLAG_INSISTENT (0x4): Android keeps replaying the notification sound until
   // the notification is cancelled/dismissed — i.e. it rings like an alarm.
@@ -99,22 +100,11 @@ class NotificationService {
     _initialized = true;
   }
 
-  Future<void> scheduleReminder(
-    DateTime at, {
-    required String babyName,
-    required String soundId,
-    String? title,
-    String? body,
-  }) async {
-    await init();
-    await _plugin.cancel(_reminderNotificationId);
-    if (at.isBefore(DateTime.now())) return;
-
-    final id = resolveAlarmSoundId(soundId);
-    final resolvedTitle = title ?? (babyName.isNotEmpty ? "$babyName's next feed" : 'Feed reminder');
-    final resolvedBody = body ?? "It's about time for the next feed.";
-
-    final androidDetails = AndroidNotificationDetails(
+  /// Builds the alarm-clock notification details shared by the real reminder
+  /// and the diagnostic test, so a passing test genuinely exercises the same
+  /// full-screen / insistent / lock-screen config the feed reminder uses.
+  AndroidNotificationDetails _alarmAndroidDetails(String id) {
+    return AndroidNotificationDetails(
       _channelIdFor(id),
       'Feed alarm',
       channelDescription: 'Rings when it is time for the next feed.',
@@ -140,6 +130,22 @@ class NotificationService {
         ),
       ],
     );
+  }
+
+  Future<void> scheduleReminder(
+    DateTime at, {
+    required String babyName,
+    required String soundId,
+    String? title,
+    String? body,
+  }) async {
+    await init();
+    await _plugin.cancel(_reminderNotificationId);
+    if (at.isBefore(DateTime.now())) return;
+
+    final id = resolveAlarmSoundId(soundId);
+    final resolvedTitle = title ?? (babyName.isNotEmpty ? "$babyName's next feed" : 'Feed reminder');
+    final resolvedBody = body ?? "It's about time for the next feed.";
 
     await _plugin.zonedSchedule(
       _reminderNotificationId,
@@ -147,7 +153,7 @@ class NotificationService {
       resolvedBody,
       tz.TZDateTime.from(at, tz.local),
       NotificationDetails(
-        android: androidDetails,
+        android: _alarmAndroidDetails(id),
         iOS: DarwinNotificationDetails(
           sound: '$id.wav',
           interruptionLevel: InterruptionLevel.timeSensitive,
@@ -162,7 +168,71 @@ class NotificationService {
     );
   }
 
+  /// Schedules a one-off diagnostic alarm [delay] from now, using the exact
+  /// same delivery path as a real feed reminder. Lets the user verify on their
+  /// own device that a closed/locked-phone alarm actually fires — the one thing
+  /// that can't be checked without hardware.
+  Future<void> scheduleTest({
+    Duration delay = const Duration(seconds: 10),
+    required String soundId,
+  }) async {
+    await init();
+    final id = resolveAlarmSoundId(soundId);
+    final at = DateTime.now().add(delay);
+    await _plugin.zonedSchedule(
+      _testNotificationId,
+      'Test alarm',
+      'If you can see and hear this with the app closed, real reminders will work too.',
+      tz.TZDateTime.from(at, tz.local),
+      NotificationDetails(
+        android: _alarmAndroidDetails(id),
+        iOS: DarwinNotificationDetails(
+          sound: '$id.wav',
+          interruptionLevel: InterruptionLevel.timeSensitive,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.alarmClock,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
   Future<void> cancelReminder() async {
     await _plugin.cancel(_reminderNotificationId);
+  }
+
+  AndroidFlutterLocalNotificationsPlugin? get _android =>
+      _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+
+  /// Whether the OS will actually display notifications this app posts. If this
+  /// is false, alarms fire but nothing is shown — the classic "only rings when
+  /// the app is open" symptom (the in-app sound works, the notification is
+  /// suppressed).
+  Future<bool> notificationsEnabled() async {
+    await init();
+    return (await _android?.areNotificationsEnabled()) ?? true;
+  }
+
+  /// Whether the app is allowed to schedule exact alarms ("Alarms & reminders"
+  /// on Android 12+). Without it, scheduled alarms are delayed or dropped in
+  /// Doze, so they don't fire reliably while the phone is idle/locked.
+  Future<bool> exactAlarmsAllowed() async {
+    await init();
+    return (await _android?.canScheduleExactNotifications()) ?? true;
+  }
+
+  /// Prompts for the runtime notifications permission (Android 13+). Returns
+  /// whether it ended up granted.
+  Future<bool> requestNotifications() async {
+    await init();
+    return (await _android?.requestNotificationsPermission()) ?? false;
+  }
+
+  /// Opens the system "Alarms & reminders" screen so the user can allow exact
+  /// alarms. Returns whether it is granted afterwards.
+  Future<bool> requestExactAlarms() async {
+    await init();
+    return (await _android?.requestExactAlarmsPermission()) ?? false;
   }
 }
