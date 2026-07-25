@@ -59,6 +59,20 @@ class AppIcons {
     );
   }
 
+  static Widget plus({double size = 26, required Color color}) {
+    final stroke = _hex(color);
+    return SvgPicture.string(
+      '''
+<svg width="$size" height="$size" viewBox="0 0 24 24" fill="none" stroke="$stroke" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 5v14"></path>
+  <path d="M5 12h14"></path>
+</svg>
+''',
+      width: size,
+      height: size,
+    );
+  }
+
   static Widget diaper({double size = 18, required Color color, double strokeWidth = 2}) {
     final stroke = _hex(color);
     return SvgPicture.string(

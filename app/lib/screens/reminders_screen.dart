@@ -4,6 +4,7 @@ import '../models/reminder.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/delete_confirm_dialog.dart';
+import '../widgets/quick_log.dart';
 import '../widgets/reminder_list_item.dart';
 import '../widgets/reminder_sheet.dart';
 
@@ -60,6 +61,22 @@ class RemindersScreen extends StatelessWidget {
                           .toList(),
                     ),
                   ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 16, 20, 2),
+                  child: Text('Quick log',
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text('Log a category right now, no schedule needed.',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: QuickLogChips(
+                    onSelect: (category) => performQuickLog(context, appState, category),
+                  ),
+                ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
                   child: Text('All reminders',

@@ -666,11 +666,54 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  /// Completion logs recorded on [date], earliest first.
+  /// Completion + quick logs recorded on [date], earliest first.
   List<ReminderLog> reminderLogsForDate(String date) {
     final list = reminderLogs.where((l) => l.date == date).toList()
       ..sort((a, b) => a.time.compareTo(b.time));
     return list;
+  }
+
+  /// Scheduled-reminder completions on [date] (the report's "Completed" count).
+  List<ReminderLog> completedLogsForDate(String date) =>
+      reminderLogsForDate(date).where((l) => !l.isQuickLog).toList();
+
+  /// Ad-hoc quick logs on [date] (the report's "Logged" count + white rows).
+  List<ReminderLog> quickLogsForDate(String date) =>
+      reminderLogsForDate(date).where((l) => l.isQuickLog).toList();
+
+  // --- Quick log (ad-hoc category logging, no schedule) ---------------------
+
+  /// Logs a category on the spot: appends an ad-hoc [ReminderLog] (reminderId
+  /// null) at today's date and the current time, with no note and no schedule.
+  /// Returns it so the caller can show the confirmation toast.
+  Future<ReminderLog> quickLog(ReminderCategory category) async {
+    final n = DateTime.now();
+    final log = ReminderLog(
+      id: _newReminderLogId(),
+      reminderId: null,
+      label: reminderCategories[category]!.label,
+      category: category,
+      date: dateStr(n),
+      time: timeStr(n),
+    );
+    reminderLogs = [...reminderLogs, log];
+    await storage.saveReminderLogs(reminderLogs);
+    notifyListeners();
+    return log;
+  }
+
+  /// Edits the date/time of a log (used by the report's compact edit sheet;
+  /// quick logs are the only rows the report makes editable).
+  Future<void> updateReminderLog(String id, {required String date, required String time}) async {
+    reminderLogs = reminderLogs.map((l) => l.id == id ? l.copyWith(date: date, time: time) : l).toList();
+    await storage.saveReminderLogs(reminderLogs);
+    notifyListeners();
+  }
+
+  Future<void> deleteReminderLog(String id) async {
+    reminderLogs = reminderLogs.where((l) => l.id != id).toList();
+    await storage.saveReminderLogs(reminderLogs);
+    notifyListeners();
   }
 
   /// Fixed-time reminders that came due on [date] but have no completion logged

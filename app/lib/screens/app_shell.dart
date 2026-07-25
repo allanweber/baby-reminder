@@ -7,6 +7,7 @@ import '../widgets/app_icons.dart';
 import '../widgets/feed_fab.dart';
 import '../widgets/log_diaper_sheet.dart';
 import '../widgets/log_feed_sheet.dart';
+import '../widgets/quick_log.dart';
 import '../widgets/reminder_sheet.dart';
 import 'diapers_screen.dart';
 import 'home_screen.dart';
@@ -76,7 +77,12 @@ class _AppShellState extends State<AppShell> {
         onTap: () => showLogDiaperSheet(context, widget.appState),
       );
     }
-    return null; // Report: no FAB
+    // Report: a quick-log FAB (Report previously had none).
+    return FeedFab(
+      accentColor: accent,
+      icon: AppIcons.plus(color: Colors.white),
+      onTap: () => showQuickLogSheet(context, widget.appState),
+    );
   }
 
   Widget _buildShell(BuildContext context) {

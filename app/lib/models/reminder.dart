@@ -106,7 +106,9 @@ class Reminder {
 /// "Done" rows and the completed/missed counts.
 class ReminderLog {
   final String id;
-  final String reminderId;
+  /// The scheduled reminder this completion belongs to, or `null` for an
+  /// ad-hoc "quick log" (a category logged on the spot with no schedule).
+  final String? reminderId;
   final String label;
   final ReminderCategory category;
   final String date; // YYYY-MM-DD
@@ -121,6 +123,20 @@ class ReminderLog {
     required this.time,
   });
 
+  /// True when this is an ad-hoc quick log rather than a scheduled-reminder
+  /// completion. Quick logs render as plain white rows (no Done/Missed pill)
+  /// and are editable/deletable in the report.
+  bool get isQuickLog => reminderId == null;
+
+  ReminderLog copyWith({String? date, String? time}) => ReminderLog(
+        id: id,
+        reminderId: reminderId,
+        label: label,
+        category: category,
+        date: date ?? this.date,
+        time: time ?? this.time,
+      );
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'reminderId': reminderId,
@@ -132,7 +148,9 @@ class ReminderLog {
 
   factory ReminderLog.fromJson(Map<String, dynamic> json) => ReminderLog(
         id: json['id'] as String,
-        reminderId: json['reminderId'] as String? ?? '',
+        // Absent or empty reminderId → quick log (null). Older backups wrote a
+        // real id for every (scheduled) completion, so they load unchanged.
+        reminderId: (json['reminderId'] as String?)?.isNotEmpty == true ? json['reminderId'] as String : null,
         label: json['label'] as String? ?? '',
         category: reminderCategoryFromString(json['category'] as String? ?? 'other'),
         date: json['date'] as String,

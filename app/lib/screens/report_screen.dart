@@ -7,9 +7,11 @@ import '../widgets/date_time_pickers.dart';
 import '../widgets/delete_confirm_dialog.dart';
 import '../widgets/diaper_list_item.dart';
 import '../widgets/diaper_stats_row.dart';
+import '../widgets/edit_reminder_log_sheet.dart';
 import '../widgets/feed_list_item.dart';
 import '../widgets/log_diaper_sheet.dart';
 import '../widgets/log_feed_sheet.dart';
+import '../widgets/quick_log_report_row.dart';
 import '../widgets/reminder_report_row.dart';
 import '../widgets/stats_row.dart';
 
@@ -74,6 +76,13 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
+  Future<void> _handleDeleteLog(BuildContext context, String id) async {
+    final confirmed = await showDeleteConfirmDialog(context, title: 'Delete this log?');
+    if (confirmed) {
+      await widget.appState.deleteReminderLog(id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = widget.appState;
@@ -90,7 +99,8 @@ class _ReportScreenState extends State<ReportScreen> {
         final stats = appState.computeStats(appState.feedsForDate(reportDateStr));
         final reportDiapers = appState.diapersForDate(reportDateStr);
         final diaperStats = appState.diaperStatsFor(reportDiapers);
-        final doneLogs = appState.reminderLogsForDate(reportDateStr);
+        final completed = appState.completedLogsForDate(reportDateStr);
+        final quickLogs = appState.quickLogsForDate(reportDateStr);
         final missed = appState.missedRemindersForDate(reportDateStr);
 
         final showFeeds = filter == ReportFilter.all || filter == ReportFilter.feed;
@@ -125,7 +135,7 @@ class _ReportScreenState extends State<ReportScreen> {
           }
         }
         if (showReminders) {
-          for (final l in doneLogs) {
+          for (final l in completed) {
             items.add(_TimelineItem(
               l.time,
               ReminderReportRow(category: l.category, label: l.label, time: l.time, done: true),
@@ -135,6 +145,18 @@ class _ReportScreenState extends State<ReportScreen> {
             items.add(_TimelineItem(
               m.time,
               ReminderReportRow(category: m.reminder.category, label: m.reminder.label, time: m.time, done: false),
+            ));
+          }
+          for (final l in quickLogs) {
+            items.add(_TimelineItem(
+              l.time,
+              QuickLogReportRow(
+                category: l.category,
+                label: l.label,
+                time: l.time,
+                onEdit: () => showEditReminderLogSheet(context, appState, l),
+                onDelete: () => _handleDeleteLog(context, l.id),
+              ),
             ));
           }
         }
@@ -193,7 +215,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     ),
                   ),
                 if (filter == ReportFilter.reminders)
-                  _ReminderStatsRow(completed: doneLogs.length, missed: missed.length)
+                  _ReminderStatsRow(completed: completed.length, missed: missed.length, logged: quickLogs.length)
                 else if (filter == ReportFilter.diapers)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -289,7 +311,8 @@ class _FilterSegment extends StatelessWidget {
 class _ReminderStatsRow extends StatelessWidget {
   final int completed;
   final int missed;
-  const _ReminderStatsRow({required this.completed, required this.missed});
+  final int logged;
+  const _ReminderStatsRow({required this.completed, required this.missed, required this.logged});
 
   @override
   Widget build(BuildContext context) {
@@ -300,6 +323,8 @@ class _ReminderStatsRow extends StatelessWidget {
           Expanded(child: _card('$completed', 'COMPLETED')),
           const SizedBox(width: 10),
           Expanded(child: _card('$missed', 'MISSED')),
+          const SizedBox(width: 10),
+          Expanded(child: _card('$logged', 'LOGGED')),
         ],
       ),
     );
