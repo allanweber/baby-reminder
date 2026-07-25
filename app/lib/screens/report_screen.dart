@@ -5,12 +5,15 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_time_pickers.dart';
 import '../widgets/delete_confirm_dialog.dart';
+import '../widgets/diaper_list_item.dart';
+import '../widgets/diaper_stats_row.dart';
 import '../widgets/feed_list_item.dart';
+import '../widgets/log_diaper_sheet.dart';
 import '../widgets/log_feed_sheet.dart';
 import '../widgets/reminder_report_row.dart';
 import '../widgets/stats_row.dart';
 
-enum ReportFilter { all, feed, reminders }
+enum ReportFilter { all, feed, diapers, reminders }
 
 class ReportScreen extends StatefulWidget {
   final AppState appState;
@@ -64,6 +67,13 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
+  Future<void> _handleDeleteDiaper(BuildContext context, String id) async {
+    final confirmed = await showDeleteConfirmDialog(context, title: 'Delete this diaper log?');
+    if (confirmed) {
+      await widget.appState.deleteDiaper(id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = widget.appState;
@@ -78,12 +88,18 @@ class _ReportScreenState extends State<ReportScreen> {
         final reportFeeds = appState.feedsForDate(reportDateStr).toList()
           ..sort((a, b) => a.time.compareTo(b.time));
         final stats = appState.computeStats(appState.feedsForDate(reportDateStr));
+        final reportDiapers = appState.diapersForDate(reportDateStr);
+        final diaperStats = appState.diaperStatsFor(reportDiapers);
         final doneLogs = appState.reminderLogsForDate(reportDateStr);
         final missed = appState.missedRemindersForDate(reportDateStr);
 
+        final showFeeds = filter == ReportFilter.all || filter == ReportFilter.feed;
+        final showDiapers = filter == ReportFilter.all || filter == ReportFilter.diapers;
+        final showReminders = filter == ReportFilter.all || filter == ReportFilter.reminders;
+
         // Build the timeline for the current filter, time-sorted.
         final items = <_TimelineItem>[];
-        if (filter != ReportFilter.reminders) {
+        if (showFeeds) {
           for (final f in reportFeeds) {
             items.add(_TimelineItem(
               f.time,
@@ -96,7 +112,19 @@ class _ReportScreenState extends State<ReportScreen> {
             ));
           }
         }
-        if (filter != ReportFilter.feed) {
+        if (showDiapers) {
+          for (final d in reportDiapers) {
+            items.add(_TimelineItem(
+              d.time,
+              DiaperListItem(
+                diaper: d,
+                onEdit: () => showLogDiaperSheet(context, appState, existing: d),
+                onDelete: () => _handleDeleteDiaper(context, d.id),
+              ),
+            ));
+          }
+        }
+        if (showReminders) {
           for (final l in doneLogs) {
             items.add(_TimelineItem(
               l.time,
@@ -166,6 +194,11 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                 if (filter == ReportFilter.reminders)
                   _ReminderStatsRow(completed: doneLogs.length, missed: missed.length)
+                else if (filter == ReportFilter.diapers)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: DiaperStatsRow(stats: diaperStats, changesLabel: 'TOTAL CHANGES'),
+                  )
                 else
                   StatsRow(
                     totalLabel: 'TOTAL INTAKE',
@@ -216,6 +249,7 @@ class _FilterSegment extends StatelessWidget {
         children: [
           _seg('All', ReportFilter.all),
           _seg('Feed', ReportFilter.feed),
+          _seg('Diapers', ReportFilter.diapers),
           _seg('Reminders', ReportFilter.reminders),
         ],
       ),
@@ -224,9 +258,11 @@ class _FilterSegment extends StatelessWidget {
 
   Widget _seg(String label, ReportFilter value) {
     final active = filter == value;
+    // The Diapers segment fills with the teal diaper accent, not the app accent.
+    final activeColor = value == ReportFilter.diapers ? AppColors.diaperAccent : AppColors.accentBlush;
     return Expanded(
       child: Material(
-        color: active ? AppColors.accentBlush : Colors.transparent,
+        color: active ? activeColor : Colors.transparent,
         borderRadius: BorderRadius.circular(11),
         child: InkWell(
           borderRadius: BorderRadius.circular(11),
@@ -236,8 +272,9 @@ class _FilterSegment extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               label,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 color: active ? Colors.white : AppColors.textSecondary,
               ),

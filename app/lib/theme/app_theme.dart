@@ -25,6 +25,17 @@ class AppColors {
   static const accentLavender = Color(0xFFA98FC4);
   static const accentSoftPeach = Color(0xFFD9A441);
 
+  // Diapers feature accent — a distinct teal used ONLY for this feature so a
+  // diaper entry never reads as a Feed or Reminder.
+  static const diaperAccent = Color(0xFF5B94AC);
+  static const diaperSoft = Color(0xFFE4F0F4);
+  static const diaperText = Color(0xFF2F4C57); // row title on teal-tinted cards
+  static const diaperSubtext = Color(0xFF5B7C88); // row detail line
+  static const diaperDeleteBg = Color(0xFFD3E5EB); // × button on diaper rows
+  static const diaperDeleteText = Color(0xFF3D6577);
+  static const diaperSwatchRing = Color(0xFFC7DCE2); // outer ring on swatch dots
+  static const diaperStatLabel = Color(0xFFEAF4F8); // label on the teal stat card
+
   static const feedTypes = {
     FeedType.formula: FeedTypeColors(
       label: 'Formula',
@@ -84,6 +95,75 @@ ReminderCategory reminderCategoryFromString(String s) => ReminderCategory.values
       (c) => c.name == s,
       orElse: () => ReminderCategory.other,
     );
+
+/// What a diaper change contained. `both` = pee & poop in one change.
+enum DiaperType { pee, poop, both }
+
+const diaperTypeLabels = {
+  DiaperType.pee: 'Pee',
+  DiaperType.poop: 'Poop',
+  DiaperType.both: 'Pee & poop',
+};
+
+DiaperType diaperTypeFromString(String s) => DiaperType.values.firstWhere(
+      (t) => t.name == s,
+      orElse: () => DiaperType.pee,
+    );
+
+/// A selectable diaper color: its display label and the swatch fill. Enum keys
+/// match the persisted JSON strings and the design handoff's color tokens.
+class DiaperColorSwatch {
+  final String label;
+  final Color hex;
+  const DiaperColorSwatch({required this.label, required this.hex});
+}
+
+/// Pee colors — spanning healthy shades through concerning ones (pink/red flags
+/// possible dehydration or blood).
+enum PeeColor { clear, pale, yellow, dark, pink }
+
+const peeColors = {
+  PeeColor.clear: DiaperColorSwatch(label: 'Clear', hex: Color(0xFFF7F6EC)),
+  PeeColor.pale: DiaperColorSwatch(label: 'Pale yellow', hex: Color(0xFFF5E6A3)),
+  PeeColor.yellow: DiaperColorSwatch(label: 'Yellow', hex: Color(0xFFE8C547)),
+  PeeColor.dark: DiaperColorSwatch(label: 'Dark amber', hex: Color(0xFFC68A2E)),
+  PeeColor.pink: DiaperColorSwatch(label: 'Pink/red', hex: Color(0xFFC4585A)),
+};
+
+/// Poop colors — again spanning concerning colors (black, red), not only
+/// healthy ones.
+enum PoopColor { yellow, brown, green, white, black, red }
+
+const poopColors = {
+  PoopColor.yellow: DiaperColorSwatch(label: 'Yellow', hex: Color(0xFFD9A441)),
+  PoopColor.brown: DiaperColorSwatch(label: 'Brown', hex: Color(0xFF8B5E3C)),
+  PoopColor.green: DiaperColorSwatch(label: 'Green', hex: Color(0xFF6B8E4E)),
+  PoopColor.white: DiaperColorSwatch(label: 'Pale/white', hex: Color(0xFFE5DEC5)),
+  PoopColor.black: DiaperColorSwatch(label: 'Black', hex: Color(0xFF3A3A3A)),
+  PoopColor.red: DiaperColorSwatch(label: 'Red', hex: Color(0xFFB23A2E)),
+};
+
+const poopAmounts = ['Small', 'Medium', 'Large'];
+
+PeeColor? peeColorFromString(String? s) {
+  if (s == null) return null;
+  for (final c in PeeColor.values) {
+    if (c.name == s) return c;
+  }
+  return null;
+}
+
+PoopColor? poopColorFromString(String? s) {
+  if (s == null) return null;
+  for (final c in PoopColor.values) {
+    if (c.name == s) return c;
+  }
+  return null;
+}
+
+List<BoxShadow> diaperStatShadow() => [
+      const BoxShadow(color: Color.fromRGBO(91, 148, 172, 0.25), blurRadius: 14, offset: Offset(0, 3)),
+    ];
 
 class AppRadius {
   static const chip = 10.0;

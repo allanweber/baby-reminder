@@ -5,16 +5,19 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_icons.dart';
 import '../widgets/feed_fab.dart';
+import '../widgets/log_diaper_sheet.dart';
 import '../widgets/log_feed_sheet.dart';
 import '../widgets/reminder_sheet.dart';
+import 'diapers_screen.dart';
 import 'home_screen.dart';
 import 'reminders_screen.dart';
 import 'report_screen.dart';
 
 /// Persistent shell: bottom tab bar + FAB stay put while Reminders / Feed /
-/// Report swap underneath. "Feed" is the primary (center) tab and is shown
-/// first; the FAB is context-aware (bottle on Feed, bell on Reminders, hidden
-/// on Report).
+/// Diapers / Report swap underneath. "Feed" is the primary (emphasized) tab and
+/// is shown first; the FAB is context-aware (bottle on Feed, bell on Reminders,
+/// folded diaper on Diapers, hidden on Report). The Diapers tab uses its own
+/// teal accent so it never reads as a Feed or Reminder.
 class AppShell extends StatefulWidget {
   final AppState appState;
   const AppShell({super.key, required this.appState});
@@ -24,7 +27,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  // 0 = Reminders, 1 = Feed (primary, default), 2 = Report.
+  // 0 = Reminders, 1 = Feed (primary, default), 2 = Diapers, 3 = Report.
   int _tabIndex = 1;
 
   @override
@@ -66,6 +69,13 @@ class _AppShellState extends State<AppShell> {
         onTap: () => showLogFeedSheet(context, widget.appState),
       );
     }
+    if (_tabIndex == 2) {
+      return FeedFab(
+        accentColor: AppColors.diaperAccent,
+        icon: AppIcons.diaper(size: 24, color: Colors.white, strokeWidth: 1.9),
+        onTap: () => showLogDiaperSheet(context, widget.appState),
+      );
+    }
     return null; // Report: no FAB
   }
 
@@ -78,6 +88,7 @@ class _AppShellState extends State<AppShell> {
         children: [
           RemindersScreen(appState: widget.appState),
           HomeScreen(appState: widget.appState),
+          DiapersScreen(appState: widget.appState),
           ReportScreen(appState: widget.appState),
         ],
       ),
@@ -114,11 +125,20 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.calendar(size: 20, color: _tabIndex == 2 ? accent : AppColors.textMuted),
-                  label: 'Report',
+                  icon: AppIcons.diaper(size: 20, color: _tabIndex == 2 ? AppColors.diaperAccent : AppColors.textMuted),
+                  label: 'Diapers',
                   active: _tabIndex == 2,
-                  accent: accent,
+                  accent: AppColors.diaperAccent,
                   onTap: () => setState(() => _tabIndex = 2),
+                ),
+              ),
+              Expanded(
+                child: _TabButton(
+                  icon: AppIcons.calendar(size: 20, color: _tabIndex == 3 ? accent : AppColors.textMuted),
+                  label: 'Report',
+                  active: _tabIndex == 3,
+                  accent: accent,
+                  onTap: () => setState(() => _tabIndex = 3),
                 ),
               ),
             ],

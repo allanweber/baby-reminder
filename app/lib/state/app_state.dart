@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/diaper.dart';
 import '../models/feed.dart';
 import '../models/reminder.dart';
 import '../services/alarm_service.dart';
@@ -24,6 +25,15 @@ class DayStats {
   final int feedCount;
   final String avgIntervalDisplay;
   const DayStats({required this.totalDisplay, required this.feedCount, required this.avgIntervalDisplay});
+}
+
+/// A day's diaper tallies for the stats row: total changes, and how many
+/// involved pee / poop (a "both" change counts toward each).
+class DiaperStats {
+  final int total;
+  final int peeCount;
+  final int poopCount;
+  const DiaperStats({required this.total, required this.peeCount, required this.poopCount});
 }
 
 /// A reminder that came due on a given day but was never marked done — surfaced
@@ -47,6 +57,7 @@ class AppState extends ChangeNotifier {
   AppState(this.storage, this.notifications, this.alarm);
 
   List<Feed> feeds = [];
+  List<Diaper> diapers = [];
   List<Reminder> reminders = [];
   List<ReminderLog> reminderLogs = [];
   int _nextReminderAlarmId = 1000;
@@ -107,6 +118,7 @@ class AppState extends ChangeNotifier {
       await _persistAll();
     } else {
       feeds = storage.loadFeeds();
+      diapers = storage.loadDiapers();
       reminders = storage.loadReminders();
       reminderLogs = storage.loadReminderLogs();
       _nextReminderAlarmId = storage.loadNextReminderAlarmId();
@@ -220,10 +232,19 @@ class AppState extends ChangeNotifier {
     reminderLogs = [
       ReminderLog(id: 'rl1', reminderId: 'r1', label: 'Vitamin D drops', category: ReminderCategory.vitamins, date: dateStr(nowDt), time: '09:00'),
     ];
+
+    // A couple of sample diaper changes (one today) so the Diapers tab and the
+    // report's diaper view aren't empty on first run.
+    diapers = [
+      Diaper(id: 'd1', date: dateStr(yest), time: '08:20', type: DiaperType.pee, peeColor: PeeColor.yellow),
+      Diaper(id: 'd2', date: dateStr(yest), time: '14:10', type: DiaperType.both, peeColor: PeeColor.pale, poopColor: PoopColor.brown, poopAmount: 'Medium'),
+      Diaper(id: 'd3', date: dateStr(nowDt), time: '07:15', type: DiaperType.poop, poopColor: PoopColor.yellow, poopAmount: 'Small'),
+    ];
   }
 
   Future<void> _persistAll() async {
     await storage.saveFeeds(feeds);
+    await storage.saveDiapers(diapers);
     await storage.saveBabyName(babyName);
     await storage.saveUnitPref(unitPref);
     await storage.saveReminderIntervalMin(reminderIntervalMin);
@@ -306,6 +327,40 @@ class AppState extends ChangeNotifier {
     feeds = feeds.where((f) => f.id != id).toList();
     await storage.saveFeeds(feeds);
     notifyListeners();
+  }
+
+  // --- Diapers (logging/reporting only, no scheduling) ----------------------
+
+  String newDiaperId() => 'd${_uuid.v4()}';
+
+  /// Saves a diaper change (new or edited). Unlike feeds, diapers never touch
+  /// the reminder — they're log-only.
+  Future<void> saveDiaper(Diaper diaper, {required bool isNew}) async {
+    diapers = isNew ? [...diapers, diaper] : diapers.map((d) => d.id == diaper.id ? diaper : d).toList();
+    diapers.sort((a, b) => a.sortKey.compareTo(b.sortKey));
+    await storage.saveDiapers(diapers);
+    notifyListeners();
+  }
+
+  Future<void> deleteDiaper(String id) async {
+    diapers = diapers.where((d) => d.id != id).toList();
+    await storage.saveDiapers(diapers);
+    notifyListeners();
+  }
+
+  /// Diaper changes on [date], earliest first.
+  List<Diaper> diapersForDate(String date) {
+    final list = diapers.where((d) => d.date == date).toList()
+      ..sort((a, b) => a.time.compareTo(b.time));
+    return list;
+  }
+
+  /// Tallies for the diaper stats row. A "both" change counts toward both the
+  /// pee and the poop totals.
+  DiaperStats diaperStatsFor(List<Diaper> list) {
+    final pee = list.where((d) => d.hasPee).length;
+    final poop = list.where((d) => d.hasPoop).length;
+    return DiaperStats(total: list.length, peeCount: pee, poopCount: poop);
   }
 
   Future<void> setBabyName(String name) async {
@@ -647,9 +702,10 @@ class AppState extends ChangeNotifier {
   // reinstall) would otherwise wipe it. These let the user save everything to
   // a JSON file they keep, and read it back.
 
-  static const backupVersion = 2;
+  static const backupVersion = 3;
 
-  /// Serialises every feed, reminder and setting to a portable JSON string.
+  /// Serialises every feed, diaper, reminder and setting to a portable JSON
+  /// string.
   String exportData() => jsonEncode({
         'app': 'baby_feed_tracker',
         'version': backupVersion,
@@ -660,6 +716,7 @@ class AppState extends ChangeNotifier {
         'alarmSound': alarmSound,
         'alarmVolume': alarmVolume,
         'feeds': feeds.map((f) => f.toJson()).toList(),
+        'diapers': diapers.map((d) => d.toJson()).toList(),
         'reminders': reminders.map((r) => r.toJson()).toList(),
         'reminderLogs': reminderLogs.map((l) => l.toJson()).toList(),
       });
@@ -681,6 +738,16 @@ class AppState extends ChangeNotifier {
       reminderIntervalMin = (data['reminderIntervalMin'] as int?) ?? reminderIntervalMin;
       alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
       alarmVolume = ((data['alarmVolume'] as num?)?.toDouble() ?? alarmVolume).clamp(0.0, 1.0);
+
+      // Diapers, like reminders, are only replaced when the backup actually
+      // carries them, so restoring an older backup (v1/v2, no diapers key)
+      // leaves existing diapers intact.
+      if (data.containsKey('diapers')) {
+        diapers = (data['diapers'] as List<dynamic>)
+            .map((e) => Diaper.fromJson(e as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) => a.sortKey.compareTo(b.sortKey));
+      }
 
       // Reminders are only replaced when the backup actually carries them, so
       // restoring an older feeds-only backup leaves existing reminders intact.

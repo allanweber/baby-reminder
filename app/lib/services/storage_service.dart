@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/diaper.dart';
 import '../models/feed.dart';
 import '../models/reminder.dart';
 
@@ -21,6 +22,7 @@ class StorageService {
   static const _kReminders = 'reminders';
   static const _kReminderLogs = 'reminderLogs';
   static const _kNextReminderAlarmId = 'nextReminderAlarmId';
+  static const _kDiapers = 'diapers';
   static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
@@ -107,4 +109,16 @@ class StorageService {
   // and the diagnostic test alarm (2) so their native alarms never collide.
   int loadNextReminderAlarmId() => _prefs.getInt(_kNextReminderAlarmId) ?? 1000;
   Future<void> saveNextReminderAlarmId(int id) => _prefs.setInt(_kNextReminderAlarmId, id);
+
+  List<Diaper> loadDiapers() {
+    final raw = _prefs.getString(_kDiapers);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list.map((e) => Diaper.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveDiapers(List<Diaper> diapers) async {
+    final raw = jsonEncode(diapers.map((d) => d.toJson()).toList());
+    await _prefs.setString(_kDiapers, raw);
+  }
 }

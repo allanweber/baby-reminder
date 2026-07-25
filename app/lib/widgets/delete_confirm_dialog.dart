@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
-/// Centered "Delete this feed?" confirmation, shared by the Home and Daily
-/// report feed lists. Nothing is removed until the user confirms.
-Future<bool> showDeleteConfirmDialog(BuildContext context) async {
+/// Centered "Delete this …?" confirmation, shared by the feed, reminder and
+/// diaper lists. Nothing is removed until the user confirms. [title] overrides
+/// the default heading so each list can name what it's deleting.
+Future<bool> showDeleteConfirmDialog(BuildContext context, {String title = 'Delete this feed?'}) async {
   final result = await showDialog<bool>(
     context: context,
     barrierColor: const Color.fromRGBO(74, 59, 54, 0.4),
@@ -22,9 +23,9 @@ Future<bool> showDeleteConfirmDialog(BuildContext context) async {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Delete this feed?',
-              style: TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            Text(
+              title,
+              style: const TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
             const Text(
