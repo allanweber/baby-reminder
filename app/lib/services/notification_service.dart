@@ -176,6 +176,43 @@ class NotificationService {
     await ErrorLog.breadcrumb('schedule: reminder set OK');
   }
 
+  /// Arms an arbitrary alarm [id] at [at], using the exact same full-screen /
+  /// sound / vibration delivery as the feed reminder. Used for the per-reminder
+  /// care alarms (medicine, vitamins…), each of which owns its own [id] so they
+  /// can be armed, re-armed and cancelled independently. An [at] in the past
+  /// fires almost immediately (an overdue reminder still rings on app open).
+  Future<void> scheduleAlarmAt({
+    required int id,
+    required DateTime at,
+    required String title,
+    required String body,
+    required String soundId,
+    required double volume,
+  }) async {
+    if (_inFlutterTest) return;
+    await init();
+    await Alarm.stop(id);
+    final now = DateTime.now();
+    final fireAt = at.isAfter(now) ? at : now.add(const Duration(seconds: 2));
+    await Alarm.set(
+      alarmSettings: _buildAlarm(
+        id: id,
+        at: fireAt,
+        title: title,
+        body: body,
+        soundId: soundId,
+        volume: volume,
+      ),
+    );
+  }
+
+  /// Cancels a previously armed alarm by [id] (feed reminder, test, or any
+  /// per-reminder care alarm).
+  Future<void> cancelAlarm(int id) async {
+    if (_inFlutterTest) return;
+    await Alarm.stop(id);
+  }
+
   /// Schedules a one-off diagnostic alarm [delay] from now, using the exact
   /// same delivery path as a real feed reminder. Lets the user verify on their
   /// own device that a closed/locked-phone alarm actually fires.

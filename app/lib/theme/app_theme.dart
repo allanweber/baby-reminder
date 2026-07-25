@@ -58,6 +58,33 @@ FeedType feedTypeFromString(String s) => FeedType.values.firstWhere(
       orElse: () => FeedType.formula,
     );
 
+/// The non-feed care items a reminder can be filed under. Colours + tints come
+/// straight from the design handoff's "Reminder category colors" tokens.
+enum ReminderCategory { medicine, vitamins, tummyTime, exercises, activities, diaper, bath, other }
+
+class ReminderCategoryColors {
+  final String label;
+  final Color color; // icon + dashed border + status pill text
+  final Color soft; // icon tile / status pill background
+  const ReminderCategoryColors({required this.label, required this.color, required this.soft});
+}
+
+const reminderCategories = {
+  ReminderCategory.medicine: ReminderCategoryColors(label: 'Medicine', color: Color(0xFFC9695C), soft: Color(0xFFF7E3E0)),
+  ReminderCategory.vitamins: ReminderCategoryColors(label: 'Vitamins', color: Color(0xFFD9A441), soft: Color(0xFFFBF0DC)),
+  ReminderCategory.tummyTime: ReminderCategoryColors(label: 'Tummy time', color: Color(0xFF8FAE7B), soft: Color(0xFFEDF3E6)),
+  ReminderCategory.exercises: ReminderCategoryColors(label: 'Exercises', color: Color(0xFF6FA8A0), soft: Color(0xFFE3F1EF)),
+  ReminderCategory.activities: ReminderCategoryColors(label: 'Activities', color: Color(0xFFB08FC4), soft: Color(0xFFF0E7F5)),
+  ReminderCategory.diaper: ReminderCategoryColors(label: 'Diaper', color: Color(0xFFD98E8E), soft: Color(0xFFF9E9E9)),
+  ReminderCategory.bath: ReminderCategoryColors(label: 'Bath', color: Color(0xFF7FB0C4), soft: Color(0xFFE6F1F5)),
+  ReminderCategory.other: ReminderCategoryColors(label: 'Other', color: Color(0xFFA79A8F), soft: Color(0xFFEFEAE5)),
+};
+
+ReminderCategory reminderCategoryFromString(String s) => ReminderCategory.values.firstWhere(
+      (c) => c.name == s,
+      orElse: () => ReminderCategory.other,
+    );
+
 class AppRadius {
   static const chip = 10.0;
   static const input = 14.0;

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/feed.dart';
+import '../models/reminder.dart';
 
 /// On-device persistence. This is a single-user, single-baby, offline-first
 /// app — everything lives in [SharedPreferences], no backend involved.
@@ -17,6 +18,9 @@ class StorageService {
   static const _kAlarmVolume = 'alarmVolume';
   static const _kCustomTimerAt = 'customTimerAt';
   static const _kCustomTimerLabel = 'customTimerLabel';
+  static const _kReminders = 'reminders';
+  static const _kReminderLogs = 'reminderLogs';
+  static const _kNextReminderAlarmId = 'nextReminderAlarmId';
   static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
@@ -74,4 +78,33 @@ class StorageService {
 
   String? loadCustomTimerLabel() => _prefs.getString(_kCustomTimerLabel);
   Future<void> saveCustomTimerLabel(String label) => _prefs.setString(_kCustomTimerLabel, label);
+
+  List<Reminder> loadReminders() {
+    final raw = _prefs.getString(_kReminders);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list.map((e) => Reminder.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveReminders(List<Reminder> reminders) async {
+    final raw = jsonEncode(reminders.map((r) => r.toJson()).toList());
+    await _prefs.setString(_kReminders, raw);
+  }
+
+  List<ReminderLog> loadReminderLogs() {
+    final raw = _prefs.getString(_kReminderLogs);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list.map((e) => ReminderLog.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveReminderLogs(List<ReminderLog> logs) async {
+    final raw = jsonEncode(logs.map((l) => l.toJson()).toList());
+    await _prefs.setString(_kReminderLogs, raw);
+  }
+
+  // Distinct alarm-id space for reminders, kept clear of the feed reminder (1)
+  // and the diagnostic test alarm (2) so their native alarms never collide.
+  int loadNextReminderAlarmId() => _prefs.getInt(_kNextReminderAlarmId) ?? 1000;
+  Future<void> saveNextReminderAlarmId(int id) => _prefs.setInt(_kNextReminderAlarmId, id);
 }

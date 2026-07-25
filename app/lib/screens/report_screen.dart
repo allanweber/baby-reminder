@@ -7,7 +7,10 @@ import '../widgets/date_time_pickers.dart';
 import '../widgets/delete_confirm_dialog.dart';
 import '../widgets/feed_list_item.dart';
 import '../widgets/log_feed_sheet.dart';
+import '../widgets/reminder_report_row.dart';
 import '../widgets/stats_row.dart';
+
+enum ReportFilter { all, feed, reminders }
 
 class ReportScreen extends StatefulWidget {
   final AppState appState;
@@ -17,8 +20,16 @@ class ReportScreen extends StatefulWidget {
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
+/// One time-sorted entry in the merged report timeline.
+class _TimelineItem {
+  final String time; // HH:MM 24h, used for sorting
+  final Widget child;
+  const _TimelineItem(this.time, this.child);
+}
+
 class _ReportScreenState extends State<ReportScreen> {
   late DateTime reportDate;
+  ReportFilter filter = ReportFilter.all;
 
   @override
   void initState() {
@@ -41,8 +52,6 @@ class _ReportScreenState extends State<ReportScreen> {
       firstDate: DateTime(2015),
       lastDate: DateTime(2100),
     );
-    // Falls back to today automatically since `picked` is only ever a valid
-    // date or null (cancel) — there is no invalid/empty native-picker state.
     if (picked != null) {
       setState(() => reportDate = picked);
     }
@@ -69,6 +78,39 @@ class _ReportScreenState extends State<ReportScreen> {
         final reportFeeds = appState.feedsForDate(reportDateStr).toList()
           ..sort((a, b) => a.time.compareTo(b.time));
         final stats = appState.computeStats(appState.feedsForDate(reportDateStr));
+        final doneLogs = appState.reminderLogsForDate(reportDateStr);
+        final missed = appState.missedRemindersForDate(reportDateStr);
+
+        // Build the timeline for the current filter, time-sorted.
+        final items = <_TimelineItem>[];
+        if (filter != ReportFilter.reminders) {
+          for (final f in reportFeeds) {
+            items.add(_TimelineItem(
+              f.time,
+              FeedListItem(
+                feed: f,
+                state: appState,
+                onEdit: () => showLogFeedSheet(context, appState, existing: f),
+                onDelete: () => _handleDelete(context, f.id),
+              ),
+            ));
+          }
+        }
+        if (filter != ReportFilter.feed) {
+          for (final l in doneLogs) {
+            items.add(_TimelineItem(
+              l.time,
+              ReminderReportRow(category: l.category, label: l.label, time: l.time, done: true),
+            ));
+          }
+          for (final m in missed) {
+            items.add(_TimelineItem(
+              m.time,
+              ReminderReportRow(category: m.reminder.category, label: m.reminder.label, time: m.time, done: false),
+            ));
+          }
+        }
+        items.sort((a, b) => a.time.compareTo(b.time));
 
         final title = appState.babyName.isNotEmpty ? "${appState.babyName}'s daily report" : 'Daily report';
         final dateLabel = isToday ? 'Today' : DateFormat('EEE, d MMM').format(reportDate);
@@ -85,7 +127,14 @@ class _ReportScreenState extends State<ReportScreen> {
                       style: const TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: _FilterSegment(
+                    filter: filter,
+                    onChanged: (f) => setState(() => filter = f),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -115,33 +164,31 @@ class _ReportScreenState extends State<ReportScreen> {
                       ),
                     ),
                   ),
-                StatsRow(
-                  totalLabel: 'TOTAL INTAKE',
-                  totalValue: stats.totalDisplay,
-                  feedsLabel: 'FEEDS',
-                  feedCountValue: '${stats.feedCount}',
-                  avgGapValue: stats.avgIntervalDisplay,
-                ),
+                if (filter == ReportFilter.reminders)
+                  _ReminderStatsRow(completed: doneLogs.length, missed: missed.length)
+                else
+                  StatsRow(
+                    totalLabel: 'TOTAL INTAKE',
+                    totalValue: stats.totalDisplay,
+                    feedsLabel: 'FEEDS',
+                    feedCountValue: '${stats.feedCount}',
+                    avgGapValue: stats.avgIntervalDisplay,
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-                  child: reportFeeds.isEmpty
+                  child: items.isEmpty
                       ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                           child: Center(
-                            child: Text('No feeds logged this day.',
+                            child: Text('Nothing logged this day.',
                                 style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
                           ),
                         )
                       : Column(
-                          children: reportFeeds
-                              .map((f) => Padding(
+                          children: items
+                              .map((it) => Padding(
                                     padding: const EdgeInsets.only(bottom: 10),
-                                    child: FeedListItem(
-                                      feed: f,
-                                      state: appState,
-                                      onEdit: () => showLogFeedSheet(context, appState, existing: f),
-                                      onDelete: () => _handleDelete(context, f.id),
-                                    ),
+                                    child: it.child,
                                   ))
                               .toList(),
                         ),
@@ -151,6 +198,95 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _FilterSegment extends StatelessWidget {
+  final ReportFilter filter;
+  final ValueChanged<ReportFilter> onChanged;
+  const _FilterSegment({required this.filter, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(color: AppColors.surfaceSecondary, borderRadius: BorderRadius.circular(14)),
+      child: Row(
+        children: [
+          _seg('All', ReportFilter.all),
+          _seg('Feed', ReportFilter.feed),
+          _seg('Reminders', ReportFilter.reminders),
+        ],
+      ),
+    );
+  }
+
+  Widget _seg(String label, ReportFilter value) {
+    final active = filter == value;
+    return Expanded(
+      child: Material(
+        color: active ? AppColors.accentBlush : Colors.transparent,
+        borderRadius: BorderRadius.circular(11),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(11),
+          onTap: () => onChanged(value),
+          child: Container(
+            height: 36,
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: active ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReminderStatsRow extends StatelessWidget {
+  final int completed;
+  final int missed;
+  const _ReminderStatsRow({required this.completed, required this.missed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Row(
+        children: [
+          Expanded(child: _card('$completed', 'COMPLETED')),
+          const SizedBox(width: 10),
+          Expanded(child: _card('$missed', 'MISSED')),
+        ],
+      ),
+    );
+  }
+
+  Widget _card(String value, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: cardShadow(),
+      ),
+      child: Column(
+        children: [
+          Text(value,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          const SizedBox(height: 2),
+          Text(label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+        ],
+      ),
     );
   }
 }

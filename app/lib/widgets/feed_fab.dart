@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'app_icons.dart';
 
-/// FAB: line-drawn baby bottle with a small white circular "+" badge
-/// overlapping its bottom-right corner, per the prototype.
+/// FAB: a line-drawn glyph with a small white circular "+" badge overlapping
+/// its bottom-right corner, per the prototype. Shows the feeding bottle on the
+/// Feed tab and a bell on the Reminders tab (via [icon]).
 class FeedFab extends StatelessWidget {
   final Color accentColor;
   final VoidCallback onTap;
-  const FeedFab({super.key, required this.accentColor, required this.onTap});
+  final Widget? icon;
+  const FeedFab({super.key, required this.accentColor, required this.onTap, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class FeedFab extends StatelessWidget {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: onTap,
-                child: Center(child: AppIcons.bottle(color: Colors.white)),
+                child: Center(child: icon ?? AppIcons.bottle(color: Colors.white)),
               ),
             ),
           ),

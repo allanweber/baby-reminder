@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../models/reminder.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_icons.dart';
 import '../widgets/feed_fab.dart';
 import '../widgets/log_feed_sheet.dart';
+import '../widgets/reminder_sheet.dart';
 import 'home_screen.dart';
+import 'reminders_screen.dart';
 import 'report_screen.dart';
 
-/// Persistent shell: bottom tab bar + FAB stay put while Home/Daily report
-/// swap underneath, matching the prototype where both screens share one
-/// device frame.
+/// Persistent shell: bottom tab bar + FAB stay put while Reminders / Feed /
+/// Report swap underneath. "Feed" is the primary (center) tab and is shown
+/// first; the FAB is context-aware (bottle on Feed, bell on Reminders, hidden
+/// on Report).
 class AppShell extends StatefulWidget {
   final AppState appState;
   const AppShell({super.key, required this.appState});
@@ -20,25 +24,49 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  int _tabIndex = 0;
+  // 0 = Reminders, 1 = Feed (primary, default), 2 = Report.
+  int _tabIndex = 1;
 
   @override
   Widget build(BuildContext context) {
     // Rebuild on every state change so the alarm overlay appears/disappears the
-    // moment the reminder starts or is dismissed.
+    // moment an alarm starts or is dismissed.
     return AnimatedBuilder(
       animation: widget.appState,
-      builder: (context, _) => Stack(
-        children: [
-          _buildShell(context),
-          if (widget.appState.alarmRinging)
-            _AlarmOverlay(
-              appState: widget.appState,
-              onLog: () => showLogFeedSheet(context, widget.appState),
-            ),
-        ],
-      ),
+      builder: (context, _) {
+        final ringingReminder = widget.appState.ringingReminder;
+        return Stack(
+          children: [
+            _buildShell(context),
+            if (ringingReminder != null)
+              _ReminderAlarmOverlay(appState: widget.appState, reminder: ringingReminder)
+            else if (widget.appState.alarmRinging)
+              _AlarmOverlay(
+                appState: widget.appState,
+                onLog: () => showLogFeedSheet(context, widget.appState),
+              ),
+          ],
+        );
+      },
     );
+  }
+
+  Widget? _buildFab(BuildContext context) {
+    const accent = AppColors.accentBlush;
+    if (_tabIndex == 0) {
+      return FeedFab(
+        accentColor: accent,
+        icon: AppIcons.bell(color: Colors.white),
+        onTap: () => showReminderSheet(context, widget.appState),
+      );
+    }
+    if (_tabIndex == 1) {
+      return FeedFab(
+        accentColor: accent,
+        onTap: () => showLogFeedSheet(context, widget.appState),
+      );
+    }
+    return null; // Report: no FAB
   }
 
   Widget _buildShell(BuildContext context) {
@@ -48,29 +76,27 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _tabIndex,
         children: [
+          RemindersScreen(appState: widget.appState),
           HomeScreen(appState: widget.appState),
           ReportScreen(appState: widget.appState),
         ],
       ),
-      floatingActionButton: FeedFab(
-        accentColor: accent,
-        onTap: () => showLogFeedSheet(context, widget.appState),
-      ),
+      floatingActionButton: _buildFab(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(top: BorderSide(color: Color(0xFFF0E6DD), width: 1)),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
         child: SafeArea(
           top: false,
           child: Row(
             children: [
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.house(color: _tabIndex == 0 ? accent : AppColors.textMuted),
-                  label: 'Home',
+                  icon: AppIcons.bell(size: 20, color: _tabIndex == 0 ? accent : AppColors.textMuted),
+                  label: 'Reminders',
                   active: _tabIndex == 0,
                   accent: accent,
                   onTap: () => setState(() => _tabIndex = 0),
@@ -78,11 +104,21 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.calendar(color: _tabIndex == 1 ? accent : AppColors.textMuted),
-                  label: 'Daily report',
+                  icon: AppIcons.house(size: 25, color: _tabIndex == 1 ? accent : AppColors.textMuted),
+                  label: 'Feed',
                   active: _tabIndex == 1,
                   accent: accent,
+                  primary: true,
                   onTap: () => setState(() => _tabIndex = 1),
+                ),
+              ),
+              Expanded(
+                child: _TabButton(
+                  icon: AppIcons.calendar(size: 20, color: _tabIndex == 2 ? accent : AppColors.textMuted),
+                  label: 'Report',
+                  active: _tabIndex == 2,
+                  accent: accent,
+                  onTap: () => setState(() => _tabIndex = 2),
                 ),
               ),
             ],
@@ -94,7 +130,7 @@ class _AppShellState extends State<AppShell> {
 }
 
 /// Full-screen "alarm playing" state shown over the whole app while the feed
-/// reminder is ringing, with an immediate way to stop it.
+/// reminder (or a custom timer) is ringing, with an immediate way to stop it.
 class _AlarmOverlay extends StatelessWidget {
   final AppState appState;
   final VoidCallback onLog;
@@ -191,13 +227,113 @@ class _AlarmOverlay extends StatelessWidget {
   }
 }
 
+/// Full-screen alarm for a due care reminder (medicine, vitamins…). Same OS
+/// alarm treatment as feeds, but its actions log a completion / snooze / skip.
+class _ReminderAlarmOverlay extends StatelessWidget {
+  final AppState appState;
+  final Reminder reminder;
+  const _ReminderAlarmOverlay({required this.appState, required this.reminder});
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = reminderCategories[reminder.category]!;
+    final title = reminder.label.isNotEmpty ? reminder.label : meta.label;
+    return Positioned.fill(
+      child: Material(
+        color: meta.color,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            child: Column(
+              children: [
+                const Spacer(),
+                const Icon(Icons.notifications_active_rounded, size: 96, color: Colors.white),
+                const SizedBox(height: 24),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontFamily: balooFamily, fontSize: 30, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${meta.label} reminder',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70),
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  height: 58,
+                  child: ElevatedButton(
+                    onPressed: () => appState.markReminderDone(reminder),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: meta.color,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    ),
+                    child: const Text('Mark done', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () => appState.snoozeReminderItem(reminder),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white70, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('Snooze 15m', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () => appState.dismissReminderItem(reminder),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white70, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('Dismiss', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TabButton extends StatelessWidget {
   final Widget icon;
   final String label;
   final bool active;
   final Color accent;
+  final bool primary;
   final VoidCallback onTap;
-  const _TabButton({required this.icon, required this.label, required this.active, required this.accent, required this.onTap});
+  const _TabButton({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.accent,
+    required this.onTap,
+    this.primary = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +347,14 @@ class _TabButton extends StatelessWidget {
           children: [
             icon,
             const SizedBox(height: 3),
-            Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: color)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: primary ? 13 : 12,
+                fontWeight: primary ? FontWeight.w800 : FontWeight.w700,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),

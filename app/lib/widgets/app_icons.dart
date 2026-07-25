@@ -45,6 +45,20 @@ class AppIcons {
     );
   }
 
+  static Widget bell({double size = 26, required Color color}) {
+    final stroke = _hex(color);
+    return SvgPicture.string(
+      '''
+<svg width="$size" height="$size" viewBox="0 0 24 24" fill="none" stroke="$stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+  <path d="M13.73 21a2 2 0 01-3.46 0"></path>
+</svg>
+''',
+      width: size,
+      height: size,
+    );
+  }
+
   static Widget bottle({double size = 26, required Color color}) {
     final stroke = _hex(color);
     return SvgPicture.string(

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/feed.dart';
+import '../models/reminder.dart';
 import '../services/alarm_service.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
@@ -25,6 +26,15 @@ class DayStats {
   const DayStats({required this.totalDisplay, required this.feedCount, required this.avgIntervalDisplay});
 }
 
+/// A reminder that came due on a given day but was never marked done — surfaced
+/// as a grayed "Missed" row in the daily report. Only fixed-time reminders can
+/// be missed (interval reminders drift, so they have no fixed clock deadline).
+class MissedReminder {
+  final Reminder reminder;
+  final String time; // HH:MM the reminder was due at that day
+  const MissedReminder(this.reminder, this.time);
+}
+
 /// Holds all persisted app state and the domain logic ported from the
 /// prototype's `Component` class (feeds, reminder scheduling, settings).
 /// Ephemeral UI state (which sheet is open, in-progress edits) lives in the
@@ -37,6 +47,9 @@ class AppState extends ChangeNotifier {
   AppState(this.storage, this.notifications, this.alarm);
 
   List<Feed> feeds = [];
+  List<Reminder> reminders = [];
+  List<ReminderLog> reminderLogs = [];
+  int _nextReminderAlarmId = 1000;
   String babyName = '';
   String unitPref = 'ml';
   int reminderIntervalMin = 180;
@@ -55,9 +68,29 @@ class AppState extends ChangeNotifier {
 
   Timer? _ticker;
   bool _alarmRinging = false;
+  String? _ringingReminderId;
 
   bool get alarmRinging => _alarmRinging;
   bool get customTimerActive => customTimerAt != null;
+
+  /// The reminder whose full-screen alarm is currently sounding, if any. Takes
+  /// visual priority over the feed alarm in the app-wide alarm overlay.
+  Reminder? get ringingReminder {
+    if (_ringingReminderId == null) return null;
+    for (final r in reminders) {
+      if (r.id == _ringingReminderId) return r;
+    }
+    return null;
+  }
+
+  /// Reminders whose armed time has passed and haven't been acted on yet —
+  /// these surface as "due now" cards at the top of the Reminders tab.
+  List<Reminder> get dueReminders {
+    final nowMs = now.millisecondsSinceEpoch;
+    final due = reminders.where((r) => r.nextDueAt <= nowMs).toList()
+      ..sort((a, b) => a.nextDueAt.compareTo(b.nextDueAt));
+    return due;
+  }
 
   /// The countdown target the UI and alarm should track right now: the custom
   /// timer when one is set, otherwise the feed reminder.
@@ -74,6 +107,9 @@ class AppState extends ChangeNotifier {
       await _persistAll();
     } else {
       feeds = storage.loadFeeds();
+      reminders = storage.loadReminders();
+      reminderLogs = storage.loadReminderLogs();
+      _nextReminderAlarmId = storage.loadNextReminderAlarmId();
       babyName = storage.loadBabyName() ?? '';
       unitPref = storage.loadUnitPref();
       reminderIntervalMin = storage.loadReminderIntervalMin();
@@ -97,16 +133,30 @@ class AppState extends ChangeNotifier {
     // ringing state into the in-app overlay instead of running a second,
     // competing alarm here.
     notifications.onRinging((ids) {
-      final ringing = ids.contains(NotificationService.reminderAlarmId);
-      if (ringing != _alarmRinging) {
-        _alarmRinging = ringing;
-        notifyListeners();
+      final feedRinging = ids.contains(NotificationService.reminderAlarmId);
+      String? remId;
+      for (final r in reminders) {
+        if (ids.contains(r.alarmId)) {
+          remId = r.id;
+          break;
+        }
       }
+      var changed = false;
+      if (feedRinging != _alarmRinging) {
+        _alarmRinging = feedRinging;
+        changed = true;
+      }
+      if (remId != _ringingReminderId) {
+        _ringingReminderId = remId;
+        changed = true;
+      }
+      if (changed) notifyListeners();
     });
-    // Make sure a real OS alarm is armed for any pending reminder/timer, so it
-    // still fires when the app is later closed — previously the notification
-    // was only (re)scheduled when the user changed something.
+    // Make sure a real OS alarm is armed for any pending reminder/timer/care
+    // reminder, so they still fire when the app is later closed — previously the
+    // notification was only (re)scheduled when the user changed something.
     await _rescheduleNotification();
+    await _rescheduleAllReminders();
     notifyListeners();
   }
 
@@ -137,6 +187,39 @@ class AppState extends ChangeNotifier {
     reminderIntervalMin = 180;
     nextReminderAt = t3.add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
     reminderDismissed = false;
+
+    // A small starter set so the Reminders tab and the report's reminder view
+    // aren't empty on first run.
+    final createdMs = nowDt.millisecondsSinceEpoch;
+    reminders = [
+      Reminder(
+        id: 'r1',
+        alarmId: 1000,
+        label: 'Vitamin D drops',
+        category: ReminderCategory.vitamins,
+        mode: ReminderMode.fixed,
+        fixedTime: '09:00',
+        intervalHours: 0,
+        nextDueAt: Reminder.nextFixedOccurrence('09:00', nowDt).millisecondsSinceEpoch,
+        createdAt: createdMs,
+      ),
+      Reminder(
+        id: 'r2',
+        alarmId: 1001,
+        label: 'Tummy time',
+        category: ReminderCategory.tummyTime,
+        mode: ReminderMode.interval,
+        fixedTime: '',
+        intervalHours: 4,
+        nextDueAt: nowDt.add(const Duration(hours: 4)).millisecondsSinceEpoch,
+        createdAt: createdMs,
+      ),
+    ];
+    _nextReminderAlarmId = 1002;
+    // One completed reminder today so the report's "Done" row + counts show.
+    reminderLogs = [
+      ReminderLog(id: 'rl1', reminderId: 'r1', label: 'Vitamin D drops', category: ReminderCategory.vitamins, date: dateStr(nowDt), time: '09:00'),
+    ];
   }
 
   Future<void> _persistAll() async {
@@ -150,6 +233,9 @@ class AppState extends ChangeNotifier {
     await storage.saveAlarmVolume(alarmVolume);
     await storage.saveCustomTimerAt(customTimerAt);
     await storage.saveCustomTimerLabel(customTimerLabel);
+    await storage.saveReminders(reminders);
+    await storage.saveReminderLogs(reminderLogs);
+    await storage.saveNextReminderAlarmId(_nextReminderAlarmId);
   }
 
   /// Stops a currently sounding alarm immediately. Clears the in-app overlay
@@ -339,14 +425,231 @@ class AppState extends ChangeNotifier {
   Future<void> previewAlarm([String? id]) =>
       alarm.previewSound(soundId: id ?? alarmSound, volume: alarmVolume);
 
+  // --- Reminders (non-feed care alarms) -------------------------------------
+
+  String newReminderId() => 'r${_uuid.v4()}';
+  String _newReminderLogId() => 'rl${_uuid.v4()}';
+
+  /// The other fixed-time reminder already using [hhmm], if any — used to block
+  /// duplicate clock times and name the conflict in the inline error. Interval
+  /// reminders are exempt (their due time drifts, so it can't collide).
+  Reminder? fixedTimeConflict(String hhmm, {String? excludeId}) {
+    for (final r in reminders) {
+      if (r.id == excludeId) continue;
+      if (r.isFixed && r.fixedTime == hhmm) return r;
+    }
+    return null;
+  }
+
+  /// Allocates the next free native alarm id for a new reminder.
+  int _allocReminderAlarmId() => _nextReminderAlarmId++;
+
+  /// Computes when a reminder should first come due after being created/edited.
+  int _initialDueAt(ReminderMode mode, String fixedTime, int intervalHours) {
+    final n = DateTime.now();
+    if (mode == ReminderMode.fixed) {
+      return Reminder.nextFixedOccurrence(fixedTime, n).millisecondsSinceEpoch;
+    }
+    return n.add(Duration(hours: intervalHours)).millisecondsSinceEpoch;
+  }
+
+  /// Creates a reminder from the Add/Edit sheet's fields. Assigns a stable
+  /// alarm id + first due time and arms its alarm. Returns the created reminder.
+  Future<Reminder> addReminder({
+    required String label,
+    required ReminderCategory category,
+    required ReminderMode mode,
+    required String fixedTime,
+    required int intervalHours,
+  }) async {
+    final reminder = Reminder(
+      id: newReminderId(),
+      alarmId: _allocReminderAlarmId(),
+      label: label.trim(),
+      category: category,
+      mode: mode,
+      fixedTime: mode == ReminderMode.fixed ? fixedTime : '',
+      intervalHours: mode == ReminderMode.interval ? intervalHours : 0,
+      nextDueAt: _initialDueAt(mode, fixedTime, intervalHours),
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    reminders = [...reminders, reminder];
+    await storage.saveReminders(reminders);
+    await storage.saveNextReminderAlarmId(_nextReminderAlarmId);
+    await _armReminder(reminder);
+    notifyListeners();
+    return reminder;
+  }
+
+  /// Applies edits to an existing reminder. Its schedule (and next due time) is
+  /// recomputed and the alarm re-armed.
+  Future<void> updateReminder(
+    String id, {
+    required String label,
+    required ReminderCategory category,
+    required ReminderMode mode,
+    required String fixedTime,
+    required int intervalHours,
+  }) async {
+    reminders = reminders.map((r) {
+      if (r.id != id) return r;
+      return r.copyWith(
+        label: label.trim(),
+        category: category,
+        mode: mode,
+        fixedTime: mode == ReminderMode.fixed ? fixedTime : '',
+        intervalHours: mode == ReminderMode.interval ? intervalHours : 0,
+        nextDueAt: _initialDueAt(mode, fixedTime, intervalHours),
+      );
+    }).toList();
+    await storage.saveReminders(reminders);
+    final updated = reminders.firstWhere((r) => r.id == id);
+    await _armReminder(updated);
+    notifyListeners();
+  }
+
+  Future<void> deleteReminder(String id) async {
+    Reminder? removed;
+    for (final r in reminders) {
+      if (r.id == id) removed = r;
+    }
+    reminders = reminders.where((r) => r.id != id).toList();
+    if (removed != null) {
+      try {
+        await notifications.cancelAlarm(removed.alarmId);
+      } catch (_) {}
+    }
+    if (_ringingReminderId == id) _ringingReminderId = null;
+    await storage.saveReminders(reminders);
+    notifyListeners();
+  }
+
+  /// Marks a reminder done: appends a completion log at the current time and
+  /// reschedules its next occurrence (fixed → tomorrow at the same time,
+  /// interval → now + N hours). Stops it ringing if it currently is.
+  Future<void> markReminderDone(Reminder reminder) async {
+    final n = DateTime.now();
+    reminderLogs = [
+      ...reminderLogs,
+      ReminderLog(
+        id: _newReminderLogId(),
+        reminderId: reminder.id,
+        label: reminder.label,
+        category: reminder.category,
+        date: dateStr(n),
+        time: timeStr(n),
+      ),
+    ];
+    await storage.saveReminderLogs(reminderLogs);
+    await _rescheduleReminder(reminder, from: n);
+  }
+
+  /// Snoozes a due reminder 15 minutes from now.
+  Future<void> snoozeReminderItem(Reminder reminder) async {
+    final at = DateTime.now().add(const Duration(minutes: 15));
+    await _rescheduleReminder(reminder, explicitNext: at);
+  }
+
+  /// Dismisses a due reminder without logging a completion — it moves on to its
+  /// next occurrence (fixed → next day; interval → now + N). A fixed reminder
+  /// dismissed this way still counts as "missed" for the day in the report.
+  Future<void> dismissReminderItem(Reminder reminder) async {
+    await _rescheduleReminder(reminder, from: DateTime.now());
+  }
+
+  /// Advances a reminder to its next occurrence and re-arms its alarm. When
+  /// [explicitNext] is given (snooze) it is used directly; otherwise the next
+  /// occurrence is derived from [from] per the reminder's mode.
+  Future<void> _rescheduleReminder(Reminder reminder, {DateTime? from, DateTime? explicitNext}) async {
+    final base = from ?? DateTime.now();
+    final DateTime next;
+    if (explicitNext != null) {
+      next = explicitNext;
+    } else if (reminder.isFixed) {
+      // Strictly after `base` so a just-completed reminder rolls to the next day
+      // rather than re-firing at the same clock time today.
+      next = Reminder.nextFixedOccurrence(reminder.fixedTime, base);
+    } else {
+      next = base.add(Duration(hours: reminder.intervalHours));
+    }
+    reminders = reminders
+        .map((r) => r.id == reminder.id ? r.copyWith(nextDueAt: next.millisecondsSinceEpoch) : r)
+        .toList();
+    if (_ringingReminderId == reminder.id) _ringingReminderId = null;
+    await storage.saveReminders(reminders);
+    final updated = reminders.firstWhere((r) => r.id == reminder.id);
+    try {
+      await notifications.cancelAlarm(reminder.alarmId);
+    } catch (_) {}
+    await _armReminder(updated);
+    notifyListeners();
+  }
+
+  /// Arms (or re-arms) the native full-screen alarm for a single reminder at its
+  /// current [Reminder.nextDueAt]. Guarded so a device scheduling failure can't
+  /// stop the in-app state update.
+  Future<void> _armReminder(Reminder reminder) async {
+    try {
+      await notifications.scheduleAlarmAt(
+        id: reminder.alarmId,
+        at: DateTime.fromMillisecondsSinceEpoch(reminder.nextDueAt),
+        title: reminder.label.isNotEmpty ? reminder.label : 'Reminder',
+        body: reminderCategories[reminder.category]!.label,
+        soundId: alarmSound,
+        volume: alarmVolume,
+      );
+    } catch (e) {
+      debugPrint('Failed to arm reminder alarm: $e');
+    }
+  }
+
+  /// Re-arms every reminder's alarm (called once on load) so care reminders keep
+  /// firing after the app has been closed.
+  Future<void> _rescheduleAllReminders() async {
+    for (final r in reminders) {
+      await _armReminder(r);
+    }
+  }
+
+  /// Completion logs recorded on [date], earliest first.
+  List<ReminderLog> reminderLogsForDate(String date) {
+    final list = reminderLogs.where((l) => l.date == date).toList()
+      ..sort((a, b) => a.time.compareTo(b.time));
+    return list;
+  }
+
+  /// Fixed-time reminders that came due on [date] but have no completion logged
+  /// that day — the report's grayed "Missed" rows. Only considers dates from a
+  /// reminder's creation day up to today (a reminder can't be missed before it
+  /// existed, or on a future day).
+  List<MissedReminder> missedRemindersForDate(String date) {
+    final result = <MissedReminder>[];
+    final n = DateTime.now();
+    final todayStr = dateStr(n);
+    if (date.compareTo(todayStr) > 0) return result; // future day
+    for (final r in reminders) {
+      if (!r.isFixed) continue;
+      final createdStr = dateStr(DateTime.fromMillisecondsSinceEpoch(r.createdAt));
+      if (date.compareTo(createdStr) < 0) continue; // before it existed
+      // On today, the deadline must already have passed.
+      if (date == todayStr) {
+        final due = DateTime.parse('${date}T${r.fixedTime}:00');
+        if (due.isAfter(n)) continue;
+      }
+      final doneThatDay = reminderLogs.any((l) => l.reminderId == r.id && l.date == date);
+      if (!doneThatDay) result.add(MissedReminder(r, r.fixedTime));
+    }
+    return result;
+  }
+
   // --- Backup & restore ------------------------------------------------------
   // All state is on-device, so an uninstall (or the one-time signing-key
   // reinstall) would otherwise wipe it. These let the user save everything to
   // a JSON file they keep, and read it back.
 
-  static const backupVersion = 1;
+  static const backupVersion = 2;
 
-  /// Serialises every feed and setting to a portable JSON string.
+  /// Serialises every feed, reminder and setting to a portable JSON string.
   String exportData() => jsonEncode({
         'app': 'baby_feed_tracker',
         'version': backupVersion,
@@ -357,6 +660,8 @@ class AppState extends ChangeNotifier {
         'alarmSound': alarmSound,
         'alarmVolume': alarmVolume,
         'feeds': feeds.map((f) => f.toJson()).toList(),
+        'reminders': reminders.map((r) => r.toJson()).toList(),
+        'reminderLogs': reminderLogs.map((l) => l.toJson()).toList(),
       });
 
   /// Restores from a backup produced by [exportData]. Returns the number of
@@ -377,7 +682,26 @@ class AppState extends ChangeNotifier {
       alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
       alarmVolume = ((data['alarmVolume'] as num?)?.toDouble() ?? alarmVolume).clamp(0.0, 1.0);
 
+      // Reminders are only replaced when the backup actually carries them, so
+      // restoring an older feeds-only backup leaves existing reminders intact.
+      if (data.containsKey('reminders')) {
+        reminders = (data['reminders'] as List<dynamic>)
+            .map((e) => Reminder.fromJson(e as Map<String, dynamic>))
+            .toList();
+        // Keep the alarm-id counter ahead of every imported reminder so newly
+        // added ones never reuse a live alarm id.
+        for (final r in reminders) {
+          if (r.alarmId >= _nextReminderAlarmId) _nextReminderAlarmId = r.alarmId + 1;
+        }
+      }
+      if (data.containsKey('reminderLogs')) {
+        reminderLogs = (data['reminderLogs'] as List<dynamic>)
+            .map((e) => ReminderLog.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+
       await _persistAll();
+      await _rescheduleAllReminders();
       notifyListeners();
       return imported.length;
     } catch (e) {
