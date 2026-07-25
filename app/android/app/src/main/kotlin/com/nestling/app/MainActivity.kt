@@ -1,4 +1,4 @@
-package com.babyfeedtracker.baby_feed_tracker
+package com.nestling.app
 
 import android.os.Build
 import android.os.Bundle

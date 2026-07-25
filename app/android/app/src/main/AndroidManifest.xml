@@ -17,7 +17,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <application
-        android:label="Baby Feed Tracker"
+        android:label="Nestling"
         android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"><!-- Auto-back up app data (incl. the

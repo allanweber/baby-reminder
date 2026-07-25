@@ -53,7 +53,7 @@ class BabyFeedTrackerApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: appState,
       builder: (context, _) {
-        final title = appState.babyName.isNotEmpty ? "${appState.babyName}'s Feeds" : 'Baby Feed Tracker';
+        final title = appState.babyName.isNotEmpty ? "${appState.babyName}'s Feeds" : 'Nestling';
         return MaterialApp(
           title: title,
           debugShowCheckedModeBanner: false,

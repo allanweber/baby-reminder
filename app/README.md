@@ -1,4 +1,4 @@
-# Baby Feed Tracker
+# Nestling
 
 A one-handed, calming Flutter app for logging baby formula/bottle/breastfeeding
 feeds, with an in-app + local-notification reminder for the next feed and a
