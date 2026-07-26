@@ -153,6 +153,7 @@ class HomeScreen extends StatelessWidget {
                     onLogNow: () => showLogFeedSheet(context, appState),
                     onSnooze: () => appState.snoozeReminder(),
                     onDismiss: () => appState.dismissReminder(),
+                    onAddTime: (minutes) => appState.addReminderTime(minutes),
                   ),
                 StatsRow(
                   totalLabel: "TODAY'S INTAKE",

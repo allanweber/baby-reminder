@@ -51,6 +51,11 @@
                 <button onClick="{{ snoozeReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:var(--overlay-btn-bg);color:var(--text-primary);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Snooze 15m</button>
                 <button onClick="{{ dismissReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:transparent;color:var(--text-secondary);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Dismiss</button>
               </div>
+              <div style="display:flex;gap:8px;">
+                <button onClick="{{ addReminderTime5 }}" style="flex:1;padding:8px 0;border-radius:12px;border:1px solid var(--overlay-btn-bg);background:transparent;color:var(--text-secondary);font-weight:700;font-size:12px;font-family:'Nunito',sans-serif;cursor:pointer;">+5m</button>
+                <button onClick="{{ addReminderTime15 }}" style="flex:1;padding:8px 0;border-radius:12px;border:1px solid var(--overlay-btn-bg);background:transparent;color:var(--text-secondary);font-weight:700;font-size:12px;font-family:'Nunito',sans-serif;cursor:pointer;">+15m</button>
+                <button onClick="{{ addReminderTime30 }}" style="flex:1;padding:8px 0;border-radius:12px;border:1px solid var(--overlay-btn-bg);background:transparent;color:var(--text-secondary);font-weight:700;font-size:12px;font-family:'Nunito',sans-serif;cursor:pointer;">+30m</button>
+              </div>
             </div>
           </sc-if>
           <sc-if value="{{ !showReminderBanner }}" hint-placeholder-val="{{ false }}">
@@ -976,6 +981,7 @@ class Component extends DCLogic {
   decAmount(){ const step = this.state.unitPref==='oz'?15:10; this.setDraft({ amountMl: Math.max(0, (this.state.draft.amountMl||0)-step) }); }
   incDuration(){ this.setDraft({ durationMin: Math.min(90, (this.state.draft.durationMin||0)+1) }); }
   decDuration(){ this.setDraft({ durationMin: Math.max(0, (this.state.draft.durationMin||0)-1) }); }
+
   onDateChange(e){ this.setDraft({ date: e.target.value }); }
   onTimeChange(e){ this.setDraft({ time: e.target.value }); }
   onNoteChange(e){ this.setDraft({ note: e.target.value }); }
@@ -1132,6 +1138,7 @@ class Component extends DCLogic {
   openSettings(){ this.setState({ settingsOpen:true }); }
   closeSettings(){ this.setState({ settingsOpen:false }); }
   setInterval_(mins){ this.setState(s=>({ reminderIntervalMin:mins, nextReminderAt: s.now + mins*60000 })); }
+  addReminderTime(min){ this.setState(s=>({ nextReminderAt: Math.max(s.now, s.nextReminderAt) + min*60000, reminderDismissed:false })); }
   prevDay(){ this.setState(s=>{ const d=new Date(s.reportDate+'T00:00:00'); d.setDate(d.getDate()-1); return { reportDate:dateStr(d) }; }); }
   nextDay(){ this.setState(s=>{ const d=new Date(s.reportDate+'T00:00:00'); d.setDate(d.getDate()+1); return { reportDate:dateStr(d) }; }); }
   onReportDateChange(e){
@@ -1347,6 +1354,7 @@ class Component extends DCLogic {
     const durationLabel = draft.type==='breastfeeding' ? 'DURATION (MIN)' : 'DURATION (OPTIONAL)';
     const durationHint = draft.type==='breastfeeding' ? 'How long the feed took' : 'How long the feed took, if you tracked it';
 
+
     return {
       isHome: s.view==='home',
       isReport: s.view==='report',
@@ -1369,6 +1377,7 @@ class Component extends DCLogic {
       reminderPulse: overdue ? 'pulse 1.2s ease-in-out infinite' : 'none',
       reminderTitle: overdue ? 'Feed overdue' : 'Next feed in',
       reminderLabel,
+      addReminderTime5: () => this.addReminderTime(5), addReminderTime15: () => this.addReminderTime(15), addReminderTime30: () => this.addReminderTime(30),
       logNowFromReminder: () => this.logNowFromReminder(),
       snoozeReminder: () => this.snoozeReminder(),
       dismissReminder: () => this.dismissReminder(),
@@ -1471,6 +1480,7 @@ class Component extends DCLogic {
       durationLabel, durationHint,
       decDuration: () => this.decDuration(), incDuration: () => this.incDuration(),
       durationDisplay: draft.durationMin+' m',
+
       formError: s.formError,
       closeSheet: () => this.closeSheet(), saveFeed: () => this.saveFeed(),
       confirmingDeleteId: s.confirmingDeleteId,

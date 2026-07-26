@@ -11,6 +11,9 @@ class ReminderBanner extends StatelessWidget {
   final VoidCallback onLogNow;
   final VoidCallback onSnooze;
   final VoidCallback onDismiss;
+  /// Nudges the feed reminder forward by the given number of minutes — wired to
+  /// the "+5m / +15m / +30m" row. When null the row is hidden.
+  final ValueChanged<int>? onAddTime;
 
   const ReminderBanner({
     super.key,
@@ -22,6 +25,7 @@ class ReminderBanner extends StatelessWidget {
     required this.onLogNow,
     required this.onSnooze,
     required this.onDismiss,
+    this.onAddTime,
   });
 
   @override
@@ -111,7 +115,49 @@ class ReminderBanner extends StatelessWidget {
               ),
             ],
           ),
+          if (onAddTime != null) ...[
+            const SizedBox(height: 8),
+            // A one-off nudge to the current countdown — outlined chips, kept
+            // visually lighter than the Snooze/Dismiss row above.
+            Row(
+              children: [
+                _AddTimeButton(minutes: 5, onTap: onAddTime!),
+                const SizedBox(width: 8),
+                _AddTimeButton(minutes: 15, onTap: onAddTime!),
+                const SizedBox(width: 8),
+                _AddTimeButton(minutes: 30, onTap: onAddTime!),
+              ],
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _AddTimeButton extends StatelessWidget {
+  final int minutes;
+  final ValueChanged<int> onTap;
+  const _AddTimeButton({required this.minutes, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: SizedBox(
+        height: 34,
+        child: TextButton(
+          onPressed: () => onTap(minutes),
+          style: TextButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: AppColors.textSecondary,
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.border),
+            ),
+          ),
+          child: Text('+${minutes}m', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        ),
       ),
     );
   }

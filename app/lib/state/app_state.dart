@@ -420,6 +420,25 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Nudges the feed reminder's due time forward by [minutes] — the banner's
+  /// "+5m / +15m / +30m" actions. Stackable (each call adds to the last). When
+  /// the reminder is already overdue we anchor to now so the nudge always lands
+  /// in the future and clears the overdue state, mirroring the custom timer's
+  /// "+5 min". This is a one-off nudge to the current countdown; it never
+  /// touches the default interval preset. Only reachable while the feed
+  /// reminder banner is showing (no custom timer covering it).
+  Future<void> addReminderTime(int minutes) async {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final base = nextReminderAt < nowMs ? nowMs : nextReminderAt;
+    nextReminderAt = base + minutes * 60000;
+    reminderDismissed = false;
+    await storage.saveNextReminderAt(nextReminderAt);
+    await storage.saveReminderDismissed(reminderDismissed);
+    await _stopRinging();
+    await _rescheduleNotification();
+    notifyListeners();
+  }
+
   Future<void> dismissReminder() async {
     // Dismissing a ringing custom timer clears it (a one-shot), which uncovers
     // the feed reminder again. Re-evaluate so the feed reminder can take over.

@@ -148,6 +148,13 @@ Applies to fixed-time reminders only (interval-mode reminders never get a "misse
 - The resulting log's status pill reads **"Done (late)"** (distinct warm color) instead of plain "Done", and remains visible/deletable in the Report going forward (delete button now shows for late logs, not just quick-logs).
 - The reminder's next occurrence is unaffected — always reschedules to its normal daily fixed time regardless of when today's was completed.
 
+## Add Time to Feed Reminder Countdown
+On the home tab's "Next feed in" / "Feed overdue" banner, add three small buttons below the existing Snooze/Dismiss row: **+5m**, **+15m**, **+30m**.
+- Tapping one pushes the reminder's next-due time forward by that amount, from its current due time (not from now) — so tapping +15m twice adds 30 minutes total.
+- If the reminder was overdue, adding time can move it back into the future; the banner should immediately reflect the new state (overdue pulse/label clears if no longer due).
+- This is independent of the interval presets in Settings — it's a one-off nudge to the current countdown, not a change to the default interval.
+- Same subtle secondary-button styling as Snooze/Dismiss (transparent/outline, not accent-filled).
+
 ## Assets
 No image assets — all icons (settings gear, home house, report calendar, bottle+plus FAB) are simple line-drawn SVGs, single color, defined inline in the prototype. No illustrations or photography are used; the calm/friendly feel comes from color, type and rounded geometry only.
 
