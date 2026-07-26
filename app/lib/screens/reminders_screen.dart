@@ -19,6 +19,18 @@ class RemindersScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _handleMarkDoneLate(BuildContext context, Reminder r) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Mark as done now?',
+      message: 'This will log it as done right now.',
+      confirmLabel: 'Mark done',
+    );
+    if (confirmed) {
+      await appState.markReminderDoneLate(r, date: dateStr(DateTime.now()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -99,6 +111,8 @@ class RemindersScreen extends StatelessWidget {
                                     child: ReminderListItem(
                                       reminder: r,
                                       now: appState.now,
+                                      missed: appState.isMissedNow(r),
+                                      onMarkDoneLate: () => _handleMarkDoneLate(context, r),
                                       onEdit: () => showReminderSheet(context, appState, existing: r),
                                       onDelete: () => _handleDelete(context, r.id),
                                     ),

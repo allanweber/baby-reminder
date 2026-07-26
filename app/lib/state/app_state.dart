@@ -614,6 +614,34 @@ class AppState extends ChangeNotifier {
     await _rescheduleReminder(reminder, from: n);
   }
 
+  /// Marks a *missed* fixed-time reminder done after the fact ("Missed → Mark
+  /// done late"). Appends a completion for [date] — today when triggered from
+  /// the Reminders tab, or the viewed day when triggered from the report —
+  /// timestamped at the current time (never backdated) and flagged
+  /// [ReminderLog.isLate] so it shows as "Done (late)".
+  ///
+  /// The reminder's schedule is deliberately left untouched: it keeps firing at
+  /// its normal daily fixed time. The late completion is purely a log entry, so
+  /// (a log now existing for that day) the day's "Missed" state clears on its
+  /// own.
+  Future<void> markReminderDoneLate(Reminder reminder, {required String date}) async {
+    final n = DateTime.now();
+    reminderLogs = [
+      ...reminderLogs,
+      ReminderLog(
+        id: _newReminderLogId(),
+        reminderId: reminder.id,
+        label: reminder.label,
+        category: reminder.category,
+        date: date,
+        time: timeStr(n),
+        isLate: true,
+      ),
+    ];
+    await storage.saveReminderLogs(reminderLogs);
+    notifyListeners();
+  }
+
   /// Snoozes a due reminder 15 minutes from now.
   Future<void> snoozeReminderItem(Reminder reminder) async {
     final at = DateTime.now().add(const Duration(minutes: 15));
@@ -753,6 +781,21 @@ class AppState extends ChangeNotifier {
       if (!doneThatDay) result.add(MissedReminder(r, r.fixedTime));
     }
     return result;
+  }
+
+  /// Whether fixed-time [r] is currently "missed" for today — its clock time
+  /// has passed and nothing has been logged for it today. Drives the tappable
+  /// "Missed" tag on the Reminders tab; same rule the report uses per day. Uses
+  /// the live [now] so it flips on as the day crosses the reminder's time.
+  bool isMissedNow(Reminder r) {
+    if (!r.isFixed) return false;
+    final n = now;
+    final todayStr = dateStr(n);
+    final createdStr = dateStr(DateTime.fromMillisecondsSinceEpoch(r.createdAt));
+    if (todayStr.compareTo(createdStr) < 0) return false; // before it existed
+    final due = DateTime.parse('${todayStr}T${r.fixedTime}:00');
+    if (due.isAfter(n)) return false; // deadline not yet reached
+    return !reminderLogs.any((l) => l.reminderId == r.id && l.date == todayStr);
   }
 
   // --- Backup & restore ------------------------------------------------------

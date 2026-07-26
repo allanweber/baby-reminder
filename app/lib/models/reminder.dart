@@ -113,6 +113,10 @@ class ReminderLog {
   final ReminderCategory category;
   final String date; // YYYY-MM-DD
   final String time; // HH:MM, 24h
+  /// True when this completion was logged after the fact via "Missed → Mark
+  /// done late" — it renders as a distinct "Done (late)" pill in the report and
+  /// (unlike a plain scheduled completion) is deletable there.
+  final bool isLate;
 
   const ReminderLog({
     required this.id,
@@ -121,6 +125,7 @@ class ReminderLog {
     required this.category,
     required this.date,
     required this.time,
+    this.isLate = false,
   });
 
   /// True when this is an ad-hoc quick log rather than a scheduled-reminder
@@ -135,6 +140,7 @@ class ReminderLog {
         category: category,
         date: date ?? this.date,
         time: time ?? this.time,
+        isLate: isLate,
       );
 
   Map<String, dynamic> toJson() => {
@@ -144,6 +150,7 @@ class ReminderLog {
         'category': category.name,
         'date': date,
         'time': time,
+        'late': isLate,
       };
 
   factory ReminderLog.fromJson(Map<String, dynamic> json) => ReminderLog(
@@ -155,6 +162,8 @@ class ReminderLog {
         category: reminderCategoryFromString(json['category'] as String? ?? 'other'),
         date: json['date'] as String,
         time: json['time'] as String,
+        // Older backups have no 'late' key → treated as a plain "Done".
+        isLate: json['late'] as bool? ?? false,
       );
 }
 

@@ -192,9 +192,9 @@
                       <div style="font-size:12px;color:var(--text-secondary);font-weight:600;margin-top:2px;">{{ item.reminder.displayTimeStr }}</div>
                     </div>
                     <sc-if value="{{ item.reminder.showStatusPill }}" hint-placeholder-val="{{ true }}">
-                      <div style="font-size:10.5px;font-weight:800;color:{{ item.reminder.categoryColor }};background:color-mix(in srgb, {{ item.reminder.categoryColor }} 24%, var(--bg-card) 76%);padding:4px 9px;border-radius:10px;flex-shrink:0;">{{ item.reminder.statusLabel }}</div>
+                      <div style="font-size:10.5px;font-weight:800;color:{{ item.reminder.statusColor }};background:color-mix(in srgb, {{ item.reminder.statusColor }} 24%, var(--bg-card) 76%);padding:4px 9px;border-radius:10px;flex-shrink:0;">{{ item.reminder.statusLabel }}</div>
                     </sc-if>
-                    <sc-if value="{{ item.reminder.isQuickLog }}" hint-placeholder-val="{{ false }}">
+                    <sc-if value="{{ item.reminder.onDelete }}" hint-placeholder-val="{{ false }}">
                       <button onClick="{{ item.reminder.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--bg-inset);color:var(--danger-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
                     </sc-if>
                   </div>
@@ -272,6 +272,9 @@
                   </div>
                   <div onClick="{{ r.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
                     <div style="font-size:15px;font-weight:700;color:var(--text-primary);">{{ r.label }} <span style="color:var(--text-tertiary);font-weight:700;">· {{ r.categoryLabel }}</span></div>
+                    <sc-if value="{{ r.isMissed }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:11px;font-weight:800;color:#D97B67;background:color-mix(in srgb, #D97B67 24%, var(--bg-card) 76%);padding:2px 8px;border-radius:8px;display:inline-block;margin-top:4px;">Missed · tap to mark done</div>
+                    </sc-if>
                     <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;margin-top:2px;">{{ r.scheduleLabel }} · next in {{ r.nextLabel }}</div>
                   </div>
                   <button onClick="{{ r.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--bg-inset);color:var(--danger-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
@@ -495,6 +498,19 @@
             <div style="display:flex;gap:10px;">
               <button onClick="{{ closeReminderSheet }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
               <button onClick="{{ saveReminder }}" style="flex:2;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Save reminder</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ confirmingMarkDoneLate }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;">
+          <div style="width:100%;background:var(--bg-surface);border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Mark as done now?</div>
+            <div style="font-size:13.5px;color:var(--text-secondary);font-weight:600;margin-bottom:18px;">This will log it as done right now.</div>
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ cancelMarkDoneLate }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ confirmMarkDoneLate }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Mark done</button>
             </div>
           </div>
         </div>
@@ -850,6 +866,7 @@ class Component extends DCLogic {
       confirmingDeleteReminderLogId: null,
       editingReminderLogId: null,
       reminderLogDraft: null,
+      confirmingMarkDoneLate: null,
       darkMode: (typeof localStorage!=='undefined' && localStorage.getItem('babyTrackerDarkMode')==='1'),
     };
   })();
@@ -1098,6 +1115,19 @@ class Component extends DCLogic {
   }
   snoozeReminderDue(id){ this.setState(s=>({ reminders: s.reminders.map(r=>r.id===id?{...r, snoozedUntil: s.now + 15*60000, dismissed:false}:r) })); }
   dismissReminderDue(id){ this.setState(s=>({ reminders: s.reminders.map(r=>r.id===id?{...r, dismissed:true}:r) })); }
+  requestMarkDoneLate(reminderId, date){ this.setState({ confirmingMarkDoneLate: { reminderId, date } }); }
+  cancelMarkDoneLate(){ this.setState({ confirmingMarkDoneLate: null }); }
+  confirmMarkDoneLate(){
+    this.setState(s => {
+      const c = s.confirmingMarkDoneLate;
+      if(!c) return {};
+      const r = s.reminders.find(x=>x.id===c.reminderId);
+      if(!r) return { confirmingMarkDoneLate:null };
+      const now = new Date();
+      const log = { id:'rl'+Date.now(), reminderId:r.id, label:r.label, category:r.category, date:c.date, time:timeStr(now), late:true };
+      return { reminderLogs:[...s.reminderLogs, log], confirmingMarkDoneLate:null };
+    });
+  }
   setReportFilter(f){ this.setState({ reportFilter:f }); }
   openSettings(){ this.setState({ settingsOpen:true }); }
   closeSettings(){ this.setState({ settingsOpen:false }); }
@@ -1218,10 +1248,13 @@ class Component extends DCLogic {
       if(due) nextLabel = 'Due now';
       else { const tm = Math.ceil(msLeftR/60000); nextLabel = tm<60 ? tm+'m' : Math.floor(tm/60)+'h '+(tm%60)+'m'; }
       const scheduleLabel = r.mode==='fixed' ? 'Daily at '+display12h(r.fixedTime) : 'Every '+r.intervalHours+'h';
+      const todayStr = dateStr(new Date(nowMs));
+      const loggedToday = s.reminderLogs.some(l=>l.reminderId===r.id && l.date===todayStr);
+      const isMissed = r.mode==='fixed' && !loggedToday && effectiveDue <= nowMs;
       return {
         ...r, categoryLabel: meta.label, categoryColor: meta.color, categorySoft: meta.soft,
-        scheduleLabel, nextLabel, isDue: due,
-        onEdit: () => this.openEditReminder(r.id),
+        scheduleLabel, nextLabel, isDue: due, isMissed,
+        onEdit: isMissed ? (() => this.requestMarkDoneLate(r.id, dateStr(new Date(nowMs)))) : (() => this.openEditReminder(r.id)),
         onDelete: () => this.requestDeleteReminder(r.id),
         onMarkDone: () => this.markReminderDone(r.id),
         onSnooze: () => this.snoozeReminderDue(r.id),
@@ -1249,10 +1282,11 @@ class Component extends DCLogic {
         const isQuickLog = !l.reminderId;
         items.push({ kind:'reminder', sortTime:l.time, reminder:{
           label:l.label, categoryLabel:meta.label, categoryColor:meta.color, categorySoft:meta.soft,
-          displayTimeStr: display12h(l.time), statusLabel:'Done', muted:false, opacityVal:1,
+          displayTimeStr: display12h(l.time), statusLabel: l.late ? 'Done (late)' : 'Done', muted:false, opacityVal:1, isLate: !!l.late,
           isQuickLog, showStatusPill: !isQuickLog,
-          cardStyle: isQuickLog ? `background:${T.bgCard};border-radius:14px;` : `background:${T.bgCard};border-radius:14px;border:1.5px dashed ${meta.color};`,
-          onDelete: isQuickLog ? (() => this.requestDeleteReminderLog(l.id)) : null,
+          statusColor: l.late ? '#D97B67' : meta.color,
+          cardStyle: isQuickLog ? `background:${T.bgCard};border-radius:14px;` : `background:${T.bgCard};border-radius:14px;border:1.5px dashed ${l.late ? '#D97B67' : meta.color};`,
+          onDelete: (isQuickLog || l.late) ? (() => this.requestDeleteReminderLog(l.id)) : null,
           onEdit: isQuickLog ? (() => this.openEditReminderLog(l.id)) : null,
           editableCursor: isQuickLog ? 'cursor:pointer;' : '',
         } });
@@ -1265,7 +1299,7 @@ class Component extends DCLogic {
         const already = s.reminderLogs.some(l=>l.reminderId===r.id && l.date===s.reportDate);
         if(already) return;
         const meta = CATEGORY_META[r.category];
-        items.push({ kind:'reminder', sortTime:r.fixedTime, reminder:{ label:r.label, categoryLabel:meta.label, categoryColor:meta.color, categorySoft:meta.soft, displayTimeStr: display12h(r.fixedTime), statusLabel:'Missed', muted:true, opacityVal:0.55, isQuickLog:false, showStatusPill:true, cardStyle:`background:#fff;border-radius:14px;border:1.5px dashed ${meta.color};` } });
+        items.push({ kind:'reminder', sortTime:r.fixedTime, reminder:{ label:r.label, categoryLabel:meta.label, categoryColor:meta.color, categorySoft:meta.soft, statusColor:meta.color, displayTimeStr: display12h(r.fixedTime), statusLabel:'Missed', muted:true, opacityVal:0.55, isQuickLog:false, showStatusPill:true, editableCursor:'cursor:pointer;', onEdit: () => this.requestMarkDoneLate(r.id, s.reportDate), cardStyle:`background:${T.bgCard};border-radius:14px;border:1.5px dashed ${meta.color};` } });
       });
       items.sort((a,b)=>a.sortTime.localeCompare(b.sortTime));
       return items;
@@ -1282,7 +1316,7 @@ class Component extends DCLogic {
     const dDraft = s.diaperDraft || this.freshDiaperDraft();
     const diaperTypeOptions = ['pee','poop','both'].map(t=>{
       const active = dDraft.type===t;
-      return { key:t, label:DIAPER_TYPE_META[t].label, onSelect: () => this.selectDiaperType(t), buttonStyle: active ? `background:${DIAPER_ACCENT};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};B7A73;border:1.5px solid #EFE4DB;` };
+      return { key:t, label:DIAPER_TYPE_META[t].label, onSelect: () => this.selectDiaperType(t), buttonStyle: active ? `background:${DIAPER_ACCENT};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};` };
     });
     const showPeeColorField = dDraft.type==='pee' || dDraft.type==='both';
     const showPoopFields = dDraft.type==='poop' || dDraft.type==='both';
@@ -1408,6 +1442,7 @@ class Component extends DCLogic {
       showDiaperStats: s.reportFilter==='diaper',
       diaperReportStats: this.computeDiaperStats(s.diapers.filter(d=>d.date===s.reportDate)),
       reminderCompletedCount, reminderMissedCount,
+      confirmingMarkDoneLate: s.confirmingMarkDoneLate, cancelMarkDoneLate: () => this.cancelMarkDoneLate(), confirmMarkDoneLate: () => this.confirmMarkDoneLate(),
       reportItems, hasReportItems: reportItems.length>0,
 
       diaperSheetOpen: s.diaperSheetOpen,

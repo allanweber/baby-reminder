@@ -138,6 +138,16 @@ A dark theme is included, toggled from the Settings sheet (persisted via local s
 - Category/type "soft" tint chips (feed-type icon tiles, reminder category chips, diaper swatches) are NOT swapped to fixed dark hexes — they're computed as `color-mix(in srgb, {categoryColor} 24%, {cardBg} 76%)` so any accent stays legible against either surface. Recreate this as a token function, not a lookup table.
 - All solid accent colors (feed types, reminder categories, diaper teal, pee/poop swatches) stay the same hex in both themes — only neutrals and soft tints change.
 
+## Missed Reminder → Mark Done Late
+Applies to fixed-time reminders only (interval-mode reminders never get a "missed" state).
+
+- A fixed-time reminder is "missed" once its due time has passed for today AND no log exists yet for today. This is independent of whether the due banner was dismissed.
+- Shown as a tappable "Missed" indicator/pill in both the Reminders tab (inline tag under the reminder name) and the Daily Report (status pill on the placeholder row).
+- Tapping it always opens a confirmation dialog ("Mark as done now?") before logging anything.
+- Confirming logs it at the **current** time (never backdated) under **today's actual date** — not the reminder's next scheduled occurrence date.
+- The resulting log's status pill reads **"Done (late)"** (distinct warm color) instead of plain "Done", and remains visible/deletable in the Report going forward (delete button now shows for late logs, not just quick-logs).
+- The reminder's next occurrence is unaffected — always reschedules to its normal daily fixed time regardless of when today's was completed.
+
 ## Assets
 No image assets — all icons (settings gear, home house, report calendar, bottle+plus FAB) are simple line-drawn SVGs, single color, defined inline in the prototype. No illustrations or photography are used; the calm/friendly feel comes from color, type and rounded geometry only.
 

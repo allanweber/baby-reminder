@@ -11,6 +11,11 @@ class ReminderListItem extends StatelessWidget {
   final DateTime now;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  /// True when this fixed-time reminder is currently missed for today — draws a
+  /// tappable "Missed · tap to mark done" pill under the label.
+  final bool missed;
+  /// Called when the missed pill is tapped (opens the confirm dialog).
+  final VoidCallback? onMarkDoneLate;
 
   const ReminderListItem({
     super.key,
@@ -18,6 +23,8 @@ class ReminderListItem extends StatelessWidget {
     required this.now,
     required this.onEdit,
     required this.onDelete,
+    this.missed = false,
+    this.onMarkDoneLate,
   });
 
   String _untilLabel() {
@@ -94,6 +101,29 @@ class ReminderListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (missed) ...[
+                      const SizedBox(height: 6),
+                      // Only the pill taps through to "mark done late" — the rest
+                      // of the row still opens the edit sheet.
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onMarkDoneLate,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: softTint(AppColors.overdue),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Missed · tap to mark done',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.overdue),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

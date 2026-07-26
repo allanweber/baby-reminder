@@ -5,7 +5,27 @@ import '../theme/app_theme.dart';
 /// Centered "Delete this …?" confirmation, shared by the feed, reminder and
 /// diaper lists. Nothing is removed until the user confirms. [title] overrides
 /// the default heading so each list can name what it's deleting.
-Future<bool> showDeleteConfirmDialog(BuildContext context, {String title = 'Delete this feed?'}) async {
+Future<bool> showDeleteConfirmDialog(BuildContext context, {String title = 'Delete this feed?'}) {
+  return showConfirmDialog(
+    context,
+    title: title,
+    message: "This can't be undone.",
+    confirmLabel: 'Delete',
+    confirmColor: AppColors.errorSolid,
+  );
+}
+
+/// A centered confirmation dialog matching the delete dialog's shell, but with
+/// a customisable heading, body and confirm button. Returns true only if the
+/// user taps the confirm button. Used for the "Mark as done now?" prompt as
+/// well as the destructive delete confirmations.
+Future<bool> showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+  Color? confirmColor,
+}) async {
   final result = await showDialog<bool>(
     context: context,
     barrierColor: const Color.fromRGBO(74, 59, 54, 0.4),
@@ -29,7 +49,7 @@ Future<bool> showDeleteConfirmDialog(BuildContext context, {String title = 'Dele
             ),
             const SizedBox(height: 6),
             Text(
-              "This can't be undone.",
+              message,
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 18),
@@ -52,12 +72,12 @@ Future<bool> showDeleteConfirmDialog(BuildContext context, {String title = 'Dele
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(true),
                     style: TextButton.styleFrom(
-                      backgroundColor: AppColors.errorSolid,
+                      backgroundColor: confirmColor ?? AppColors.accentBlush,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Delete', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    child: Text(confirmLabel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],

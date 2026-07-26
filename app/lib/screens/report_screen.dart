@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../models/reminder.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_time_pickers.dart';
@@ -83,6 +84,18 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
+  Future<void> _handleMarkDoneLate(BuildContext context, Reminder r, String date) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Mark as done now?',
+      message: 'This will log it as done right now.',
+      confirmLabel: 'Mark done',
+    );
+    if (confirmed) {
+      await widget.appState.markReminderDoneLate(r, date: date);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = widget.appState;
@@ -138,13 +151,28 @@ class _ReportScreenState extends State<ReportScreen> {
           for (final l in completed) {
             items.add(_TimelineItem(
               l.time,
-              ReminderReportRow(category: l.category, label: l.label, time: l.time, done: true),
+              ReminderReportRow(
+                category: l.category,
+                label: l.label,
+                time: l.time,
+                done: true,
+                isLate: l.isLate,
+                // Late catch-ups are deletable (like quick logs); plain
+                // scheduled completions are not.
+                onDelete: l.isLate ? () => _handleDeleteLog(context, l.id) : null,
+              ),
             ));
           }
           for (final m in missed) {
             items.add(_TimelineItem(
               m.time,
-              ReminderReportRow(category: m.reminder.category, label: m.reminder.label, time: m.time, done: false),
+              ReminderReportRow(
+                category: m.reminder.category,
+                label: m.reminder.label,
+                time: m.time,
+                done: false,
+                onTap: () => _handleMarkDoneLate(context, m.reminder, reportDateStr),
+              ),
             ));
           }
           for (final l in quickLogs) {
