@@ -125,9 +125,9 @@ class _ReminderSheetState extends State<ReminderSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: ListView(
@@ -143,10 +143,10 @@ class _ReminderSheetState extends State<ReminderSheet> {
               ),
               Text(
                 isEditing ? 'Edit reminder' : 'Add reminder',
-                style: const TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 16),
-              const Text('LABEL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text('LABEL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
               const SizedBox(height: 6),
               TextField(
                 controller: labelController,
@@ -154,19 +154,20 @@ class _ReminderSheetState extends State<ReminderSheet> {
                 onChanged: (_) {
                   if (formError != null) setState(() => formError = null);
                 },
-                style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                 decoration: InputDecoration(
                   hintText: 'e.g. Vitamin D drops',
+                  hintStyle: TextStyle(color: AppColors.textMuted),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.cardWhite,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('CATEGORY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text('CATEGORY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -179,7 +180,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                       decoration: BoxDecoration(
-                        color: active ? meta.color : Colors.white,
+                        color: active ? meta.color : AppColors.cardWhite,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(color: active ? meta.color : AppColors.border, width: 1.5),
                       ),
@@ -210,7 +211,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                 }).toList(),
               ),
               const SizedBox(height: 18),
-              const Text('SCHEDULE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text('SCHEDULE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(3),
@@ -233,7 +234,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                 ),
               if (formError != null) ...[
                 const SizedBox(height: 12),
-                Text(formError!, style: const TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(formError!, style: TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
               ],
               const SizedBox(height: 18),
               Row(
@@ -290,7 +291,7 @@ class _ModeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: active ? Colors.white : Colors.transparent,
+        color: active ? AppColors.cardWhite : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -322,11 +323,11 @@ class _FixedTimeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('TIME OF DAY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Text('TIME OF DAY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(14),
@@ -336,7 +337,7 @@ class _FixedTimeRow extends StatelessWidget {
                 color: AppColors.surfaceSecondary,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Text(value, style: const TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              child: Text(value, style: TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             ),
           ),
         ],
@@ -355,11 +356,11 @@ class _IntervalRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('EVERY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Text('EVERY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           Row(
             children: [
               _StepBtn(label: '–', onTap: onDec),
@@ -368,7 +369,7 @@ class _IntervalRow extends StatelessWidget {
                 child: Text(
                   '${hours}h',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                 ),
               ),
               _StepBtn(label: '+', onTap: onInc),

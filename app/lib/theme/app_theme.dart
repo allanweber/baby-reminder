@@ -1,40 +1,181 @@
 import 'package:flutter/material.dart';
 
+/// A complete set of theme-dependent neutral tokens. The app ships two:
+/// [Palette.light] and [Palette.dark]. Everything that changes between light
+/// and dark lives here; the solid accent colors (feed types, reminder
+/// categories, diaper teal, pee/poop swatches) do NOT — they stay identical
+/// across themes, per the design handoff's Dark Mode section.
+class Palette {
+  final Color background;
+  final Color surfaceSecondary;
+  final Color cardWhite; // the "card" surface (white in light, dark card in dark)
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textMuted2;
+  final Color border;
+  final Color errorText;
+  final Color errorSolid;
+  final Color overdue;
+  final Color gearStroke;
+  final Color settingsBg;
+  final Color reminderTitleText;
+  final Color dragHandle;
+  final Color overdueBanner; // reminder banner bg when overdue / due
+  final Color tabBarBorder; // hairline above the bottom tab bar
+  // Diaper-feature neutral surfaces (the teal-tinted card, its × button, swatch
+  // ring). The diaper accent itself (solid teal) stays constant across themes.
+  final Color diaperSoft;
+  final Color diaperText;
+  final Color diaperSubtext;
+  final Color diaperDeleteBg;
+  final Color diaperDeleteText;
+  final Color diaperSwatchRing;
+  final Color diaperStatLabel;
+
+  const Palette({
+    required this.background,
+    required this.surfaceSecondary,
+    required this.cardWhite,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textMuted2,
+    required this.border,
+    required this.errorText,
+    required this.errorSolid,
+    required this.overdue,
+    required this.gearStroke,
+    required this.settingsBg,
+    required this.reminderTitleText,
+    required this.dragHandle,
+    required this.overdueBanner,
+    required this.tabBarBorder,
+    required this.diaperSoft,
+    required this.diaperText,
+    required this.diaperSubtext,
+    required this.diaperDeleteBg,
+    required this.diaperDeleteText,
+    required this.diaperSwatchRing,
+    required this.diaperStatLabel,
+  });
+
+  static const light = Palette(
+    background: Color(0xFFFFF8F2),
+    surfaceSecondary: Color(0xFFF3EDE6),
+    cardWhite: Color(0xFFFFFFFF),
+    textPrimary: Color(0xFF4A3B36),
+    textSecondary: Color(0xFF9C8A82),
+    textMuted: Color(0xFFB7A79E),
+    textMuted2: Color(0xFFC4B6AC),
+    border: Color(0xFFEFE4DB),
+    errorText: Color(0xFFB7726A),
+    errorSolid: Color(0xFFC9695C),
+    overdue: Color(0xFFD97B67),
+    gearStroke: Color(0xFF8B7A73),
+    settingsBg: Color(0xFFEFE4DB),
+    reminderTitleText: Color(0xFF7A6A62),
+    dragHandle: Color(0xFFE4D5CB),
+    overdueBanner: Color(0xFFF9E2DC),
+    tabBarBorder: Color(0xFFF0E6DD),
+    diaperSoft: Color(0xFFE4F0F4),
+    diaperText: Color(0xFF2F4C57),
+    diaperSubtext: Color(0xFF5B7C88),
+    diaperDeleteBg: Color(0xFFD3E5EB),
+    diaperDeleteText: Color(0xFF3D6577),
+    diaperSwatchRing: Color(0xFFC7DCE2),
+    diaperStatLabel: Color(0xFFEAF4F8),
+  );
+
+  // Dark token set (design handoff → "Dark Mode"). Warm charcoal surfaces,
+  // legible warm-gray text; danger tuned; reminder-due bg deepened. The diaper
+  // card becomes a teal-tinted dark surface.
+  static const dark = Palette(
+    background: Color(0xFF221B19),
+    surfaceSecondary: Color(0xFF3D332F),
+    cardWhite: Color(0xFF352C29),
+    textPrimary: Color(0xFFF3EAE4),
+    textSecondary: Color(0xFFB8A99F),
+    textMuted: Color(0xFF8F8079),
+    textMuted2: Color(0xFF8F8079),
+    border: Color(0xFF453A35),
+    errorText: Color(0xFFE39184),
+    errorSolid: Color(0xFFD97A6C),
+    overdue: Color(0xFFD97B67),
+    gearStroke: Color(0xFFB8A99F),
+    settingsBg: Color(0xFF3D332F),
+    reminderTitleText: Color(0xFFC9BAB0),
+    dragHandle: Color(0xFF4A3E38),
+    overdueBanner: Color(0xFF4A342E),
+    tabBarBorder: Color(0xFF453A35),
+    diaperSoft: Color(0xFF2E3A3D),
+    diaperText: Color(0xFFD6E7ED),
+    diaperSubtext: Color(0xFF9FBAC4),
+    diaperDeleteBg: Color(0xFF3A4A4F),
+    diaperDeleteText: Color(0xFFA8C6D0),
+    diaperSwatchRing: Color(0xFF45575E),
+    diaperStatLabel: Color(0xFFEAF4F8),
+  );
+}
+
+/// The palette currently in force. Swapped by [applyPalette] (called from the
+/// root App build) before the widget tree rebuilds, so every [AppColors] getter
+/// below resolves to the active theme's value. The whole tree rebuilds on the
+/// same [notifyListeners] that flips this, so there's a single, consistent read
+/// per frame.
+Palette _activePalette = Palette.light;
+
+/// Points the neutral tokens at the light or dark set. Call before building
+/// [MaterialApp] each frame.
+void applyPalette({required bool dark}) {
+  _activePalette = dark ? Palette.dark : Palette.light;
+}
+
+bool get isDarkPalette => identical(_activePalette, Palette.dark);
+
 /// Design tokens lifted from the Claude Design handoff
 /// (`Baby Feed Tracker.dc.html` / `design_handoff_baby_feed_tracker/README.md`).
+///
+/// Neutral tokens resolve through [_activePalette] so they follow the active
+/// (light/dark) theme. Solid accent colors are compile-time constants — they're
+/// identical in both themes by design.
 class AppColors {
-  static const background = Color(0xFFFFF8F2);
-  static const surfaceSecondary = Color(0xFFF3EDE6);
-  static const cardWhite = Color(0xFFFFFFFF);
-  static const textPrimary = Color(0xFF4A3B36);
-  static const textSecondary = Color(0xFF9C8A82);
-  static const textMuted = Color(0xFFB7A79E);
-  static const textMuted2 = Color(0xFFC4B6AC);
-  static const border = Color(0xFFEFE4DB);
-  static const errorText = Color(0xFFB7726A);
-  static const errorSolid = Color(0xFFC9695C);
-  static const overdue = Color(0xFFD97B67);
-  static const gearStroke = Color(0xFF8B7A73);
-  static const settingsBg = Color(0xFFEFE4DB);
-  static const reminderTitleText = Color(0xFF7A6A62);
-  static const dragHandle = Color(0xFFE4D5CB);
+  static Color get background => _activePalette.background;
+  static Color get surfaceSecondary => _activePalette.surfaceSecondary;
+  static Color get cardWhite => _activePalette.cardWhite;
+  static Color get textPrimary => _activePalette.textPrimary;
+  static Color get textSecondary => _activePalette.textSecondary;
+  static Color get textMuted => _activePalette.textMuted;
+  static Color get textMuted2 => _activePalette.textMuted2;
+  static Color get border => _activePalette.border;
+  static Color get errorText => _activePalette.errorText;
+  static Color get errorSolid => _activePalette.errorSolid;
+  static Color get overdue => _activePalette.overdue;
+  static Color get gearStroke => _activePalette.gearStroke;
+  static Color get settingsBg => _activePalette.settingsBg;
+  static Color get reminderTitleText => _activePalette.reminderTitleText;
+  static Color get dragHandle => _activePalette.dragHandle;
+  static Color get overdueBanner => _activePalette.overdueBanner;
+  static Color get tabBarBorder => _activePalette.tabBarBorder;
 
   // Tweakable accent (default blush). Alternatives offered as theme options.
+  // Accents are identical across light/dark, so they remain compile-time consts.
   static const accentBlush = Color(0xFFE39C8B);
   static const accentSage = Color(0xFF7FA377);
   static const accentLavender = Color(0xFFA98FC4);
   static const accentSoftPeach = Color(0xFFD9A441);
 
   // Diapers feature accent — a distinct teal used ONLY for this feature so a
-  // diaper entry never reads as a Feed or Reminder.
+  // diaper entry never reads as a Feed or Reminder. The solid teal is constant;
+  // the surfaces around it (soft card, × button, swatch ring) follow the theme.
   static const diaperAccent = Color(0xFF5B94AC);
-  static const diaperSoft = Color(0xFFE4F0F4);
-  static const diaperText = Color(0xFF2F4C57); // row title on teal-tinted cards
-  static const diaperSubtext = Color(0xFF5B7C88); // row detail line
-  static const diaperDeleteBg = Color(0xFFD3E5EB); // × button on diaper rows
-  static const diaperDeleteText = Color(0xFF3D6577);
-  static const diaperSwatchRing = Color(0xFFC7DCE2); // outer ring on swatch dots
-  static const diaperStatLabel = Color(0xFFEAF4F8); // label on the teal stat card
+  static Color get diaperSoft => _activePalette.diaperSoft;
+  static Color get diaperText => _activePalette.diaperText; // row title on teal-tinted cards
+  static Color get diaperSubtext => _activePalette.diaperSubtext; // row detail line
+  static Color get diaperDeleteBg => _activePalette.diaperDeleteBg; // × button on diaper rows
+  static Color get diaperDeleteText => _activePalette.diaperDeleteText;
+  static Color get diaperSwatchRing => _activePalette.diaperSwatchRing; // outer ring on swatch dots
+  static Color get diaperStatLabel => _activePalette.diaperStatLabel; // label on the teal stat card
 
   static const feedTypes = {
     FeedType.formula: FeedTypeColors(
@@ -190,17 +331,30 @@ List<BoxShadow> fabShadow(Color accent) => [
       BoxShadow(color: accent.withValues(alpha: 0.5), blurRadius: 20, offset: const Offset(0, 8)),
     ];
 
-ThemeData buildAppTheme(Color accent) {
+/// A category/type "soft" tint: the solid accent [base] blended 24% over the
+/// current card surface (`color-mix(in srgb, base 24%, cardBg 76%)`). Computed,
+/// not looked up, so any accent stays legible against either theme's card —
+/// per the design handoff's Dark Mode section. Optionally blend over a
+/// different [surface] (e.g. the page background) when a chip sits off-card.
+Color softTint(Color base, {Color? surface}) =>
+    Color.alphaBlend(base.withValues(alpha: 0.24), surface ?? AppColors.cardWhite);
+
+ThemeData buildAppTheme(Color accent, {Brightness brightness = Brightness.light}) {
+  final palette = brightness == Brightness.dark ? Palette.dark : Palette.light;
   final base = ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: AppColors.background,
+    brightness: brightness,
+    scaffoldBackgroundColor: palette.background,
+    canvasColor: palette.background,
     fontFamily: 'Nunito',
-    colorScheme: ColorScheme.fromSeed(seedColor: accent, brightness: Brightness.light),
+    colorScheme: ColorScheme.fromSeed(seedColor: accent, brightness: brightness).copyWith(
+      surface: palette.cardWhite,
+    ),
   );
   return base.copyWith(
     textTheme: base.textTheme.apply(
-      bodyColor: AppColors.textPrimary,
-      displayColor: AppColors.textPrimary,
+      bodyColor: palette.textPrimary,
+      displayColor: palette.textPrimary,
       fontFamily: 'Nunito',
     ),
   );

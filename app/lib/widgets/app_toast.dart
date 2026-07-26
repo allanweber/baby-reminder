@@ -57,7 +57,10 @@ class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderSta
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.textPrimary,
+              // Fixed warm-dark toast in both themes (white text on top): the
+              // light theme's primary ink, which reads as a raised surface on
+              // the dark background too — so it never inverts to light-on-light.
+              color: const Color(0xFF4A3B36),
               borderRadius: BorderRadius.circular(16),
               boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 20, offset: Offset(0, 8))],
             ),

@@ -101,9 +101,9 @@ class _AppShellState extends State<AppShell> {
       floatingActionButton: _buildFab(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFF0E6DD), width: 1)),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          border: Border(top: BorderSide(color: AppColors.tabBarBorder, width: 1)),
         ),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
         child: SafeArea(

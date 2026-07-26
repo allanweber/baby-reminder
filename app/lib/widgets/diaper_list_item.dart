@@ -52,12 +52,12 @@ class DiaperListItem extends StatelessWidget {
                 children: [
                   Text(
                     diaperTypeLabels[diaper.type]!,
-                    style: const TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.diaperText),
+                    style: TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.diaperText),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.diaperSubtext),
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.diaperSubtext),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -77,7 +77,7 @@ class DiaperListItem extends StatelessWidget {
               child: InkWell(
                 onTap: onDelete,
                 borderRadius: BorderRadius.circular(10),
-                child: const Center(
+                child: Center(
                   child: Text('×', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.diaperDeleteText)),
                 ),
               ),
@@ -120,7 +120,7 @@ class _SwatchRow extends StatelessWidget {
           color: color,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 2),
-          boxShadow: const [BoxShadow(color: AppColors.diaperSwatchRing, spreadRadius: 1, blurRadius: 0)],
+          boxShadow: [BoxShadow(color: AppColors.diaperSwatchRing, spreadRadius: 1, blurRadius: 0)],
         ),
       );
 }

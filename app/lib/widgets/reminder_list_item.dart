@@ -55,7 +55,7 @@ class ReminderListItem extends StatelessWidget {
               Container(
                 width: 38,
                 height: 38,
-                decoration: BoxDecoration(color: meta.soft, borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(color: softTint(meta.color), borderRadius: BorderRadius.circular(14)),
                 alignment: Alignment.center,
                 child: Container(
                   width: 10,
@@ -71,12 +71,12 @@ class ReminderListItem extends StatelessWidget {
                   children: [
                     Text.rich(
                       TextSpan(
-                        style: const TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        style: TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                         children: [
                           TextSpan(text: reminder.label.isNotEmpty ? reminder.label : meta.label),
                           TextSpan(
                             text: '  ·  ${meta.label}',
-                            style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                            style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
@@ -107,7 +107,7 @@ class ReminderListItem extends StatelessWidget {
                   child: InkWell(
                     onTap: onDelete,
                     borderRadius: BorderRadius.circular(10),
-                    child: const Center(
+                    child: Center(
                       child: Text('×', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.errorText)),
                     ),
                   ),

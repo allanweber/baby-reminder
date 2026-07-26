@@ -140,9 +140,9 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: ListView(
@@ -158,7 +158,7 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
               ),
               Text(
                 isEditing ? 'Edit diaper change' : 'Log diaper change',
-                style: const TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 14),
               // Type pills
@@ -173,9 +173,9 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
                         child: OutlinedButton(
                           onPressed: () => _selectType(t),
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: active ? accent : Colors.white,
+                            backgroundColor: active ? accent : AppColors.cardWhite,
                             foregroundColor: active ? Colors.white : AppColors.gearStroke,
-                            side: active ? BorderSide.none : const BorderSide(color: AppColors.border, width: 1.5),
+                            side: active ? BorderSide.none : BorderSide(color: AppColors.border, width: 1.5),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                           ),
@@ -242,7 +242,7 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
                         }).toList(),
                       ),
                       const SizedBox(height: 14),
-                      const Text('AMOUNT (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                      Text('AMOUNT (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -264,26 +264,27 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
                 ),
                 const SizedBox(height: 14),
               ],
-              const Text('NOTE (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text('NOTE (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
               const SizedBox(height: 6),
               TextField(
                 controller: noteController,
                 minLines: 2,
                 maxLines: 4,
-                style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'e.g. slight rash, extra fussy…',
+                  hintStyle: TextStyle(color: AppColors.textMuted),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.cardWhite,
                   contentPadding: const EdgeInsets.all(12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
                 ),
               ),
               if (formError != null) ...[
                 const SizedBox(height: 10),
-                Text(formError!, style: const TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(formError!, style: TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
               ],
               const SizedBox(height: 16),
               Row(
@@ -339,11 +340,11 @@ class _ColorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           const SizedBox(height: 10),
           child,
         ],
@@ -388,7 +389,7 @@ class _SwatchButton extends StatelessWidget {
                             BoxShadow(color: AppColors.diaperAccent, spreadRadius: 5.5, blurRadius: 0),
                             BoxShadow(color: Colors.white, spreadRadius: 3, blurRadius: 0),
                           ]
-                        : const [
+                        : [
                             BoxShadow(color: AppColors.border, spreadRadius: 1.5, blurRadius: 0),
                           ],
                   ),
@@ -428,9 +429,9 @@ class _AmountPill extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          backgroundColor: selected ? AppColors.diaperAccent : Colors.white,
+          backgroundColor: selected ? AppColors.diaperAccent : AppColors.cardWhite,
           foregroundColor: selected ? Colors.white : AppColors.gearStroke,
-          side: selected ? BorderSide.none : const BorderSide(color: AppColors.border, width: 1.5),
+          side: selected ? BorderSide.none : BorderSide(color: AppColors.border, width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(horizontal: 4),
         ),
@@ -451,7 +452,7 @@ class _DateTimeField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         const SizedBox(height: 6),
         InkWell(
           onTap: onTap,
@@ -460,11 +461,11 @@ class _DateTimeField extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardWhite,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border, width: 1.5),
             ),
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 14)),
+            child: Text(value, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 14)),
           ),
         ),
       ],

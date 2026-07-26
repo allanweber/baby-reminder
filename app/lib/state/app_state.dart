@@ -63,6 +63,7 @@ class AppState extends ChangeNotifier {
   int _nextReminderAlarmId = 1000;
   String babyName = '';
   String unitPref = 'ml';
+  bool darkMode = false;
   int reminderIntervalMin = 180;
   int nextReminderAt = 0;
   bool reminderDismissed = false;
@@ -124,6 +125,7 @@ class AppState extends ChangeNotifier {
       _nextReminderAlarmId = storage.loadNextReminderAlarmId();
       babyName = storage.loadBabyName() ?? '';
       unitPref = storage.loadUnitPref();
+      darkMode = storage.loadDarkMode();
       reminderIntervalMin = storage.loadReminderIntervalMin();
       nextReminderAt = storage.loadNextReminderAt() ??
           DateTime.now().add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
@@ -247,6 +249,7 @@ class AppState extends ChangeNotifier {
     await storage.saveDiapers(diapers);
     await storage.saveBabyName(babyName);
     await storage.saveUnitPref(unitPref);
+    await storage.saveDarkMode(darkMode);
     await storage.saveReminderIntervalMin(reminderIntervalMin);
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
@@ -373,6 +376,18 @@ class AppState extends ChangeNotifier {
   Future<void> setUnitPref(String unit) async {
     unitPref = unit;
     await storage.saveUnitPref(unit);
+    notifyListeners();
+  }
+
+  /// Toggles the dark theme. The root App reads [darkMode] on the next build
+  /// and swaps the active palette, so the whole tree re-themes at once.
+  Future<void> setDarkMode(bool on) async {
+    darkMode = on;
+    // Swap the active palette up front so every listener that rebuilds on this
+    // notify — including an already-open Settings sheet — reads the new theme's
+    // tokens in the same frame, not one frame late.
+    applyPalette(dark: on);
+    await storage.saveDarkMode(on);
     notifyListeners();
   }
 
@@ -755,6 +770,7 @@ class AppState extends ChangeNotifier {
         'exportedAt': DateTime.now().toIso8601String(),
         'babyName': babyName,
         'unitPref': unitPref,
+        'darkMode': darkMode,
         'reminderIntervalMin': reminderIntervalMin,
         'alarmSound': alarmSound,
         'alarmVolume': alarmVolume,
@@ -778,6 +794,7 @@ class AppState extends ChangeNotifier {
       feeds = imported;
       babyName = (data['babyName'] as String?) ?? babyName;
       unitPref = (data['unitPref'] as String?) ?? unitPref;
+      darkMode = (data['darkMode'] as bool?) ?? darkMode;
       reminderIntervalMin = (data['reminderIntervalMin'] as int?) ?? reminderIntervalMin;
       alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
       alarmVolume = ((data['alarmVolume'] as num?)?.toDouble() ?? alarmVolume).clamp(0.0, 1.0);

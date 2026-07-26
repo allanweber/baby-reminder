@@ -25,6 +25,42 @@ The bundled file (`Baby Feed Tracker.dc.html`) is a **design reference built in 
 - **FAB**: 62×62 circle, accent color background, drop shadow. Icon: a simple line-drawn baby bottle (white stroke) with a small white circular "+" badge overlapping its bottom-right corner. Opens the log sheet for a new entry.
 - **Bottom tab bar**: white background, top hairline border `#F0E6DD`. Two tabs, each icon (house / calendar) stacked above a 12.5px 700 label; active tab colored with the accent color, inactive `#B7A79E`.
 
+### 1b. Reminders tab (new nav item, left of Feed)
+- Bottom nav is now 4 tabs: **Reminders** — **Feed** (larger/bolder — the primary tab) — **Diapers** — **Report**. "Home" was renamed to "Feed."
+- Purpose: manage recurring alarms for non-feed care items — medicine, vitamins, tummy time, exercises, activities, diaper, bath, other.
+- **Due-now cards** at top (shown only when something is due): category color dot + label, big "Mark done" primary button, "Snooze 15m" / "Dismiss" secondary row. Marking done logs a completion (for the report) and reschedules per the reminder's repeat rule.
+- **All reminders list** below: each row shows label, category, schedule summary ("Daily at 9:00 AM" or "Every 8h"), and time until next due. Tap opens edit; × opens the same delete-confirmation dialog pattern as feeds.
+- **FAB** on this tab shows a bell icon (instead of the bottle) and opens the Add/Edit Reminder sheet.
+- **Add/Edit Reminder sheet**: Label (text input) → Category (8 pill options: Medicine, Vitamins, Tummy time, Exercises, Activities, Diaper, Bath, Other — each with its own accent color) → Mode toggle "Daily at a time" vs "Every N hours" → conditionally either a time picker or an hour stepper → Save.
+  - **Validation**: label required. Fixed-time mode: duplicate hh:mm across other fixed-time reminders is blocked with an inline error naming the conflicting reminder — this check does NOT apply to interval-mode reminders (their due time drifts, so it can't collide on a fixed clock time).
+  - Interval-mode reminders auto-reschedule +N hours from completion time (same pattern as the feed reminder).
+
+### 1c. Diapers tab (new nav item, between Feed and Report)
+- Purpose: log diaper changes (pee/poop/both) with color and amount, for health tracking — logging/reporting only, no schedule or alarm.
+- **Accent color**: a distinct teal `#5B94AC` (soft tint `#E4F0F4`) used only for this feature, so it never reads as a Feed or Reminder entry.
+- **Stats row**: 3 cards — Changes (teal solid card, white text), Pee (count), Poop (count).
+- Full-width primary button **"Log diaper change"** (teal, matches the Log-feed-now button pattern).
+- **Today's changes list**: teal-tinted rows (`#E4F0F4` background, not white — this is the visual differentiator from Feed's white cards and Reminders' dashed-border cards): 38×38 teal icon tile (folded-diaper glyph), type label ("Pee"/"Poop"/"Pee & poop"), time + color/amount detail line (e.g. "7:15 AM · Poop · Yellow · Small"), one or two small color-swatch dot badges (8–16px circles, color = the logged pee/poop color, white-ring outline) trailing the row, and the same "×" delete-confirm pattern as feeds/reminders.
+- **FAB** on this tab shows the folded-diaper icon and opens the Log Diaper sheet.
+- **Log/Edit Diaper sheet** (bottom sheet, same shell as the feed sheet):
+  - **Type**: 3 segmented pills — Pee / Poop / Pee & poop.
+  - **Date / Time**: same paired native inputs as the feed sheet.
+  - **Pee color** (shown when type is Pee or Pee & poop): required toggle, swatch buttons — Clear, Pale yellow, Yellow, Dark amber, Pink/red (the last two flag possible dehydration/blood — not just "healthy" shades). Selected swatch gets a white-ring halo + white checkmark overlay + bold colored label so the selection is unambiguous.
+  - **Poop color** (shown when type is Poop or Pee & poop): required toggle, swatch buttons — Yellow, Brown, Green, Pale/white, Black, Red (again spanning concerning colors, not only healthy ones). Same selected-state treatment as pee color.
+  - **Poop amount** (shown alongside poop color): optional toggle, Small / Medium / Large; tapping the already-selected pill deselects it.
+  - **Note**: optional textarea, same style as the feed sheet's note field.
+  - **Validation**: date/time always required; pee color required whenever pee is logged; poop color required whenever poop is logged; amount is optional.
+  - **Footer**: "Cancel" + "Save diaper log" (teal accent), same layout as the feed sheet footer.
+
+### 1d. Quick log (ad-hoc category logging, no schedule)
+- Purpose: let the caregiver log that a category happened (e.g. "gave vitamins") right now, without creating or touching a recurring schedule.
+- **Entry points**: (1) a "Quick log" chip row on the Reminders tab, above "All reminders" — one compact pill per category, excluding Diaper (7 categories: Medicine, Vitamins, Tummy time, Exercises, Activities, Bath, Other), each pill outlined/tinted in its category color. (2) A FAB on the Report screen (Report previously had no FAB) that opens a "Quick log" bottom sheet with the same 7 chips plus a Cancel button.
+- **Behavior**: tapping a chip logs instantly — category, today's date, current time, no note — and shows a brief toast ("{Category} logged · {time}") that auto-dismisses after ~1.5s. No sheet/form step for the common case.
+- **Backdating**: not offered at log time. To change the date/time of a quick log, tap the row in the report (see below) to edit it after the fact.
+- **Report-only visibility**: quick logs never appear in the "All reminders" list (which only shows items with an ongoing schedule) — they only show up in the Daily report, under the Reminders filter, merged into the same time-sorted list as scheduled reminder completions/misses.
+- **Distinct report styling**: a quick log renders as a plain solid white card (no dashed border, unlike scheduled-reminder rows) with the category icon tile, label, category, and time — and no "Done"/"Missed" status pill, since there was no schedule to satisfy. Tapping the row opens a compact edit sheet (date + time only); a "×" opens the same delete-confirmation dialog pattern used elsewhere.
+- **Reminders stats update**: the Reminders-filter stats row in Daily report now shows three cards instead of two — Completed, Missed, **Logged** (count of quick logs for the viewed day) — so ad-hoc logs never get conflated with schedule completions.
+
 ### 2. Log Feed sheet (modal, bottom sheet, opened from FAB or a feed row or "Log feed now")
 - **Layout**: Bottom sheet sliding up (28px top corner radius), drag handle bar, title "Log a feed" / "Edit feed" (Baloo 2 700 19px).
 - **Feed type**: 3 segmented pill buttons, equal width, gap 8px: Formula / Breast milk / Breastfeeding. Selected pill fills with that type's accent color + white text; unselected are white with a light `#EFE4DB` border and `#8B7A73` text. Default selection: Formula (configurable).
@@ -45,15 +81,20 @@ The bundled file (`Baby Feed Tracker.dc.html`) is a **design reference built in 
 ### 4. Settings sheet (bottom sheet, opened from the home header cog)
 - "Baby's name" text input (placeholder "e.g. Mia"). Used to personalize the home header and the report title; when empty, headers fall back to generic copy ("Today's feeds" / "Daily report").
 - "Feed reminder" section: explanatory line + a row of interval preset chips (1.5h / 2h / 3h / 4h / 5h). Selected chip fills with the accent color. Selecting a preset resets the current countdown to start from now at that interval.
+- "Dark mode" row: label + description + a pill toggle switch (track = accent color when on, soft neutral when off; white thumb slides left/right). Persists across sessions.
 - Full-width "Done" button (accent color) closes the sheet.
 
 ### 5. Daily report
-- **Layout**: same scrollable-column + fixed tab bar + FAB shell as Home (the FAB and tab bar persist across both tabs).
+- **Layout**: same scrollable-column + fixed tab bar + FAB shell as Home (the FAB and tab bar persist across all three tabs; hidden only in the report itself).
 - **Header**: `"{babyName}'s daily report"` if a name is set, else `"Daily report"` (Baloo 2 700 22px).
+- **Filter**: 4-way segmented control **All / Feed / Diapers / Reminders** directly under the header (default All). Selected segment fills with the accent color (Diapers segment fills with the teal diaper accent, not the app accent).
 - **Date nav row**: "‹" / "›" circular buttons (36px, white, soft shadow) either side of a tappable date label; tapping the label opens a native date picker to jump to any date directly (invalid/empty input falls back to today). When the viewed date isn't today, a small "Jump to today" pill button appears just below the nav row.
-- **Stats row**: identical 3-card layout to Home's stats row, but scoped to the selected day: Total intake, Feeds, Avg gap.
-- **Timeline list**: same card styling as Home's feed list, chronological ascending, for the selected day. Each row also has the × delete button (with the same confirmation dialog) and tapping the row opens the edit sheet.
-- **Empty state**: centered muted text "No feeds logged this day." when the selected day has none.
+- **Stats row**: swaps by filter — Feed/All shows Total intake, Feeds, Avg gap (3 cards); Reminders shows Completed, Missed (2 cards); Diapers shows Total changes (teal solid card), Pee count, Poop count (3 cards).
+- **Timeline list**: merged and time-sorted when filter = All.
+  - **Feed rows**: unchanged solid white card style (icon tile, amount + type, time + note).
+  - **Reminder rows**: visually distinct — dashed border in the category's accent color, category icon tile, label + category, time, and a small status pill ("Done" or "Missed"). Missed reminders (fixed-time reminders whose time passed with no completion logged that day) render at reduced opacity/grayed to distinguish from completed ones.
+  - **Diaper rows**: visually distinct from both — solid teal-tinted `#E4F0F4` background (no dashed border, not white), teal icon tile, type label, time + color/amount detail, and trailing color-swatch dot badge(s) showing the exact logged pee/poop color at a glance.
+- **Empty state**: centered muted text "Nothing logged this day." when the selected day + filter has no items.
 
 ## Interactions & Behavior
 - Logging a feed (new, not an edit) recomputes the "next feed" reminder as `feed timestamp + reminder interval` and clears any dismissed/snoozed state.
@@ -66,20 +107,36 @@ The bundled file (`Baby Feed Tracker.dc.html`) is a **design reference built in 
 
 ## State Management
 - `feeds`: list of `{ id, date (YYYY-MM-DD), time (HH:MM 24h), type ('formula'|'breastBottle'|'breastfeeding'), amountMl, durationMin, note }`.
+- `reminders`: list of `{ id, label, category ('medicine'|'vitamins'|'tummyTime'|'exercises'|'activities'|'diaper'|'bath'|'other'), mode ('fixed'|'interval'), fixedTime (HH:MM, fixed mode only), intervalHours (number, interval mode only), nextDueAt (timestamp), snoozedUntil (timestamp|null), dismissed (boolean) }`.
+- `reminderLogs`: append-only completion/log history, `{ id, reminderId (string, or null for a quick/ad-hoc log), label, category, date, time }` — written when a scheduled reminder is marked done, or instantly when a quick-log chip is tapped (reminderId: null marks it as ad-hoc). Drives the report's history rows and the Completed/Missed/Logged counts.
+- `diapers`: list of `{ id, date (YYYY-MM-DD), time (HH:MM 24h), type ('pee'|'poop'|'both'), peeColor ('clear'|'pale'|'yellow'|'dark'|'pink'|null), poopColor ('yellow'|'brown'|'green'|'white'|'black'|'red'|null), poopAmount ('Small'|'Medium'|'Large'|null), note }` — logging/reporting only, no scheduling fields.
 - `babyName`: string, optional.
 - `unitPref`: `'ml' | 'oz'`, persisted as the default.
 - `reminderIntervalMin`: number (default 180), persisted.
 - `nextReminderAt`: timestamp, recomputed on new feed save / snooze / interval change.
 - `reminderDismissed`: boolean, reset on new feed save.
-- Persist `feeds`, `babyName`, `unitPref`, `reminderIntervalMin` to local on-device storage (this is a single-user, single-baby, offline-first app — no backend needed for v1).
+- Persist `feeds`, `diapers`, `babyName`, `unitPref`, `reminderIntervalMin` to local on-device storage (this is a single-user, single-baby, offline-first app — no backend needed for v1).
 
 ## Design Tokens
 - **Colors**: background/cream `#FFF8F2` (page) / `#F3EDE6` (secondary surface), card white `#FFFFFF`, primary text `#4A3B36`, secondary text `#9C8A82`, muted text `#B7A79E` / `#C4B6AC`, borders `#EFE4DB`, error/delete `#B7726A` (text) / `#C9695C` (solid button), overdue accent `#D97B67`.
   - Accent (tweakable, default blush) `#E39C8B`. Alternative curated accents used elsewhere for feed types: sage `#7FA377`, lavender `#A98FC4`. A soft-peach `#D9A441`-family alt accent is also offered as a theme option.
   - Feed type tints (icon tile backgrounds): Formula `#FBEAE5`, Breast milk `#EAF1E6`, Breastfeeding `#EFE7F5`.
+  - Reminder category colors (icon + dashed border + status pill): Medicine `#C9695C`/`#F7E3E0`, Vitamins `#D9A441`/`#FBF0DC`, Tummy time `#8FAE7B`/`#EDF3E6`, Exercises `#6FA8A0`/`#E3F1EF`, Activities `#B08FC4`/`#F0E7F5`, Diaper `#D98E8E`/`#F9E9E9`, Bath `#7FB0C4`/`#E6F1F5`, Other `#A79A8F`/`#EFEAE5`.
+  - Diapers feature accent (distinct from the app accent, used only here): `#5B94AC` solid / `#E4F0F4` soft tint.
+  - Pee colors: Clear `#F7F6EC`, Pale yellow `#F5E6A3`, Yellow `#E8C547`, Dark amber `#C68A2E`, Pink/red `#C4585A`.
+  - Poop colors: Yellow `#D9A441`, Brown `#8B5E3C`, Green `#6B8E4E`, Pale/white `#E5DEC5`, Black `#3A3A3A`, Red `#B23A2E`.
 - **Typography**: Display font **Baloo 2** (600/700) for headings, numbers, big stats. Body font **Nunito** (400/600/700) for everything else. Base body size 13–15px; large countdown/amount numerals 20–32px.
 - **Radius scale**: 10px (small chips) / 14–16px (inputs, small buttons) / 18–20px (cards, primary buttons) / 22–28px (sheets, dialogs).
 - **Shadows**: cards `0 2–3px 10–14px rgba(74,59,54,0.05–0.08)`; FAB/primary CTA `0 6–8px 16–20px` in the accent color at ~40–50% opacity.
+
+## Dark Mode
+A dark theme is included, toggled from the Settings sheet (persisted via local storage). Implement as a second token set, not per-component overrides:
+- Surfaces: page `#221B19`, card `#352C29`, secondary/inset `#241D1B`, soft `#3D332F`, borders `#453A35`, dividers `#4A3E38`.
+- Text: primary `#F3EAE4`, secondary `#B8A99F`, tertiary `#8F8079`, secondary-strong `#C9BAB0`, icon-neutral `#B8A99F`.
+- Status: danger `#D97A6C`, danger-text `#E39184`, reminder-due-bg `#4A342E`.
+- Diaper-specific: card bg `#2E3A3D`-family (teal-tinted dark), delete bg/text tuned to stay legible on dark.
+- Category/type "soft" tint chips (feed-type icon tiles, reminder category chips, diaper swatches) are NOT swapped to fixed dark hexes — they're computed as `color-mix(in srgb, {categoryColor} 24%, {cardBg} 76%)` so any accent stays legible against either surface. Recreate this as a token function, not a lookup table.
+- All solid accent colors (feed types, reminder categories, diaper teal, pee/poop swatches) stay the same hex in both themes — only neutrals and soft tints change.
 
 ## Assets
 No image assets — all icons (settings gear, home house, report calendar, bottle+plus FAB) are simple line-drawn SVGs, single color, defined inline in the prototype. No illustrations or photography are used; the calm/friendly feel comes from color, type and rounded geometry only.

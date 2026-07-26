@@ -40,7 +40,7 @@ class QuickLogChips extends StatelessWidget {
       children: quickLogCategories.map((c) {
         final meta = reminderCategories[c]!;
         return Material(
-          color: meta.soft,
+          color: softTint(meta.color),
           borderRadius: BorderRadius.circular(11),
           child: InkWell(
             borderRadius: BorderRadius.circular(11),
@@ -71,9 +71,9 @@ Future<void> showQuickLogSheet(BuildContext context, AppState appState) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
       child: SafeArea(
@@ -90,10 +90,10 @@ Future<void> showQuickLogSheet(BuildContext context, AppState appState) {
                 decoration: BoxDecoration(color: AppColors.dragHandle, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const Text('Quick log',
+            Text('Quick log',
                 style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 4),
-            const Text('Log a category right now, no schedule needed.',
+            Text('Log a category right now, no schedule needed.',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             QuickLogChips(

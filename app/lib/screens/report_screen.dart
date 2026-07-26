@@ -174,7 +174,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
                   child: Text(title,
-                      style: const TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -192,7 +192,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       InkWell(
                         onTap: _pickDate,
                         child: Text(dateLabel,
-                            style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
+                            style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
                       ),
                       _NavCircleButton(icon: '›', onTap: _nextDay),
                     ],
@@ -232,8 +232,8 @@ class _ReportScreenState extends State<ReportScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
                   child: items.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                           child: Center(
                             child: Text('Nothing logged this day.',
                                 style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
@@ -342,11 +342,11 @@ class _ReminderStatsRow extends StatelessWidget {
         children: [
           Text(value,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
           const SizedBox(height: 2),
           Text(label,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -361,7 +361,7 @@ class _NavCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.cardWhite,
       shape: const CircleBorder(),
       elevation: 0,
       child: InkWell(
@@ -374,7 +374,7 @@ class _NavCircleButton extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [BoxShadow(color: Color.fromRGBO(74, 59, 54, 0.08), blurRadius: 8, offset: Offset(0, 2))],
           ),
-          child: Center(child: Text(icon, style: const TextStyle(fontSize: 16, color: AppColors.textPrimary))),
+          child: Center(child: Text(icon, style: TextStyle(fontSize: 16, color: AppColors.textPrimary))),
         ),
       ),
     );

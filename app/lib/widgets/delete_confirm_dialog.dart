@@ -25,10 +25,10 @@ Future<bool> showDeleteConfirmDialog(BuildContext context, {String title = 'Dele
           children: [
             Text(
               title,
-              style: const TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               "This can't be undone.",
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),

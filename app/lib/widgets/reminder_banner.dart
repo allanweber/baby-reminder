@@ -38,7 +38,7 @@ class ReminderBanner extends StatelessWidget {
       );
     }
 
-    final bg = overdue ? const Color(0xFFF9E2DC) : AppColors.surfaceSecondary;
+    final bg = overdue ? AppColors.overdueBanner : AppColors.surfaceSecondary;
     final dotColor = overdue ? AppColors.overdue : accentColor;
 
     return Container(
@@ -60,16 +60,16 @@ class ReminderBanner extends StatelessWidget {
                   children: [
                     Text(
                       overdue ? 'Feed overdue' : 'Next feed in',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText, letterSpacing: 0.2),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText, letterSpacing: 0.2),
                     ),
                     Text(
                       reminderLabel,
-                      style: const TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                     ),
                     if (atLabel != null)
                       Text(
                         atLabel!,
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText),
                       ),
                   ],
                 ),
@@ -87,7 +87,7 @@ class ReminderBanner extends StatelessWidget {
                   child: TextButton(
                     onPressed: onSnooze,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.67),
+                      backgroundColor: AppColors.cardWhite.withValues(alpha: 0.67),
                       foregroundColor: AppColors.textPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),

@@ -44,7 +44,7 @@ class DiaperStatsRow extends StatelessWidget {
           const SizedBox(height: 2),
           Text(label,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.diaperStatLabel)),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.diaperStatLabel)),
         ],
       ),
     );
@@ -62,11 +62,11 @@ class DiaperStatsRow extends StatelessWidget {
         children: [
           Text(value,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
           const SizedBox(height: 2),
           Text(label,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         ],
       ),
     );

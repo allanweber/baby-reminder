@@ -41,10 +41,10 @@ class DiapersScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
                   child: Text(title,
-                      style: const TextStyle(fontFamily: balooFamily, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
                   child: Text('Log pee, poop and color to keep an eye on things.',
                       style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                 ),
@@ -68,16 +68,16 @@ class DiapersScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
                   child: Text("Today's changes",
                       style: TextStyle(fontFamily: balooFamily, fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                   child: today.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                           child: Center(
                             child: Text('No diaper changes logged yet today.',
                                 style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),

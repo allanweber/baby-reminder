@@ -81,14 +81,14 @@ class HomeScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(greeting,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontFamily: balooFamily, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                             const SizedBox(height: 2),
                             Text(longDate,
-                                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                                style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
                             Text(timePhrase,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 13,
                                     color: AppColors.textMuted,
                                     fontWeight: FontWeight.w600,
@@ -102,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                         child: InkWell(
                           customBorder: const CircleBorder(),
                           onTap: () => showTimerSheet(context, appState),
-                          child: const Tooltip(
+                          child: Tooltip(
                             message: 'Set a timer',
                             child: SizedBox(
                               width: 40,
@@ -161,16 +161,16 @@ class HomeScreen extends StatelessWidget {
                   feedCountValue: '${stats.feedCount}',
                   avgGapValue: stats.avgIntervalDisplay,
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
                   child: Text("Today's feeds",
                       style: TextStyle(fontFamily: balooFamily, fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                   child: homeFeeds.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                           child: Center(
                             child: Text('No feeds logged yet today.',
                                 style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),

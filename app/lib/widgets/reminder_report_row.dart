@@ -37,7 +37,7 @@ class ReminderReportRow extends StatelessWidget {
               Container(
                 width: 38,
                 height: 38,
-                decoration: BoxDecoration(color: meta.soft, borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(color: softTint(meta.color), borderRadius: BorderRadius.circular(14)),
                 alignment: Alignment.center,
                 child: Container(
                   width: 10,
@@ -53,12 +53,12 @@ class ReminderReportRow extends StatelessWidget {
                   children: [
                     Text.rich(
                       TextSpan(
-                        style: const TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        style: TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                         children: [
                           TextSpan(text: label.isNotEmpty ? label : meta.label),
                           TextSpan(
                             text: '  ·  ${meta.label}',
-                            style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                            style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
@@ -68,7 +68,7 @@ class ReminderReportRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       reminderTime12h(time),
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -77,7 +77,7 @@ class ReminderReportRow extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: done ? meta.soft : AppColors.surfaceSecondary,
+                  color: done ? softTint(meta.color) : AppColors.surfaceSecondary,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(

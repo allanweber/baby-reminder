@@ -61,9 +61,9 @@ class _TimerSheetState extends State<_TimerSheet> {
     final replacing = widget.appState.customTimerActive;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
       ),
       padding: EdgeInsets.fromLTRB(20, 18, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
       child: Column(
@@ -78,14 +78,14 @@ class _TimerSheetState extends State<_TimerSheet> {
               decoration: BoxDecoration(color: AppColors.dragHandle, borderRadius: BorderRadius.circular(2)),
             ),
           ),
-          const Text('Set a timer',
+          Text('Set a timer',
               style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
           const SizedBox(height: 4),
           Text(
             replacing
                 ? 'This replaces the timer you already have running.'
                 : 'Counts down in the same spot as the feed reminder and rings the alarm when it is up.',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           Wrap(
@@ -96,9 +96,9 @@ class _TimerSheetState extends State<_TimerSheet> {
               return OutlinedButton(
                 onPressed: () => _applyPreset(m),
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: active ? accent : Colors.white,
+                  backgroundColor: active ? accent : AppColors.cardWhite,
                   foregroundColor: active ? Colors.white : AppColors.gearStroke,
-                  side: active ? BorderSide.none : const BorderSide(color: AppColors.border, width: 1.5),
+                  side: active ? BorderSide.none : BorderSide(color: AppColors.border, width: 1.5),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
@@ -107,7 +107,7 @@ class _TimerSheetState extends State<_TimerSheet> {
             }).toList(),
           ),
           const SizedBox(height: 20),
-          const Text('CUSTOM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Text('CUSTOM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -151,7 +151,7 @@ class _Stepper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border, width: 1.5),
       ),
@@ -163,8 +163,8 @@ class _Stepper extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('$value',
-                  style: const TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
+                  style: TextStyle(fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
             ],
           ),
           _RoundButton(icon: Icons.add, onTap: onPlus),

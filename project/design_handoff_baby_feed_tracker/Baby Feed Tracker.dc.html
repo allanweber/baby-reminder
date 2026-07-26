@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,600&display=swap" rel="stylesheet">
   <style>
-    body { margin:0; background:#F3EDE6; font-family:'Nunito',sans-serif; }
+    body { margin:0; background:var(--bg-inset); font-family:'Nunito',sans-serif; }
     @keyframes slideUp { from{ transform:translateY(24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
     @keyframes fadeIn { from{ opacity:0; } to{ opacity:1; } }
     @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
@@ -19,18 +19,18 @@
 </helmet>
 <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px;box-sizing:border-box;font-family:'Nunito',sans-serif;">
   <x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" hint-size="412px,892px">
-    <div style="position:relative;height:100%;width:100%;background:#FFF8F2;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="position:relative;height:100%;width:100%;background:var(--bg-surface);display:flex;flex-direction:column;overflow:hidden;{{ themeStyle }}">
 
       <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
         <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;">
           <div style="padding:20px 20px 8px;display:flex;align-items:flex-start;justify-content:space-between;">
             <div>
-              <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:700;color:#4A3B36;">{{ greeting }}</div>
-              <div style="font-size:14px;color:#9C8A82;margin-top:2px;font-weight:600;">{{ todayLongDate }}</div>
-              <div style="font-size:13px;color:#B7A79E;margin-top:4px;font-weight:600;font-style:italic;">{{ timePhrase }}</div>
+              <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:700;color:var(--text-primary);">{{ greeting }}</div>
+              <div style="font-size:14px;color:var(--text-secondary);margin-top:2px;font-weight:600;">{{ todayLongDate }}</div>
+              <div style="font-size:13px;color:var(--text-tertiary);margin-top:4px;font-weight:600;font-style:italic;">{{ timePhrase }}</div>
             </div>
-            <button onClick="{{ openSettings }}" style="width:40px;height:40px;border-radius:20px;border:none;background:#EFE4DB;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" aria-label="Settings">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8B7A73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button onClick="{{ openSettings }}" style="width:40px;height:40px;border-radius:20px;border:none;background:var(--bg-soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" aria-label="Settings">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--icon-neutral)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"></path>
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.14.59.63 1.04 1.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"></path>
               </svg>
@@ -42,146 +42,581 @@
               <div style="display:flex;align-items:center;gap:10px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:{{ reminderDotColor }};animation:{{ reminderPulse }};flex-shrink:0;"></div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:13px;color:#7A6A62;font-weight:700;letter-spacing:0.2px;">{{ reminderTitle }}</div>
-                  <div style="font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:#4A3B36;">{{ reminderLabel }}</div>
+                  <div style="font-size:13px;color:var(--text-secondary-strong);font-weight:700;letter-spacing:0.2px;">{{ reminderTitle }}</div>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">{{ reminderLabel }}</div>
                 </div>
               </div>
               <button onClick="{{ logNowFromReminder }}" style="width:100%;padding:16px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:800;font-size:17px;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 6px 16px rgba(227,156,139,0.4);">Log feed now</button>
               <div style="display:flex;gap:8px;">
-                <button onClick="{{ snoozeReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:#ffffffaa;color:#4A3B36;font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Snooze 15m</button>
-                <button onClick="{{ dismissReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:transparent;color:#9C8A82;font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Dismiss</button>
+                <button onClick="{{ snoozeReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:var(--overlay-btn-bg);color:var(--text-primary);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Snooze 15m</button>
+                <button onClick="{{ dismissReminder }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:transparent;color:var(--text-secondary);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;">Dismiss</button>
               </div>
             </div>
           </sc-if>
           <sc-if value="{{ !showReminderBanner }}" hint-placeholder-val="{{ false }}">
-            <div style="margin:12px 20px 0;padding:16px;border-radius:24px;background:#F3EDE6;display:flex;flex-direction:column;gap:4px;">
+            <div style="margin:12px 20px 0;padding:16px;border-radius:24px;background:var(--bg-inset);display:flex;flex-direction:column;gap:4px;">
               <button onClick="{{ openNewLog }}" style="width:100%;padding:16px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:800;font-size:17px;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 6px 16px rgba(227,156,139,0.4);">Log feed now</button>
             </div>
           </sc-if>
 
           <div style="display:flex;gap:10px;padding:16px 20px 4px;">
-            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
-              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ todayStats.totalMlDisplay }}</div>
-              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">TODAY'S INTAKE</div>
+            <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ todayStats.totalMlDisplay }}</div>
+              <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">TODAY'S INTAKE</div>
             </div>
-            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
-              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ todayStats.feedCount }}</div>
-              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">FEEDS TODAY</div>
+            <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ todayStats.feedCount }}</div>
+              <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">FEEDS TODAY</div>
             </div>
-            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
-              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ todayStats.avgIntervalDisplay }}</div>
-              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">AVG GAP</div>
+            <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ todayStats.avgIntervalDisplay }}</div>
+              <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">AVG GAP</div>
             </div>
           </div>
 
-          <div style="padding:18px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:#4A3B36;">Today's feeds</div>
+          <div style="padding:18px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);">Today's feeds</div>
           <div style="padding:4px 20px 100px;display:flex;flex-direction:column;gap:10px;">
             <sc-if value="{{ hasHomeFeeds }}" hint-placeholder-val="{{ true }}">
               <sc-for list="{{ homeFeeds }}" as="feed" hint-placeholder-count="3">
-                <div style="background:#fff;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
-                  <div style="width:38px;height:38px;border-radius:14px;background:{{ feed.typeColorSoft }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
+                  <div style="width:38px;height:38px;border-radius:14px;background:color-mix(in srgb, {{ feed.typeColor }} 24%, var(--bg-card) 76%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <div style="width:10px;height:10px;border-radius:50%;background:{{ feed.typeColor }};"></div>
                   </div>
                   <div onClick="{{ feed.onEdit }}" style="flex:1;min-width:0;">
-                    <div style="font-size:15px;font-weight:700;color:#4A3B36;">{{ feed.displayAmount }} <span style="color:#B7A79E;font-weight:700;">· {{ feed.typeLabel }}</span></div>
-                    <div style="font-size:12.5px;color:#9C8A82;font-weight:600;margin-top:2px;">{{ feed.displayTimeStr }}{{ feed.noteSuffix }}</div>
+                    <div style="font-size:15px;font-weight:700;color:var(--text-primary);">{{ feed.displayAmount }} <span style="color:var(--text-tertiary);font-weight:700;">· {{ feed.typeLabel }}</span></div>
+                    <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;margin-top:2px;">{{ feed.displayTimeStr }}{{ feed.noteSuffix }}</div>
                   </div>
-                  <button onClick="{{ feed.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:#F3EDE6;color:#B7726A;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                  <button onClick="{{ feed.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--bg-inset);color:var(--danger-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
                 </div>
               </sc-for>
             </sc-if>
             <sc-if value="{{ !hasHomeFeeds }}" hint-placeholder-val="{{ false }}">
-              <div style="text-align:center;padding:30px 10px;color:#B7A79E;font-weight:600;font-size:14px;">No feeds logged yet today.</div>
+              <div style="text-align:center;padding:30px 10px;color:var(--text-tertiary);font-weight:600;font-size:14px;">No feeds logged yet today.</div>
             </sc-if>
           </div>
         </div>
       </sc-if>
 
-      <sc-if value="{{ !isHome }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
         <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;">
-          <div style="padding:20px 20px 8px;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:#4A3B36;">{{ reportTitle }}</div>
+          <div style="padding:20px 20px 8px;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">{{ reportTitle }}</div>
+          <div style="display:flex;background:var(--bg-soft);border-radius:16px;padding:4px;margin:0 20px 10px;">
+            <button onClick="{{ setFilterAll }}" style="flex:1;padding:8px 0;border-radius:12px;border:none;font-weight:700;font-size:11.5px;font-family:'Nunito',sans-serif;cursor:pointer;{{ filterAllStyle }}">All</button>
+            <button onClick="{{ setFilterFeed }}" style="flex:1;padding:8px 0;border-radius:12px;border:none;font-weight:700;font-size:11.5px;font-family:'Nunito',sans-serif;cursor:pointer;{{ filterFeedStyle }}">Feed</button>
+            <button onClick="{{ setFilterDiaper }}" style="flex:1;padding:8px 0;border-radius:12px;border:none;font-weight:700;font-size:11.5px;font-family:'Nunito',sans-serif;cursor:pointer;{{ filterDiaperStyle }}">Diapers</button>
+            <button onClick="{{ setFilterReminder }}" style="flex:1;padding:8px 0;border-radius:12px;border:none;font-weight:700;font-size:11.5px;font-family:'Nunito',sans-serif;cursor:pointer;{{ filterReminderStyle }}">Reminders</button>
+          </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 12px;">
-            <button onClick="{{ prevDay }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#fff;box-shadow:0 2px 8px rgba(74,59,54,0.08);font-size:16px;color:#4A3B36;cursor:pointer;">‹</button>
-            <label style="position:relative;font-weight:700;color:#4A3B36;font-size:15px;cursor:pointer;">
+            <button onClick="{{ prevDay }}" style="width:36px;height:36px;border-radius:18px;border:none;background:var(--bg-card);box-shadow:0 2px 8px rgba(74,59,54,0.08);font-size:16px;color:var(--text-primary);cursor:pointer;">‹</button>
+            <label style="position:relative;font-weight:700;color:var(--text-primary);font-size:15px;cursor:pointer;">
               {{ reportDateLabel }}
               <input type="date" value="{{ reportDate }}" onChange="{{ onReportDateChange }}" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;"/>
             </label>
-            <button onClick="{{ nextDay }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#fff;box-shadow:0 2px 8px rgba(74,59,54,0.08);font-size:16px;color:#4A3B36;cursor:pointer;">›</button>
+            <button onClick="{{ nextDay }}" style="width:36px;height:36px;border-radius:18px;border:none;background:var(--bg-card);box-shadow:0 2px 8px rgba(74,59,54,0.08);font-size:16px;color:var(--text-primary);cursor:pointer;">›</button>
           </div>
           <sc-if value="{{ showTodayButton }}" hint-placeholder-val="{{ false }}">
             <div style="display:flex;justify-content:center;padding:0 20px 8px;">
-              <button onClick="{{ goToday }}" style="padding:7px 16px;border-radius:14px;border:none;background:#EFE4DB;color:#7A6A62;font-weight:700;font-size:12.5px;font-family:'Nunito',sans-serif;cursor:pointer;">Jump to today</button>
+              <button onClick="{{ goToday }}" style="padding:7px 16px;border-radius:14px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:12.5px;font-family:'Nunito',sans-serif;cursor:pointer;">Jump to today</button>
             </div>
           </sc-if>
-          <div style="display:flex;gap:10px;padding:0 20px 4px;">
-            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
-              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ reportStats.totalMlDisplay }}</div>
-              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">TOTAL INTAKE</div>
+          <sc-if value="{{ showFeedStats }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:10px;padding:0 20px 4px;">
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ reportStats.totalMlDisplay }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">TOTAL INTAKE</div>
+              </div>
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ reportStats.feedCount }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">FEEDS</div>
+              </div>
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ reportStats.avgIntervalDisplay }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">AVG GAP</div>
+              </div>
             </div>
-            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
-              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ reportStats.feedCount }}</div>
-              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">FEEDS</div>
+          </sc-if>
+          <sc-if value="{{ showReminderStats }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:10px;padding:0 20px 4px;">
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ reminderCompletedCount }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">COMPLETED</div>
+              </div>
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ reminderMissedCount }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">MISSED</div>
+              </div>
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ reminderLoggedCount }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">LOGGED</div>
+              </div>
             </div>
-            <div style="flex:1;background:#fff;border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
-              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;">{{ reportStats.avgIntervalDisplay }}</div>
-              <div style="font-size:11px;color:#9C8A82;font-weight:700;margin-top:2px;">AVG GAP</div>
+          </sc-if>
+          <sc-if value="{{ showDiaperStats }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:10px;padding:0 20px 4px;">
+              <div style="flex:1;background:{{ diaperAccent }};border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(91,148,172,0.25);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#fff;">{{ diaperReportStats.total }}</div>
+                <div style="font-size:11px;color:#EAF4F8;font-weight:700;margin-top:2px;">TOTAL CHANGES</div>
+              </div>
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ diaperReportStats.peeCount }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">PEE</div>
+              </div>
+              <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ diaperReportStats.poopCount }}</div>
+                <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">POOP</div>
+              </div>
             </div>
-          </div>
+          </sc-if>
           <div style="padding:16px 20px 100px;display:flex;flex-direction:column;gap:10px;">
-            <sc-if value="{{ hasReportFeeds }}" hint-placeholder-val="{{ true }}">
-              <sc-for list="{{ reportFeeds }}" as="feed" hint-placeholder-count="4">
-                <div style="background:#fff;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
-                  <div style="width:38px;height:38px;border-radius:14px;background:{{ feed.typeColorSoft }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <div style="width:10px;height:10px;border-radius:50%;background:{{ feed.typeColor }};"></div>
+            <sc-if value="{{ hasReportItems }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ reportItems }}" as="item" hint-placeholder-count="4">
+                <sc-if value="{{ item.feed }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
+                    <div style="width:38px;height:38px;border-radius:14px;background:color-mix(in srgb, {{ item.feed.typeColor }} 24%, var(--bg-card) 76%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <div style="width:10px;height:10px;border-radius:50%;background:{{ item.feed.typeColor }};"></div>
+                    </div>
+                    <div onClick="{{ item.feed.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
+                      <div style="font-size:15px;font-weight:700;color:var(--text-primary);">{{ item.feed.displayAmount }} <span style="color:var(--text-tertiary);font-weight:700;">· {{ item.feed.typeLabel }}</span></div>
+                      <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;margin-top:2px;">{{ item.feed.displayTimeStr }}{{ item.feed.noteSuffix }}</div>
+                    </div>
+                    <button onClick="{{ item.feed.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--bg-inset);color:var(--danger-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
                   </div>
-                  <div onClick="{{ feed.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
-                    <div style="font-size:15px;font-weight:700;color:#4A3B36;">{{ feed.displayAmount }} <span style="color:#B7A79E;font-weight:700;">· {{ feed.typeLabel }}</span></div>
-                    <div style="font-size:12.5px;color:#9C8A82;font-weight:600;margin-top:2px;">{{ feed.displayTimeStr }}{{ feed.noteSuffix }}</div>
+                </sc-if>
+                <sc-if value="{{ item.reminder }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;opacity:{{ item.reminder.opacityVal }};{{ item.reminder.cardStyle }}">
+                    <div style="width:36px;height:36px;border-radius:11px;background:color-mix(in srgb, {{ item.reminder.categoryColor }} 24%, var(--bg-card) 76%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ item.reminder.categoryColor }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 003.4 0"></path></svg>
+                    </div>
+                    <div style="flex:1;min-width:0;{{ item.reminder.editableCursor }}" onClick="{{ item.reminder.onEdit }}">
+                      <div style="font-size:14.5px;font-weight:700;color:var(--text-primary);">{{ item.reminder.label }} <span style="color:var(--text-tertiary);font-weight:700;">· {{ item.reminder.categoryLabel }}</span></div>
+                      <div style="font-size:12px;color:var(--text-secondary);font-weight:600;margin-top:2px;">{{ item.reminder.displayTimeStr }}</div>
+                    </div>
+                    <sc-if value="{{ item.reminder.showStatusPill }}" hint-placeholder-val="{{ true }}">
+                      <div style="font-size:10.5px;font-weight:800;color:{{ item.reminder.categoryColor }};background:color-mix(in srgb, {{ item.reminder.categoryColor }} 24%, var(--bg-card) 76%);padding:4px 9px;border-radius:10px;flex-shrink:0;">{{ item.reminder.statusLabel }}</div>
+                    </sc-if>
+                    <sc-if value="{{ item.reminder.isQuickLog }}" hint-placeholder-val="{{ false }}">
+                      <button onClick="{{ item.reminder.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--bg-inset);color:var(--danger-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                    </sc-if>
                   </div>
-                  <button onClick="{{ feed.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:#F3EDE6;color:#B7726A;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
-                </div>
+                </sc-if>
+                <sc-if value="{{ item.diaper }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--diaper-card-bg);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                    <div style="width:38px;height:38px;border-radius:14px;background:#5B94AC;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v3c0 6-4 11-9 11S3 15 3 9V6z"></path><path d="M9 9a3 3 0 006 0"></path></svg>
+                    </div>
+                    <div onClick="{{ item.diaper.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
+                      <div style="font-size:15px;font-weight:700;color:#2F4C57;">{{ item.diaper.typeLabel }}</div>
+                      <div style="font-size:12.5px;color:#5B7C88;font-weight:600;margin-top:2px;">{{ item.diaper.displayTimeStr }} · {{ item.diaper.detailStr }}{{ item.diaper.noteSuffix }}</div>
+                    </div>
+                    <div style="display:flex;gap:5px;flex-shrink:0;">
+                      <sc-if value="{{ item.diaper.swatchPee }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:16px;height:16px;border-radius:50%;background:{{ item.diaper.swatchPee }};box-shadow:0 0 0 2px #fff, 0 0 0 3px #C7DCE2;"></div>
+                      </sc-if>
+                      <sc-if value="{{ item.diaper.swatchPoop }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:16px;height:16px;border-radius:50%;background:{{ item.diaper.swatchPoop }};box-shadow:0 0 0 2px #fff, 0 0 0 3px #C7DCE2;"></div>
+                      </sc-if>
+                    </div>
+                    <button onClick="{{ item.diaper.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--diaper-delete-bg);color:var(--diaper-delete-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                  </div>
+                </sc-if>
               </sc-for>
             </sc-if>
-            <sc-if value="{{ !hasReportFeeds }}" hint-placeholder-val="{{ false }}">
-              <div style="text-align:center;padding:30px 10px;color:#B7A79E;font-weight:600;font-size:14px;">No feeds logged this day.</div>
+            <sc-if value="{{ !hasReportItems }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:30px 10px;color:var(--text-tertiary);font-weight:600;font-size:14px;">Nothing logged this day.</div>
             </sc-if>
           </div>
         </div>
       </sc-if>
 
-      <button onClick="{{ openNewLog }}" style="position:absolute;right:20px;bottom:78px;width:62px;height:62px;border-radius:31px;border:none;background:{{ accentColor }};box-shadow:0 8px 20px rgba(227,156,139,0.5);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 2h4"></path>
-          <path d="M10 2v3.2c0 .4-.15.78-.42 1.08L8.2 7.9A2 2 0 007.5 9.4V20a2 2 0 002 2h5a2 2 0 002-2V9.4a2 2 0 00-.7-1.5L14.42 6.3a1.6 1.6 0 01-.42-1.08V2"></path>
-          <path d="M7.5 13h9"></path>
-        </svg>
-        <div style="position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
-          <div style="position:relative;width:12px;height:12px;">
-            <div style="position:absolute;top:4.5px;left:0;width:12px;height:2.4px;border-radius:2px;background:{{ accentColor }};"></div>
-            <div style="position:absolute;left:4.8px;top:0;width:2.4px;height:12px;border-radius:2px;background:{{ accentColor }};"></div>
+      <sc-if value="{{ isReminders }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;">
+          <div style="padding:20px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">Reminders</div>
+          <div style="padding:0 20px 8px;font-size:13px;color:var(--text-secondary);font-weight:600;">Medicine, vitamins, tummy time and more — all in one place.</div>
+
+          <sc-if value="{{ hasDueReminders }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:8px 20px 4px;display:flex;flex-direction:column;gap:10px;">
+              <sc-for list="{{ dueReminders }}" as="r" hint-placeholder-count="1">
+                <div style="border-radius:22px;padding:14px 16px;background:var(--reminder-due-bg);display:flex;flex-direction:column;gap:10px;animation:fadeIn 0.3s ease-out;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:{{ r.categoryColor }};animation:pulse 1.2s ease-in-out infinite;flex-shrink:0;"></div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:12.5px;color:var(--text-secondary-strong);font-weight:700;">{{ r.categoryLabel }} · Due now</div>
+                      <div style="font-family:'Baloo 2',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);">{{ r.label }}</div>
+                    </div>
+                  </div>
+                  <button onClick="{{ r.onMarkDone }}" style="width:100%;padding:13px 0;border-radius:16px;border:none;background:{{ r.categoryColor }};color:#fff;font-weight:800;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Mark done</button>
+                  <div style="display:flex;gap:8px;">
+                    <button onClick="{{ r.onSnooze }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:var(--overlay-btn-bg);color:var(--text-primary);font-weight:700;font-size:12.5px;font-family:'Nunito',sans-serif;cursor:pointer;">Snooze 15m</button>
+                    <button onClick="{{ r.onDismiss }}" style="flex:1;padding:9px 0;border-radius:14px;border:none;background:transparent;color:var(--text-secondary);font-weight:700;font-size:12.5px;font-family:'Nunito',sans-serif;cursor:pointer;">Dismiss</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="padding:16px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);">Quick log</div>
+          <div style="padding:2px 20px 8px;font-size:12px;color:var(--text-secondary);font-weight:600;">Log a category right now, no schedule needed.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 20px 4px;">
+            <sc-for list="{{ quickLogOptions }}" as="q" hint-placeholder-count="7">
+              <button onClick="{{ q.onSelect }}" style="padding:6px 11px;border-radius:11px;border:1.5px solid {{ q.color }};background:color-mix(in srgb, {{ q.color }} 24%, var(--bg-card) 76%);color:{{ q.color }};font-weight:700;font-size:11.5px;font-family:'Nunito',sans-serif;cursor:pointer;">{{ q.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="padding:16px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);">All reminders</div>
+          <div style="padding:4px 20px 100px;display:flex;flex-direction:column;gap:10px;">
+            <sc-if value="{{ hasReminders }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ allReminders }}" as="r" hint-placeholder-count="4">
+                <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(74,59,54,0.05);">
+                  <div style="width:38px;height:38px;border-radius:14px;background:color-mix(in srgb, {{ r.categoryColor }} 24%, var(--bg-card) 76%);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ r.categoryColor }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 003.4 0"></path></svg>
+                  </div>
+                  <div onClick="{{ r.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
+                    <div style="font-size:15px;font-weight:700;color:var(--text-primary);">{{ r.label }} <span style="color:var(--text-tertiary);font-weight:700;">· {{ r.categoryLabel }}</span></div>
+                    <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;margin-top:2px;">{{ r.scheduleLabel }} · next in {{ r.nextLabel }}</div>
+                  </div>
+                  <button onClick="{{ r.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--bg-inset);color:var(--danger-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ !hasReminders }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:30px 10px;color:var(--text-tertiary);font-weight:600;font-size:14px;">No reminders yet.</div>
+            </sc-if>
           </div>
         </div>
-      </button>
+      </sc-if>
 
-      <div style="flex-shrink:0;display:flex;background:#fff;border-top:1px solid #F0E6DD;padding:8px 20px 10px;">
-        <button onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12.5px;color:{{ homeTabColor }};cursor:pointer;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10a1 1 0 001 1h4a1 1 0 001-1v-4a1 1 0 011-1h0a1 1 0 011 1v4a1 1 0 001 1h4a1 1 0 001-1V10"></path></svg>
-          Home
+      <sc-if value="{{ isDiapers }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;">
+          <div style="padding:20px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:var(--text-primary);">Diapers</div>
+          <div style="padding:0 20px 8px;font-size:13px;color:var(--text-secondary);font-weight:600;">Log pee, poop and color to keep an eye on things.</div>
+
+          <div style="display:flex;gap:10px;padding:8px 20px 4px;">
+            <div style="flex:1;background:{{ diaperAccent }};border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(91,148,172,0.25);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#fff;">{{ todayDiaperStats.total }}</div>
+              <div style="font-size:11px;color:#EAF4F8;font-weight:700;margin-top:2px;">CHANGES</div>
+            </div>
+            <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ todayDiaperStats.peeCount }}</div>
+              <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">PEE</div>
+            </div>
+            <div style="flex:1;background:var(--bg-card);border-radius:18px;padding:12px 10px;box-shadow:0 3px 14px rgba(74,59,54,0.06);text-align:center;">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);">{{ todayDiaperStats.poopCount }}</div>
+              <div style="font-size:11px;color:var(--text-secondary);font-weight:700;margin-top:2px;">POOP</div>
+            </div>
+          </div>
+
+          <div style="margin:14px 20px 0;">
+            <button onClick="{{ openNewDiaper }}" style="width:100%;padding:16px 0;border-radius:18px;border:none;background:{{ diaperAccent }};color:#fff;font-weight:800;font-size:17px;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 6px 16px rgba(91,148,172,0.35);">Log diaper change</button>
+          </div>
+
+          <div style="padding:18px 20px 4px;font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);">Today's changes</div>
+          <div style="padding:4px 20px 100px;display:flex;flex-direction:column;gap:10px;">
+            <sc-if value="{{ hasHomeDiapers }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ homeDiapers }}" as="d" hint-placeholder-count="3">
+                <div style="background:var(--diaper-card-bg);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                  <div style="width:38px;height:38px;border-radius:14px;background:#5B94AC;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v3c0 6-4 11-9 11S3 15 3 9V6z"></path><path d="M9 9a3 3 0 006 0"></path></svg>
+                  </div>
+                  <div onClick="{{ d.onEdit }}" style="flex:1;min-width:0;cursor:pointer;">
+                    <div style="font-size:15px;font-weight:700;color:#2F4C57;">{{ d.typeLabel }}</div>
+                    <div style="font-size:12.5px;color:#5B7C88;font-weight:600;margin-top:2px;">{{ d.displayTimeStr }} · {{ d.detailStr }}{{ d.noteSuffix }}</div>
+                  </div>
+                  <div style="display:flex;gap:5px;flex-shrink:0;">
+                    <sc-if value="{{ d.swatchPee }}" hint-placeholder-val="{{ false }}">
+                      <div style="width:16px;height:16px;border-radius:50%;background:{{ d.swatchPee }};box-shadow:0 0 0 2px #fff, 0 0 0 3px #C7DCE2;"></div>
+                    </sc-if>
+                    <sc-if value="{{ d.swatchPoop }}" hint-placeholder-val="{{ false }}">
+                      <div style="width:16px;height:16px;border-radius:50%;background:{{ d.swatchPoop }};box-shadow:0 0 0 2px #fff, 0 0 0 3px #C7DCE2;"></div>
+                    </sc-if>
+                  </div>
+                  <button onClick="{{ d.onDelete }}" style="width:30px;height:30px;border-radius:10px;border:none;background:var(--diaper-delete-bg);color:var(--diaper-delete-text);font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">×</button>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ !hasHomeDiapers }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:30px 10px;color:var(--text-tertiary);font-weight:600;font-size:14px;">No diaper changes logged yet today.</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ confirmingDeleteDiaperId }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.4);z-index:30;display:flex;align-items:center;justify-content:center;padding:0 30px;animation:fadeIn 0.15s ease-out;">
+          <div style="width:100%;background:var(--bg-surface);border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Delete this diaper log?</div>
+            <div style="font-size:13.5px;color:var(--text-secondary);font-weight:600;margin-bottom:18px;">This can't be undone.</div>
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ cancelDeleteDiaper }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ confirmDeleteDiaper }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--danger);color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Delete</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ diaperSheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
+          <div style="width:100%;max-height:92%;overflow:auto;background:var(--bg-surface);border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:var(--divider);margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">{{ diaperSheetTitle }}</div>
+
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <sc-for list="{{ diaperTypeOptions }}" as="opt" hint-placeholder-count="3">
+                <button onClick="{{ opt.onSelect }}" style="flex:1;padding:10px 4px;border-radius:16px;font-size:12.5px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ opt.buttonStyle }}">{{ opt.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">DATE</div>
+                <input type="date" value="{{ diaperDraft.date }}" onChange="{{ onDiaperDateChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">TIME</div>
+                <input type="time" value="{{ diaperDraft.time }}" onChange="{{ onDiaperTimeChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
+              </div>
+            </div>
+
+            <sc-if value="{{ showPeeColorField }}" hint-placeholder-val="{{ true }}">
+              <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px;">PEE COLOR</div>
+                <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                  <sc-for list="{{ peeColorOptions }}" as="c" hint-placeholder-count="3">
+                    <button onClick="{{ c.onSelect }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:2px;">
+                      <div style="position:relative;width:34px;height:34px;border-radius:17px;background:{{ c.swatch }};{{ c.buttonStyle }}box-sizing:border-box;transition:box-shadow 0.15s ease-out, transform 0.15s ease-out;display:flex;align-items:center;justify-content:center;">
+                        <sc-if value="{{ c.checkVisible }}" hint-placeholder-val="{{ false }}">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.35));"><path d="M20 6L9 17l-5-5"></path></svg>
+                        </sc-if>
+                      </div>
+                      <div style="font-size:10.5px;max-width:60px;text-align:center;{{ c.labelStyle }}">{{ c.label }}</div>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showPoopFields }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px;">POOP COLOR</div>
+                <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+                  <sc-for list="{{ poopColorOptions }}" as="c" hint-placeholder-count="5">
+                    <button onClick="{{ c.onSelect }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:2px;">
+                      <div style="position:relative;width:34px;height:34px;border-radius:17px;background:{{ c.swatch }};{{ c.buttonStyle }}box-sizing:border-box;transition:box-shadow 0.15s ease-out, transform 0.15s ease-out;display:flex;align-items:center;justify-content:center;">
+                        <sc-if value="{{ c.checkVisible }}" hint-placeholder-val="{{ false }}">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.35));"><path d="M20 6L9 17l-5-5"></path></svg>
+                        </sc-if>
+                      </div>
+                      <div style="font-size:10.5px;max-width:60px;text-align:center;{{ c.labelStyle }}">{{ c.label }}</div>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">AMOUNT (OPTIONAL)</div>
+                <div style="display:flex;gap:8px;">
+                  <sc-for list="{{ poopAmountOptions }}" as="a" hint-placeholder-count="3">
+                    <button onClick="{{ a.onSelect }}" style="flex:1;padding:9px 0;border-radius:14px;font-size:12.5px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ a.buttonStyle }}">{{ a.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">NOTE (OPTIONAL)</div>
+              <textarea value="{{ diaperDraft.note }}" onChange="{{ onDiaperNoteChange }}" placeholder="e.g. slight rash, extra fussy…" rows="2" style="width:100%;box-sizing:border-box;padding:12px;border-radius:16px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-size:13.5px;color:var(--text-primary);resize:none;background:var(--bg-card);"></textarea>
+            </div>
+
+            <sc-if value="{{ diaperFormError }}" hint-placeholder-val="{{ false }}">
+              <div style="color:var(--danger-text);font-size:13px;font-weight:700;margin-bottom:10px;">{{ diaperFormError }}</div>
+            </sc-if>
+
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ closeDiaperSheet }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ saveDiaper }}" style="flex:2;padding:14px 0;border-radius:18px;border:none;background:{{ diaperAccent }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Save diaper log</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ confirmingDeleteReminderId }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.4);z-index:30;display:flex;align-items:center;justify-content:center;padding:0 30px;animation:fadeIn 0.15s ease-out;">
+          <div style="width:100%;background:var(--bg-surface);border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Delete this reminder?</div>
+            <div style="font-size:13.5px;color:var(--text-secondary);font-weight:600;margin-bottom:18px;">This can't be undone.</div>
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ cancelDeleteReminder }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ confirmDeleteReminder }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--danger);color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Delete</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ reminderSheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
+          <div style="width:100%;max-height:92%;overflow:auto;background:var(--bg-surface);border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:var(--divider);margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">{{ reminderSheetTitle }}</div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">LABEL</div>
+              <input type="text" value="{{ reminderDraft.label }}" onChange="{{ onReminderLabelChange }}" placeholder="e.g. Vitamin D drops" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:16px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">CATEGORY</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+              <sc-for list="{{ reminderCategoryOptions }}" as="opt" hint-placeholder-count="8">
+                <button onClick="{{ opt.onSelect }}" style="padding:9px 14px;border-radius:14px;font-size:12.5px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ opt.buttonStyle }}">{{ opt.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+              <button onClick="{{ setReminderModeFixed }}" style="flex:1;padding:10px 4px;border-radius:16px;font-size:12.5px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ fixedModePillStyle }}">Daily at a time</button>
+              <button onClick="{{ setReminderModeInterval }}" style="flex:1;padding:10px 4px;border-radius:16px;font-size:12.5px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ intervalModePillStyle }}">Every N hours</button>
+            </div>
+
+            <sc-if value="{{ showFixedTimeField }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-bottom:14px;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">TIME</div>
+                <input type="time" value="{{ reminderDraft.fixedTime }}" onChange="{{ onReminderFixedTimeChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
+              </div>
+            </sc-if>
+            <sc-if value="{{ showIntervalField }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);">REPEAT EVERY</div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <button onClick="{{ decReminderInterval }}" style="width:36px;height:36px;border-radius:18px;border:none;background:var(--bg-inset);color:var(--text-primary);font-size:18px;font-weight:700;cursor:pointer;">–</button>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:700;color:var(--text-primary);min-width:56px;text-align:center;">{{ reminderIntervalDisplay }}</div>
+                  <button onClick="{{ incReminderInterval }}" style="width:36px;height:36px;border-radius:18px;border:none;background:var(--bg-inset);color:var(--text-primary);font-size:18px;font-weight:700;cursor:pointer;">+</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ reminderFormError }}" hint-placeholder-val="{{ false }}">
+              <div style="color:var(--danger-text);font-size:13px;font-weight:700;margin-bottom:10px;">{{ reminderFormError }}</div>
+            </sc-if>
+
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ closeReminderSheet }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ saveReminder }}" style="flex:2;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Save reminder</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ confirmingDeleteReminderLogId }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.4);z-index:30;display:flex;align-items:center;justify-content:center;padding:0 30px;animation:fadeIn 0.15s ease-out;">
+          <div style="width:100%;background:var(--bg-surface);border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Delete this log?</div>
+            <div style="font-size:13.5px;color:var(--text-secondary);font-weight:600;margin-bottom:18px;">This can't be undone.</div>
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ cancelDeleteReminderLog }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ confirmDeleteReminderLog }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--danger);color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Delete</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ editingReminderLogId }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
+          <div style="width:100%;background:var(--bg-surface);border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:var(--divider);margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Edit log</div>
+            <div style="font-size:13px;color:var(--text-secondary);font-weight:600;margin-bottom:16px;">{{ reminderLogEditCategoryLabel }}</div>
+            <div style="display:flex;gap:10px;margin-bottom:18px;">
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">DATE</div>
+                <input type="date" value="{{ reminderLogDraft.date }}" onChange="{{ onReminderLogDateChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">TIME</div>
+                <input type="time" value="{{ reminderLogDraft.time }}" onChange="{{ onReminderLogTimeChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button onClick="{{ closeEditReminderLog }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ saveReminderLogEdit }}" style="flex:2;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Save</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ quickLogSheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
+          <div style="width:100%;max-height:70%;overflow:auto;background:var(--bg-surface);border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:var(--divider);margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Quick log</div>
+            <div style="font-size:13px;color:var(--text-secondary);font-weight:600;margin-bottom:16px;">Log a category right now, no schedule needed.</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+              <sc-for list="{{ quickLogOptions }}" as="q" hint-placeholder-count="7">
+                <button onClick="{{ q.onSelect }}" style="padding:6px 11px;border-radius:11px;border:1.5px solid {{ q.color }};background:color-mix(in srgb, {{ q.color }} 24%, var(--bg-card) 76%);color:{{ q.color }};font-weight:700;font-size:11.5px;font-family:'Nunito',sans-serif;cursor:pointer;">{{ q.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ closeQuickLogSheet }}" style="width:100%;padding:14px 0;border-radius:18px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:20px;right:20px;bottom:150px;background:var(--text-primary);color:#fff;padding:12px 18px;border-radius:16px;font-size:13.5px;font-weight:700;font-family:'Nunito',sans-serif;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.25);z-index:15;animation:fadeIn 0.2s ease-out;">{{ toast }}</div>
+      </sc-if>
+
+      <sc-if value="{{ showFab }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ onFabClick }}" style="position:absolute;right:20px;bottom:78px;width:62px;height:62px;border-radius:31px;border:none;background:{{ fabAccent }};box-shadow:0 8px 20px rgba(227,156,139,0.5);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;">
+          <sc-if value="{{ fabIsFeed }}" hint-placeholder-val="{{ true }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2h4"></path>
+              <path d="M10 2v3.2c0 .4-.15.78-.42 1.08L8.2 7.9A2 2 0 007.5 9.4V20a2 2 0 002 2h5a2 2 0 002-2V9.4a2 2 0 00-.7-1.5L14.42 6.3a1.6 1.6 0 01-.42-1.08V2"></path>
+              <path d="M7.5 13h9"></path>
+            </svg>
+          </sc-if>
+          <sc-if value="{{ fabIsReminder }}" hint-placeholder-val="{{ false }}">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 003.4 0"></path>
+            </svg>
+          </sc-if>
+          <sc-if value="{{ fabIsDiaper }}" hint-placeholder-val="{{ false }}">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18v3c0 6-4 11-9 11S3 15 3 9V6z"></path><path d="M9 9a3 3 0 006 0"></path>
+            </svg>
+          </sc-if>
+          <sc-if value="{{ fabIsReport }}" hint-placeholder-val="{{ false }}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14"></path><path d="M5 12h14"></path>
+            </svg>
+          </sc-if>
+          <div style="position:absolute;right:-2px;bottom:-2px;width:24px;height:24px;border-radius:12px;background:var(--bg-card);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+            <div style="position:relative;width:12px;height:12px;">
+              <div style="position:absolute;top:4.5px;left:0;width:12px;height:2.4px;border-radius:2px;background:{{ fabAccent }};"></div>
+              <div style="position:absolute;left:4.8px;top:0;width:2.4px;height:12px;border-radius:2px;background:{{ fabAccent }};"></div>
+            </div>
+          </div>
         </button>
-        <button onClick="{{ goReport }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12.5px;color:{{ reportTabColor }};cursor:pointer;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18"></path><path d="M8 2v4"></path><path d="M16 2v4"></path><path d="M8 13h.01"></path><path d="M12 13h.01"></path><path d="M16 13h.01"></path><path d="M8 17h.01"></path><path d="M12 17h.01"></path></svg>
-          Daily report
+      </sc-if>
+
+      <div style="flex-shrink:0;display:flex;align-items:flex-end;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 14px 10px;">
+        <button onClick="{{ goReminders }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:{{ remindersTabColor }};cursor:pointer;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 003.4 0"></path></svg>
+          Reminders
+        </button>
+        <button onClick="{{ goHome }}" style="flex:1.2;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;padding:2px 0 4px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;color:{{ homeTabColor }};cursor:pointer;">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h4"></path><path d="M10 2v3.2c0 .4-.15.78-.42 1.08L8.2 7.9A2 2 0 007.5 9.4V20a2 2 0 002 2h5a2 2 0 002-2V9.4a2 2 0 00-.7-1.5L14.42 6.3a1.6 1.6 0 01-.42-1.08V2"></path><path d="M7.5 13h9"></path></svg>
+          Feed
+        </button>
+        <button onClick="{{ goDiapers }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:{{ diapersTabColor }};cursor:pointer;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v3c0 6-4 11-9 11S3 15 3 9V6z"></path><path d="M9 9a3 3 0 006 0"></path></svg>
+          Diapers
+        </button>
+        <button onClick="{{ goReport }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:{{ reportTabColor }};cursor:pointer;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18"></path><path d="M8 2v4"></path><path d="M16 2v4"></path><path d="M8 13h.01"></path><path d="M12 13h.01"></path><path d="M16 13h.01"></path><path d="M8 17h.01"></path><path d="M12 17h.01"></path></svg>
+          Report
         </button>
       </div>
 
       <sc-if value="{{ confirmingDeleteId }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;inset:0;background:rgba(74,59,54,0.4);z-index:30;display:flex;align-items:center;justify-content:center;padding:0 30px;animation:fadeIn 0.15s ease-out;">
-          <div style="width:100%;background:#FFF8F2;border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
-            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:#4A3B36;margin-bottom:6px;">Delete this feed?</div>
-            <div style="font-size:13.5px;color:#9C8A82;font-weight:600;margin-bottom:18px;">This can't be undone.</div>
+          <div style="width:100%;background:var(--bg-surface);border-radius:22px;padding:22px 20px;box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,0.2);">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">Delete this feed?</div>
+            <div style="font-size:13.5px;color:var(--text-secondary);font-weight:600;margin-bottom:18px;">This can't be undone.</div>
             <div style="display:flex;gap:10px;">
-              <button onClick="{{ cancelDelete }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:#EFE4DB;color:#7A6A62;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
-              <button onClick="{{ confirmDelete }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:#C9695C;color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Delete</button>
+              <button onClick="{{ cancelDelete }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ confirmDelete }}" style="flex:1;padding:12px 0;border-radius:16px;border:none;background:var(--danger);color:#fff;font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;cursor:pointer;">Delete</button>
             </div>
           </div>
         </div>
@@ -189,9 +624,9 @@
 
       <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
-          <div style="width:100%;max-height:92%;overflow:auto;background:#FFF8F2;border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
-            <div style="width:40px;height:4px;border-radius:2px;background:#E4D5CB;margin:0 auto 14px;"></div>
-            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;margin-bottom:14px;">{{ sheetTitle }}</div>
+          <div style="width:100%;max-height:92%;overflow:auto;background:var(--bg-surface);border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:var(--divider);margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">{{ sheetTitle }}</div>
 
             <div style="display:flex;gap:8px;margin-bottom:16px;">
               <sc-for list="{{ feedTypeOptions }}" as="opt" hint-placeholder-count="3">
@@ -201,55 +636,55 @@
 
             <div style="display:flex;gap:10px;margin-bottom:14px;">
               <div style="flex:1;">
-                <div style="font-size:12px;font-weight:700;color:#9C8A82;margin-bottom:6px;">DATE</div>
-                <input type="date" value="{{ draft.date }}" onChange="{{ onDateChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-weight:700;color:#4A3B36;font-size:14px;background:#fff;"/>
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">DATE</div>
+                <input type="date" value="{{ draft.date }}" onChange="{{ onDateChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
               </div>
               <div style="flex:1;">
-                <div style="font-size:12px;font-weight:700;color:#9C8A82;margin-bottom:6px;">TIME</div>
-                <input type="time" value="{{ draft.time }}" onChange="{{ onTimeChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-weight:700;color:#4A3B36;font-size:14px;background:#fff;"/>
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">TIME</div>
+                <input type="time" value="{{ draft.time }}" onChange="{{ onTimeChange }}" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:14px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);"/>
               </div>
             </div>
 
             <sc-if value="{{ showAmountField }}" hint-placeholder-val="{{ true }}">
-              <div style="background:#fff;border-radius:20px;padding:14px 16px;margin-bottom:14px;">
+              <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-size:12px;font-weight:700;color:#9C8A82;">AMOUNT</div>
-                  <div style="display:flex;background:#F3EDE6;border-radius:12px;padding:3px;">
+                  <div style="font-size:12px;font-weight:700;color:var(--text-secondary);">AMOUNT</div>
+                  <div style="display:flex;background:var(--bg-inset);border-radius:12px;padding:3px;">
                     <button onClick="{{ setUnitMl }}" style="border:none;border-radius:9px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;{{ mlPillStyle }}">ml</button>
                     <button onClick="{{ setUnitOz }}" style="border:none;border-radius:9px;padding:4px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;{{ ozPillStyle }}">oz</button>
                   </div>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:center;gap:22px;">
-                  <button onClick="{{ decAmount }}" style="width:44px;height:44px;border-radius:22px;border:none;background:#F3EDE6;color:#4A3B36;font-size:22px;font-weight:700;cursor:pointer;">–</button>
-                  <div style="font-family:'Baloo 2',sans-serif;font-size:32px;font-weight:700;color:#4A3B36;min-width:100px;text-align:center;">{{ amountDisplay }}</div>
+                  <button onClick="{{ decAmount }}" style="width:44px;height:44px;border-radius:22px;border:none;background:var(--bg-inset);color:var(--text-primary);font-size:22px;font-weight:700;cursor:pointer;">–</button>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:32px;font-weight:700;color:var(--text-primary);min-width:100px;text-align:center;">{{ amountDisplay }}</div>
                   <button onClick="{{ incAmount }}" style="width:44px;height:44px;border-radius:22px;border:none;background:{{ accentColor }};color:#fff;font-size:22px;font-weight:700;cursor:pointer;">+</button>
                 </div>
               </div>
             </sc-if>
 
-            <div style="background:#fff;border-radius:20px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="background:var(--bg-card);border-radius:20px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
               <div>
-                <div style="font-size:12px;font-weight:700;color:#9C8A82;">{{ durationLabel }}</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text-secondary);">{{ durationLabel }}</div>
                 <div style="font-size:11px;color:#C4B6AC;font-weight:600;margin-top:1px;">{{ durationHint }}</div>
               </div>
               <div style="display:flex;align-items:center;gap:14px;">
-                <button onClick="{{ decDuration }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#F3EDE6;color:#4A3B36;font-size:18px;font-weight:700;cursor:pointer;">–</button>
-                <div style="font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:700;color:#4A3B36;min-width:56px;text-align:center;">{{ durationDisplay }}</div>
-                <button onClick="{{ incDuration }}" style="width:36px;height:36px;border-radius:18px;border:none;background:#F3EDE6;color:#4A3B36;font-size:18px;font-weight:700;cursor:pointer;">+</button>
+                <button onClick="{{ decDuration }}" style="width:36px;height:36px;border-radius:18px;border:none;background:var(--bg-inset);color:var(--text-primary);font-size:18px;font-weight:700;cursor:pointer;">–</button>
+                <div style="font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:700;color:var(--text-primary);min-width:56px;text-align:center;">{{ durationDisplay }}</div>
+                <button onClick="{{ incDuration }}" style="width:36px;height:36px;border-radius:18px;border:none;background:var(--bg-inset);color:var(--text-primary);font-size:18px;font-weight:700;cursor:pointer;">+</button>
               </div>
             </div>
 
             <div style="margin-bottom:16px;">
-              <div style="font-size:12px;font-weight:700;color:#9C8A82;margin-bottom:6px;">NOTE (OPTIONAL)</div>
-              <textarea value="{{ draft.note }}" onChange="{{ onNoteChange }}" placeholder="e.g. spit up a little, fussy before feed…" rows="2" style="width:100%;box-sizing:border-box;padding:12px;border-radius:16px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-size:13.5px;color:#4A3B36;resize:none;background:#fff;"></textarea>
+              <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">NOTE (OPTIONAL)</div>
+              <textarea value="{{ draft.note }}" onChange="{{ onNoteChange }}" placeholder="e.g. spit up a little, fussy before feed…" rows="2" style="width:100%;box-sizing:border-box;padding:12px;border-radius:16px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-size:13.5px;color:var(--text-primary);resize:none;background:var(--bg-card);"></textarea>
             </div>
 
             <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
-              <div style="color:#B7726A;font-size:13px;font-weight:700;margin-bottom:10px;">{{ formError }}</div>
+              <div style="color:var(--danger-text);font-size:13px;font-weight:700;margin-bottom:10px;">{{ formError }}</div>
             </sc-if>
 
             <div style="display:flex;gap:10px;">
-              <button onClick="{{ closeSheet }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:#EFE4DB;color:#7A6A62;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
+              <button onClick="{{ closeSheet }}" style="flex:1;padding:14px 0;border-radius:18px;border:none;background:var(--bg-soft);color:var(--text-secondary-strong);font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Cancel</button>
               <button onClick="{{ saveFeed }}" style="flex:2;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Save feed</button>
             </div>
           </div>
@@ -258,16 +693,25 @@
 
       <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
         <div style="position:absolute;inset:0;background:rgba(74,59,54,0.35);z-index:20;display:flex;align-items:flex-end;animation:fadeIn 0.2s ease-out;">
-          <div style="width:100%;background:#FFF8F2;border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
-            <div style="width:40px;height:4px;border-radius:2px;background:#E4D5CB;margin:0 auto 14px;"></div>
-            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;margin-bottom:4px;">Baby's name</div>
-            <input type="text" value="{{ babyName }}" onChange="{{ onBabyNameChange }}" placeholder="e.g. Mia" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:16px;border:1.5px solid #EFE4DB;font-family:'Nunito',sans-serif;font-weight:700;color:#4A3B36;font-size:14px;background:#fff;margin-bottom:20px;"/>
-            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:#4A3B36;margin-bottom:4px;">Feed reminder</div>
-            <div style="font-size:13px;color:#9C8A82;font-weight:600;margin-bottom:16px;">Get nudged when it's about time for the next bottle.</div>
+          <div style="width:100%;background:var(--bg-surface);border-radius:28px 28px 0 0;padding:18px 20px 24px;box-sizing:border-box;animation:slideUp 0.25s ease-out;">
+            <div style="width:40px;height:4px;border-radius:2px;background:var(--divider);margin:0 auto 14px;"></div>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Baby's name</div>
+            <input type="text" value="{{ babyName }}" onChange="{{ onBabyNameChange }}" placeholder="e.g. Mia" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:16px;border:1.5px solid var(--bg-soft);font-family:'Nunito',sans-serif;font-weight:700;color:var(--text-primary);font-size:14px;background:var(--bg-card);margin-bottom:20px;"/>
+            <div style="font-family:'Baloo 2',sans-serif;font-size:19px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">Feed reminder</div>
+            <div style="font-size:13px;color:var(--text-secondary);font-weight:600;margin-bottom:16px;">Get nudged when it's about time for the next bottle.</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
               <sc-for list="{{ intervalOptions }}" as="opt" hint-placeholder-count="5">
                 <button onClick="{{ opt.onSelect }}" style="padding:10px 16px;border-radius:16px;font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;{{ opt.buttonStyle }}">{{ opt.label }}</button>
               </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border-radius:18px;padding:14px 16px;margin-bottom:20px;">
+              <div>
+                <div style="font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);">Dark mode</div>
+                <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;margin-top:2px;">Easier on the eyes for night feeds.</div>
+              </div>
+              <button onClick="{{ toggleDarkMode }}" style="width:52px;height:30px;border-radius:15px;border:none;cursor:pointer;flex-shrink:0;position:relative;{{ darkModeTrackStyle }}">
+                <div style="position:absolute;top:3px;width:24px;height:24px;border-radius:12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.15s ease-out;{{ darkModeThumbStyle }}"></div>
+              </button>
             </div>
             <button onClick="{{ closeSettings }}" style="width:100%;padding:14px 0;border-radius:18px;border:none;background:{{ accentColor }};color:#fff;font-weight:700;font-size:15px;font-family:'Nunito',sans-serif;cursor:pointer;">Done</button>
           </div>
@@ -297,6 +741,49 @@ const TYPE_META = {
   breastBottle: { label:'Breast milk', color:'#7FA377', soft:'#EAF1E6' },
   breastfeeding: { label:'Breastfeeding', color:'#A98FC4', soft:'#EFE7F5' },
 };
+const CATEGORY_META = {
+  medicine: { label:'Medicine', color:'#C9695C', soft:'#F7E3E0' },
+  vitamins: { label:'Vitamins', color:'#D9A441', soft:'#FBF0DC' },
+  tummyTime: { label:'Tummy time', color:'#8FAE7B', soft:'#EDF3E6' },
+  exercises: { label:'Exercises', color:'#6FA8A0', soft:'#E3F1EF' },
+  activities: { label:'Activities', color:'#B08FC4', soft:'#F0E7F5' },
+  diaper: { label:'Diaper', color:'#D98E8E', soft:'#F9E9E9' },
+  bath: { label:'Bath', color:'#7FB0C4', soft:'#E6F1F5' },
+  other: { label:'Other', color:'#A79A8F', soft:'#EFEAE5' },
+};
+const CATEGORY_ORDER = ['medicine','vitamins','tummyTime','exercises','activities','diaper','bath','other'];
+const QUICK_LOG_CATEGORIES = CATEGORY_ORDER.filter(c=>c!=='diaper');
+const DIAPER_ACCENT = '#5B94AC';
+const DIAPER_SOFT = '#E4F0F4';
+const DIAPER_TYPE_META = {
+  pee: { label:'Pee' },
+  poop: { label:'Poop' },
+  both: { label:'Pee & poop' },
+};
+const PEE_COLORS = [
+  { key:'clear', label:'Clear', hex:'#F7F6EC' },
+  { key:'pale', label:'Pale yellow', hex:'#F5E6A3' },
+  { key:'yellow', label:'Yellow', hex:'#E8C547' },
+  { key:'dark', label:'Dark amber', hex:'#C68A2E' },
+  { key:'pink', label:'Pink/red', hex:'#C4585A' },
+];
+const POOP_COLORS = [
+  { key:'yellow', label:'Yellow', hex:'#D9A441' },
+  { key:'brown', label:'Brown', hex:'#8B5E3C' },
+  { key:'green', label:'Green', hex:'#6B8E4E' },
+  { key:'white', label:'Pale/white', hex:'#E5DEC5' },
+  { key:'black', label:'Black', hex:'#3A3A3A' },
+  { key:'red', label:'Red', hex:'#B23A2E' },
+];
+const POOP_AMOUNTS = ['Small','Medium','Large'];
+function findColor(list,key){ return list.find(c=>c.key===key) || null; }
+function nextFixedOccurrence(nowMs, hhmm){
+  const [hh,mm] = hhmm.split(':').map(Number);
+  const d = new Date(nowMs);
+  d.setHours(hh, mm, 0, 0);
+  if(d.getTime() <= nowMs) d.setDate(d.getDate()+1);
+  return d.getTime();
+}
 
 class Component extends DCLogic {
   state = (() => {
@@ -313,10 +800,29 @@ class Component extends DCLogic {
       { id:'t2', date:dateStr(now), time:'09:45', type:'breastBottle', amountMl:100, durationMin:0, note:'', isLast:false },
       { id:'t3', date:dateStr(t3), time:timeStr(t3), type:'formula', amountMl:130, durationMin:22, note:'Fussy, took a bit longer', isLast:false },
     ];
+    const soon = new Date(now.getTime() + 18*60000);
+    const reminders = [
+      { id:'r1', label:'Vitamin D drops', category:'vitamins', mode:'fixed', fixedTime:'09:00', intervalHours:null, nextDueAt: nextFixedOccurrence(now.getTime(),'09:00'), snoozedUntil:null, dismissed:false },
+      { id:'r2', label:'Amoxicillin', category:'medicine', mode:'interval', fixedTime:null, intervalHours:8, nextDueAt: soon.getTime(), snoozedUntil:null, dismissed:false },
+      { id:'r3', label:'Tummy time', category:'tummyTime', mode:'fixed', fixedTime:'16:00', intervalHours:null, nextDueAt: nextFixedOccurrence(now.getTime(),'16:00'), snoozedUntil:null, dismissed:false },
+      { id:'r4', label:'Evening bath', category:'bath', mode:'fixed', fixedTime:'19:30', intervalHours:null, nextDueAt: nextFixedOccurrence(now.getTime(),'19:30'), snoozedUntil:null, dismissed:false },
+    ];
+    const reminderLogs = [
+      { id:'rl1', reminderId:'r1', label:'Vitamin D drops', category:'vitamins', date:dateStr(yest), time:'09:05' },
+      { id:'rl2', reminderId:'r2', label:'Amoxicillin', category:'medicine', date:dateStr(yest), time:'08:10' },
+    ];
+    const diapers = [
+      { id:'d1', date:dateStr(yest), time:'08:20', type:'pee', peeColor:'yellow', poopColor:null, poopAmount:null, note:'' },
+      { id:'d2', date:dateStr(yest), time:'14:10', type:'both', peeColor:'pale', poopColor:'brown', poopAmount:'Medium', note:'' },
+      { id:'d3', date:dateStr(now), time:'07:15', type:'poop', peeColor:null, poopColor:'yellow', poopAmount:'Small', note:'' },
+    ];
     return {
       feeds,
+      diapers,
+      reminders, reminderLogs,
       view: 'home',
       reportDate: dateStr(now),
+      reportFilter: 'all',
       unitPref: 'ml',
       reminderIntervalMin: this.props && this.props.reminderIntervalMinutes || 180,
       nextReminderAt: t3.getTime() + ((this.props && this.props.reminderIntervalMinutes) || 180)*60000,
@@ -328,7 +834,23 @@ class Component extends DCLogic {
       formError: null,
       settingsOpen: false,
       confirmingDeleteId: null,
+      reminderSheetOpen: false,
+      editingReminderId: null,
+      reminderDraft: null,
+      reminderFormError: null,
+      confirmingDeleteReminderId: null,
       babyName: '',
+      diaperSheetOpen: false,
+      editingDiaperId: null,
+      diaperDraft: null,
+      diaperFormError: null,
+      confirmingDeleteDiaperId: null,
+      quickLogSheetOpen: false,
+      toast: null,
+      confirmingDeleteReminderLogId: null,
+      editingReminderLogId: null,
+      reminderLogDraft: null,
+      darkMode: (typeof localStorage!=='undefined' && localStorage.getItem('babyTrackerDarkMode')==='1'),
     };
   })();
 
@@ -336,8 +858,51 @@ class Component extends DCLogic {
     this._tick = setInterval(() => this.setState({ now: Date.now() }), 30000);
     this.updateTitle();
   }
+  toggleDarkMode(){
+    this.setState(s=>{
+      const next = !s.darkMode;
+      try{ localStorage.setItem('babyTrackerDarkMode', next?'1':'0'); }catch(e){}
+      return { darkMode: next };
+    });
+  }
   componentDidUpdate(){ this.updateTitle(); }
-  componentWillUnmount(){ clearInterval(this._tick); }
+  componentWillUnmount(){ clearInterval(this._tick); clearTimeout(this._toastTimer); }
+
+  logQuickCategory(category){
+    const now = new Date();
+    const meta = CATEGORY_META[category];
+    const log = { id:'rl'+Date.now(), reminderId:null, label:meta.label, category, date:dateStr(now), time:timeStr(now) };
+    this.setState(s => ({ reminderLogs:[...s.reminderLogs, log], quickLogSheetOpen:false }));
+    this.showToast(meta.label+' logged \u00b7 '+display12h(timeStr(now)));
+  }
+  showToast(msg){
+    clearTimeout(this._toastTimer);
+    this.setState({ toast: msg });
+    this._toastTimer = setTimeout(() => this.setState({ toast:null }), 1500);
+  }
+  openQuickLogSheet(){ this.setState({ quickLogSheetOpen:true }); }
+  closeQuickLogSheet(){ this.setState({ quickLogSheetOpen:false }); }
+  requestDeleteReminderLog(id){ this.setState({ confirmingDeleteReminderLogId:id }); }
+  cancelDeleteReminderLog(){ this.setState({ confirmingDeleteReminderLogId:null }); }
+  confirmDeleteReminderLog(){ const id=this.state.confirmingDeleteReminderLogId; this.setState(s=>({ reminderLogs: s.reminderLogs.filter(l=>l.id!==id), confirmingDeleteReminderLogId:null })); }
+  openEditReminderLog(id){
+    const l = this.state.reminderLogs.find(x=>x.id===id);
+    if(!l) return;
+    this.setState({ editingReminderLogId:id, reminderLogDraft:{ category:l.category, date:l.date, time:l.time } });
+  }
+  closeEditReminderLog(){ this.setState({ editingReminderLogId:null, reminderLogDraft:null }); }
+  setReminderLogDraft(patch){ this.setState(s=>({ reminderLogDraft:{ ...s.reminderLogDraft, ...patch } })); }
+  onReminderLogDateChange(e){ this.setReminderLogDraft({ date:e.target.value }); }
+  onReminderLogTimeChange(e){ this.setReminderLogDraft({ time:e.target.value }); }
+  saveReminderLogEdit(){
+    const d = this.state.reminderLogDraft;
+    const id = this.state.editingReminderLogId;
+    const meta = CATEGORY_META[d.category];
+    this.setState(s => ({
+      reminderLogs: s.reminderLogs.map(l => l.id===id ? { ...l, date:d.date, time:d.time, label:meta.label } : l),
+      editingReminderLogId:null, reminderLogDraft:null,
+    }));
+  }
   updateTitle(){ document.title = this.state.babyName ? this.state.babyName+"'s Feeds" : 'Baby Feed Tracker'; }
   onBabyNameChange(e){ this.setState({ babyName: e.target.value }); }
 
@@ -401,6 +966,139 @@ class Component extends DCLogic {
 
   goHome(){ this.setState({ view:'home' }); }
   goReport(){ this.setState({ view:'report' }); }
+  goReminders(){ this.setState({ view:'reminders' }); }
+  goDiapers(){ this.setState({ view:'diapers' }); }
+
+  freshDiaperDraft(){
+    const now = new Date();
+    return { type:'pee', date:dateStr(now), time:timeStr(now), peeColor:null, poopColor:null, poopAmount:null, note:'' };
+  }
+  openNewDiaper(){ this.setState({ diaperSheetOpen:true, editingDiaperId:null, diaperDraft:this.freshDiaperDraft(), diaperFormError:null }); }
+  openEditDiaper(id){
+    const d = this.state.diapers.find(x=>x.id===id);
+    if(!d) return;
+    this.setState({ diaperSheetOpen:true, editingDiaperId:id, diaperDraft:{ type:d.type, date:d.date, time:d.time, peeColor:d.peeColor, poopColor:d.poopColor, poopAmount:d.poopAmount, note:d.note }, diaperFormError:null });
+  }
+  closeDiaperSheet(){ this.setState({ diaperSheetOpen:false, diaperDraft:null, diaperFormError:null }); }
+  setDiaperDraft(patch){ this.setState(s => ({ diaperDraft: { ...s.diaperDraft, ...patch }, diaperFormError:null })); }
+  onDiaperDateChange(e){ this.setDiaperDraft({ date:e.target.value }); }
+  onDiaperTimeChange(e){ this.setDiaperDraft({ time:e.target.value }); }
+  onDiaperNoteChange(e){ this.setDiaperDraft({ note:e.target.value }); }
+  selectDiaperType(t){
+    const patch = { type:t };
+    if(t==='pee'){ patch.poopColor=null; patch.poopAmount=null; }
+    if(t==='poop'){ patch.peeColor=null; }
+    this.setDiaperDraft(patch);
+  }
+  selectPeeColor(k){ this.setDiaperDraft({ peeColor:k }); }
+  selectPoopColor(k){ this.setDiaperDraft({ poopColor:k }); }
+  selectPoopAmount(a){ this.setDiaperDraft({ poopAmount: this.state.diaperDraft.poopAmount===a ? null : a }); }
+
+  saveDiaper(){
+    const d = this.state.diaperDraft;
+    if(!d.date || !d.time){ this.setState({ diaperFormError:'Date and time are required.' }); return; }
+    const needsPee = d.type==='pee' || d.type==='both';
+    const needsPoop = d.type==='poop' || d.type==='both';
+    if(needsPee && !d.peeColor){ this.setState({ diaperFormError:'Select a pee color.' }); return; }
+    if(needsPoop && !d.poopColor){ this.setState({ diaperFormError:'Select a poop color.' }); return; }
+    const id = this.state.editingDiaperId || ('d'+Date.now());
+    const newDiaper = { id, date:d.date, time:d.time, type:d.type, peeColor: needsPee?d.peeColor:null, poopColor: needsPoop?d.poopColor:null, poopAmount: needsPoop?(d.poopAmount||null):null, note:d.note||'' };
+    this.setState(s => {
+      let diapers = s.editingDiaperId ? s.diapers.map(x=>x.id===id?newDiaper:x) : [...s.diapers, newDiaper];
+      diapers = diapers.sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+      return { diapers, diaperSheetOpen:false, diaperDraft:null, diaperFormError:null };
+    });
+  }
+  requestDeleteDiaper(id){ this.setState({ confirmingDeleteDiaperId:id }); }
+  cancelDeleteDiaper(){ this.setState({ confirmingDeleteDiaperId:null }); }
+  confirmDeleteDiaper(){ const id=this.state.confirmingDeleteDiaperId; this.setState(s => ({ diapers: s.diapers.filter(d=>d.id!==id), confirmingDeleteDiaperId:null })); }
+
+  computeDiaperStats(list){
+    const peeCount = list.filter(d=>d.type==='pee'||d.type==='both').length;
+    const poopCount = list.filter(d=>d.type==='poop'||d.type==='both').length;
+    return { total: list.length, peeCount, poopCount };
+  }
+
+  enrichDiaper(d, onEditFn){
+    const meta = DIAPER_TYPE_META[d.type];
+    const peeMeta = d.peeColor ? findColor(PEE_COLORS, d.peeColor) : null;
+    const poopMeta = d.poopColor ? findColor(POOP_COLORS, d.poopColor) : null;
+    const parts = [];
+    if(peeMeta) parts.push('Pee · '+peeMeta.label);
+    if(poopMeta) parts.push('Poop · '+poopMeta.label+(d.poopAmount ? ' · '+d.poopAmount : ''));
+    return {
+      ...d,
+      typeLabel: meta.label,
+      detailStr: parts.join('  ·  '),
+      swatchPee: peeMeta ? peeMeta.hex : null,
+      swatchPoop: poopMeta ? poopMeta.hex : null,
+      displayTimeStr: display12h(d.time),
+      noteSuffix: d.note ? ' · '+d.note : '',
+      onEdit: () => onEditFn(d.id),
+      onDelete: () => this.requestDeleteDiaper(d.id),
+    };
+  }
+
+  freshReminderDraft(){
+    const now = new Date();
+    return { label:'', category:'medicine', mode:'fixed', fixedTime: timeStr(now), intervalHours: 8 };
+  }
+  openNewReminder(){ this.setState({ reminderSheetOpen:true, editingReminderId:null, reminderDraft:this.freshReminderDraft(), reminderFormError:null }); }
+  openEditReminder(id){
+    const r = this.state.reminders.find(x=>x.id===id);
+    if(!r) return;
+    this.setState({ reminderSheetOpen:true, editingReminderId:id, reminderDraft:{ label:r.label, category:r.category, mode:r.mode, fixedTime:r.fixedTime||timeStr(new Date()), intervalHours:r.intervalHours||8 }, reminderFormError:null });
+  }
+  closeReminderSheet(){ this.setState({ reminderSheetOpen:false, reminderDraft:null, reminderFormError:null }); }
+  setReminderDraft(patch){ this.setState(s=>({ reminderDraft:{ ...s.reminderDraft, ...patch }, reminderFormError:null })); }
+  onReminderLabelChange(e){ this.setReminderDraft({ label:e.target.value }); }
+  selectReminderCategory(c){ this.setReminderDraft({ category:c }); }
+  setReminderModeFixed(){ this.setReminderDraft({ mode:'fixed' }); }
+  setReminderModeInterval(){ this.setReminderDraft({ mode:'interval' }); }
+  onReminderFixedTimeChange(e){ this.setReminderDraft({ fixedTime:e.target.value }); }
+  incReminderInterval(){ this.setReminderDraft({ intervalHours: Math.min(24, (this.state.reminderDraft.intervalHours||1)+1) }); }
+  decReminderInterval(){ this.setReminderDraft({ intervalHours: Math.max(1, (this.state.reminderDraft.intervalHours||1)-1) }); }
+
+  saveReminder(){
+    const d = this.state.reminderDraft;
+    if(!d.label || !d.label.trim()){ this.setState({ reminderFormError:'Give this reminder a label.' }); return; }
+    if(d.mode==='fixed'){
+      if(!d.fixedTime){ this.setState({ reminderFormError:'Pick a time.' }); return; }
+      const dup = this.state.reminders.find(r=>r.mode==='fixed' && r.fixedTime===d.fixedTime && r.id!==this.state.editingReminderId);
+      if(dup){ this.setState({ reminderFormError:'Another reminder ('+dup.label+') is already set for '+display12h(d.fixedTime)+'.' }); return; }
+    } else {
+      if(!d.intervalHours || d.intervalHours<=0){ this.setState({ reminderFormError:'Set an interval in hours.' }); return; }
+    }
+    const now = Date.now();
+    const nextDueAt = d.mode==='fixed' ? nextFixedOccurrence(now, d.fixedTime) : now + d.intervalHours*3600000;
+    const id = this.state.editingReminderId || ('r'+Date.now());
+    const newReminder = { id, label:d.label.trim(), category:d.category, mode:d.mode, fixedTime: d.mode==='fixed'?d.fixedTime:null, intervalHours: d.mode==='interval'?d.intervalHours:null, nextDueAt, snoozedUntil:null, dismissed:false };
+    this.setState(s => ({
+      reminders: s.editingReminderId ? s.reminders.map(r=>r.id===id?newReminder:r) : [...s.reminders, newReminder],
+      reminderSheetOpen:false, reminderDraft:null, reminderFormError:null,
+    }));
+  }
+
+  requestDeleteReminder(id){ this.setState({ confirmingDeleteReminderId:id }); }
+  cancelDeleteReminder(){ this.setState({ confirmingDeleteReminderId:null }); }
+  confirmDeleteReminder(){ const id=this.state.confirmingDeleteReminderId; this.setState(s=>({ reminders:s.reminders.filter(r=>r.id!==id), confirmingDeleteReminderId:null })); }
+
+  markReminderDone(id){
+    const now = new Date();
+    this.setState(s => {
+      const r = s.reminders.find(x=>x.id===id);
+      if(!r) return null;
+      const nextDueAt = r.mode==='fixed' ? nextFixedOccurrence(now.getTime(), r.fixedTime) : now.getTime() + r.intervalHours*3600000;
+      const log = { id:'rl'+Date.now(), reminderId:r.id, label:r.label, category:r.category, date:dateStr(now), time:timeStr(now) };
+      return {
+        reminders: s.reminders.map(x=>x.id===id?{...x, nextDueAt, snoozedUntil:null, dismissed:false}:x),
+        reminderLogs: [...s.reminderLogs, log],
+      };
+    });
+  }
+  snoozeReminderDue(id){ this.setState(s=>({ reminders: s.reminders.map(r=>r.id===id?{...r, snoozedUntil: s.now + 15*60000, dismissed:false}:r) })); }
+  dismissReminderDue(id){ this.setState(s=>({ reminders: s.reminders.map(r=>r.id===id?{...r, dismissed:true}:r) })); }
+  setReportFilter(f){ this.setState({ reportFilter:f }); }
   openSettings(){ this.setState({ settingsOpen:true }); }
   closeSettings(){ this.setState({ settingsOpen:false }); }
   setInterval_(mins){ this.setState(s=>({ reminderIntervalMin:mins, nextReminderAt: s.now + mins*60000 })); }
@@ -450,6 +1148,19 @@ class Component extends DCLogic {
   renderVals(){
     const s = this.state;
     const accentColor = this.props.accentColor || '#E39C8B';
+    const dm = s.darkMode;
+    const T = dm ? {
+      bgSurface:'#2A2220', bgCard:'#352C29', bgPage:'#221B19', bgInset:'#241D1B', bgSoft:'#3D332F',
+      border:'#453A35', divider:'#4A3E38', textPrimary:'#F3EAE4', textSecondary:'#B8A99F',
+      textTertiary:'#8F8079', textSecondaryStrong:'#C9BAB0', iconNeutral:'#B8A99F', danger:'#D97A6C', dangerText:'#E39184',
+      diaperCardBg:'#233B42', diaperText:'#D7E9EE', diaperTextSecondary:'#8FB3BE', diaperDeleteBg:'#2C4A53', diaperDeleteText:'#BFD9E0', diaperRing:'#3A5D66', reminderDueBg:'#4A342E'
+    } : {
+      bgSurface:'#FFF8F2', bgCard:'#ffffff', bgPage:'#F3EDE6', bgInset:'#F3EDE6', bgSoft:'#EFE4DB',
+      border:'#F0E6DD', divider:'#E4D5CB', textPrimary:'#4A3B36', textSecondary:'#9C8A82',
+      textTertiary:'#B7A79E', textSecondaryStrong:'#7A6A62', iconNeutral:'#8B7A73', danger:'#C9695C', dangerText:'#B7726A',
+      diaperCardBg:'#E4F0F4', diaperText:'#2F4C57', diaperTextSecondary:'#5B7C88', diaperDeleteBg:'#D3E5EB', diaperDeleteText:'#3D6577', diaperRing:'#C7DCE2', reminderDueBg:'#F9E2DC'
+    };
+    const themeStyle = '--bg-surface:'+T.bgSurface+';--bg-card:'+T.bgCard+';--bg-page:'+T.bgPage+';--bg-inset:'+T.bgInset+';--bg-soft:'+T.bgSoft+';--border:'+T.border+';--divider:'+T.divider+';--text-primary:'+T.textPrimary+';--text-secondary:'+T.textSecondary+';--text-tertiary:'+T.textTertiary+';--text-secondary-strong:'+T.textSecondaryStrong+';--icon-neutral:'+T.iconNeutral+';--danger:'+T.danger+';--danger-text:'+T.dangerText+';--diaper-card-bg:'+T.diaperCardBg+';--diaper-text:'+T.diaperText+';--diaper-text-secondary:'+T.diaperTextSecondary+';--diaper-delete-bg:'+T.diaperDeleteBg+';--diaper-delete-text:'+T.diaperDeleteText+';--reminder-due-bg:'+T.reminderDueBg+';--overlay-btn-bg:'+(dm?'rgba(255,255,255,0.14)':'#ffffffaa')+';';
     const now = new Date(s.now);
     const todayStr = dateStr(now);
     const hour = now.getHours();
@@ -460,6 +1171,10 @@ class Component extends DCLogic {
     const homeFeedsRaw = s.feeds.filter(f=>f.date===todayStr).sort((a,b)=>b.time.localeCompare(a.time));
     const homeFeeds = homeFeedsRaw.map(f=>this.enrichFeed(f, id=>this.openEdit(id)));
     const todayStats = this.computeStats(s.feeds.filter(f=>f.date===todayStr));
+
+    const homeDiapersRaw = s.diapers.filter(d=>d.date===todayStr).sort((a,b)=>b.time.localeCompare(a.time));
+    const homeDiapers = homeDiapersRaw.map(d=>this.enrichDiaper(d, id=>this.openEditDiaper(id)));
+    const todayDiaperStats = this.computeDiaperStats(s.diapers.filter(d=>d.date===todayStr));
 
     const reportFeedsRaw = s.feeds.filter(f=>f.date===s.reportDate).sort((a,b)=>a.time.localeCompare(b.time));
     const reportFeeds = reportFeedsRaw.map(f=>this.enrichFeed(f, id=>this.openEdit(id)));
@@ -482,7 +1197,7 @@ class Component extends DCLogic {
       return {
         key:t, label:meta.label,
         onSelect: () => this.selectType(t),
-        buttonStyle: active ? `background:${meta.color};color:#fff;border:none;` : `background:#fff;color:#8B7A73;border:1.5px solid #EFE4DB;`,
+        buttonStyle: active ? `background:${meta.color};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};`,
       };
     });
 
@@ -490,7 +1205,106 @@ class Component extends DCLogic {
     const intervalOptions = intervalPresets.map(m=>{
       const active = s.reminderIntervalMin===m;
       const label = m%60===0 ? (m/60)+'h' : (m/60).toFixed(1)+'h';
-      return { key:m, label, onSelect: () => this.setInterval_(m), buttonStyle: active ? `background:${accentColor};color:#fff;border:none;` : `background:#fff;color:#8B7A73;border:1.5px solid #EFE4DB;` };
+      return { key:m, label, onSelect: () => this.setInterval_(m), buttonStyle: active ? `background:${accentColor};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};` };
+    });
+
+    const nowMs = s.now;
+    const enrichReminder = (r) => {
+      const meta = CATEGORY_META[r.category];
+      const effectiveDue = r.snoozedUntil || r.nextDueAt;
+      const due = effectiveDue <= nowMs && !r.dismissed;
+      const msLeftR = effectiveDue - nowMs;
+      let nextLabel;
+      if(due) nextLabel = 'Due now';
+      else { const tm = Math.ceil(msLeftR/60000); nextLabel = tm<60 ? tm+'m' : Math.floor(tm/60)+'h '+(tm%60)+'m'; }
+      const scheduleLabel = r.mode==='fixed' ? 'Daily at '+display12h(r.fixedTime) : 'Every '+r.intervalHours+'h';
+      return {
+        ...r, categoryLabel: meta.label, categoryColor: meta.color, categorySoft: meta.soft,
+        scheduleLabel, nextLabel, isDue: due,
+        onEdit: () => this.openEditReminder(r.id),
+        onDelete: () => this.requestDeleteReminder(r.id),
+        onMarkDone: () => this.markReminderDone(r.id),
+        onSnooze: () => this.snoozeReminderDue(r.id),
+        onDismiss: () => this.dismissReminderDue(r.id),
+      };
+    };
+    const allReminders = s.reminders.map(enrichReminder).sort((a,b)=>(a.snoozedUntil||a.nextDueAt)-(b.snoozedUntil||b.nextDueAt));
+    const dueReminders = allReminders.filter(r=>r.isDue);
+
+    const reminderCategoryOptions = CATEGORY_ORDER.map(c=>{
+      const meta = CATEGORY_META[c];
+      const active = s.reminderDraft && s.reminderDraft.category===c;
+      return { key:c, label:meta.label, onSelect: () => this.selectReminderCategory(c), buttonStyle: active ? `background:${meta.color};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid #EFE4DB;` };
+    });
+    const rDraft = s.reminderDraft || this.freshReminderDraft();
+
+    const nowTimeStr = timeStr(now);
+    const reportItemsAll = (() => {
+      const items = [];
+      s.feeds.filter(f=>f.date===s.reportDate).forEach(f=>{
+        items.push({ kind:'feed', sortTime:f.time, feed:this.enrichFeed(f, id=>this.openEdit(id)) });
+      });
+      s.reminderLogs.filter(l=>l.date===s.reportDate).forEach(l=>{
+        const meta = CATEGORY_META[l.category];
+        const isQuickLog = !l.reminderId;
+        items.push({ kind:'reminder', sortTime:l.time, reminder:{
+          label:l.label, categoryLabel:meta.label, categoryColor:meta.color, categorySoft:meta.soft,
+          displayTimeStr: display12h(l.time), statusLabel:'Done', muted:false, opacityVal:1,
+          isQuickLog, showStatusPill: !isQuickLog,
+          cardStyle: isQuickLog ? `background:${T.bgCard};border-radius:14px;` : `background:${T.bgCard};border-radius:14px;border:1.5px dashed ${meta.color};`,
+          onDelete: isQuickLog ? (() => this.requestDeleteReminderLog(l.id)) : null,
+          onEdit: isQuickLog ? (() => this.openEditReminderLog(l.id)) : null,
+          editableCursor: isQuickLog ? 'cursor:pointer;' : '',
+        } });
+      });
+      s.diapers.filter(d=>d.date===s.reportDate).forEach(d=>{
+        items.push({ kind:'diaper', sortTime:d.time, diaper:this.enrichDiaper(d, id=>this.openEditDiaper(id)) });
+      });
+      const isPastOrTodayPast = (r) => s.reportDate < todayStr || (s.reportDate===todayStr && r.fixedTime <= nowTimeStr);
+      s.reminders.filter(r=>r.mode==='fixed' && isPastOrTodayPast(r)).forEach(r=>{
+        const already = s.reminderLogs.some(l=>l.reminderId===r.id && l.date===s.reportDate);
+        if(already) return;
+        const meta = CATEGORY_META[r.category];
+        items.push({ kind:'reminder', sortTime:r.fixedTime, reminder:{ label:r.label, categoryLabel:meta.label, categoryColor:meta.color, categorySoft:meta.soft, displayTimeStr: display12h(r.fixedTime), statusLabel:'Missed', muted:true, opacityVal:0.55, isQuickLog:false, showStatusPill:true, cardStyle:`background:#fff;border-radius:14px;border:1.5px dashed ${meta.color};` } });
+      });
+      items.sort((a,b)=>a.sortTime.localeCompare(b.sortTime));
+      return items;
+    })();
+    const reportItems = reportItemsAll.filter(it => s.reportFilter==='all' || it.kind===s.reportFilter);
+    const reminderCompletedCount = reportItemsAll.filter(it=>it.kind==='reminder' && !it.reminder.muted && !it.reminder.isQuickLog).length;
+    const reminderMissedCount = reportItemsAll.filter(it=>it.kind==='reminder' && it.reminder.muted).length;
+    const reminderLoggedCount = reportItemsAll.filter(it=>it.kind==='reminder' && it.reminder.isQuickLog).length;
+    const quickLogOptions = QUICK_LOG_CATEGORIES.map(c=>{
+      const meta = CATEGORY_META[c];
+      return { key:c, label:meta.label, color:meta.color, soft:meta.soft, onSelect: () => this.logQuickCategory(c) };
+    });
+
+    const dDraft = s.diaperDraft || this.freshDiaperDraft();
+    const diaperTypeOptions = ['pee','poop','both'].map(t=>{
+      const active = dDraft.type===t;
+      return { key:t, label:DIAPER_TYPE_META[t].label, onSelect: () => this.selectDiaperType(t), buttonStyle: active ? `background:${DIAPER_ACCENT};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};B7A73;border:1.5px solid #EFE4DB;` };
+    });
+    const showPeeColorField = dDraft.type==='pee' || dDraft.type==='both';
+    const showPoopFields = dDraft.type==='poop' || dDraft.type==='both';
+    const peeColorOptions = PEE_COLORS.map(c=>{
+      const active = dDraft.peeColor===c.key;
+      return { key:c.key, label:c.label, swatch:c.hex,
+        onSelect: () => this.selectPeeColor(c.key),
+        buttonStyle: active ? `box-shadow:0 0 0 3px ${T.bgCard}, 0 0 0 5.5px ${DIAPER_ACCENT};transform:scale(1.08);` : `box-shadow:0 0 0 1.5px ${T.bgSoft};transform:scale(1);`,
+        labelStyle: active ? `color:${DIAPER_ACCENT};font-weight:800;` : `color:${T.iconNeutral};font-weight:700;`,
+        checkVisible: active };
+    });
+    const poopColorOptions = POOP_COLORS.map(c=>{
+      const active = dDraft.poopColor===c.key;
+      return { key:c.key, label:c.label, swatch:c.hex,
+        onSelect: () => this.selectPoopColor(c.key),
+        buttonStyle: active ? `box-shadow:0 0 0 3px ${T.bgCard}, 0 0 0 5.5px ${DIAPER_ACCENT};transform:scale(1.08);` : `box-shadow:0 0 0 1.5px ${T.bgSoft};transform:scale(1);`,
+        labelStyle: active ? `color:${DIAPER_ACCENT};font-weight:800;` : `color:${T.iconNeutral};font-weight:700;`,
+        checkVisible: active };
+    });
+    const poopAmountOptions = POOP_AMOUNTS.map(a=>{
+      const active = dDraft.poopAmount===a;
+      return { key:a, label:a, onSelect: () => this.selectPoopAmount(a), buttonStyle: active ? `background:${DIAPER_ACCENT};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft}; #EFE4DB;` };
     });
 
     const draft = s.draft || this.freshDraft();
@@ -501,6 +1315,14 @@ class Component extends DCLogic {
 
     return {
       isHome: s.view==='home',
+      isReport: s.view==='report',
+      isDiapers: s.view==='diapers',
+      diaperAccent: DIAPER_ACCENT,
+      homeDiapers, hasHomeDiapers: homeDiapers.length>0,
+      todayDiaperStats,
+      goDiapers: () => this.goDiapers(),
+      diapersTabColor: s.view==='diapers' ? DIAPER_ACCENT : 'var(--text-tertiary)',
+      openNewDiaper: () => this.openNewDiaper(),
       greeting, todayLongDate, timePhrase,
       babyName: s.babyName, onBabyNameChange: (e)=>this.onBabyNameChange(e),
       reportTitle: s.babyName ? s.babyName+"'s daily report" : 'Daily report',
@@ -508,7 +1330,7 @@ class Component extends DCLogic {
       homeFeeds, hasHomeFeeds: homeFeeds.length>0,
       todayStats,
       showReminderBanner: !s.reminderDismissed,
-      reminderBg: overdue ? '#F9E2DC' : '#F3EDE6',
+      reminderBg: overdue ? 'var(--reminder-due-bg)' : 'var(--bg-inset)',
       reminderDotColor: overdue ? '#D97B67' : accentColor,
       reminderPulse: overdue ? 'pulse 1.2s ease-in-out infinite' : 'none',
       reminderTitle: overdue ? 'Feed overdue' : 'Next feed in',
@@ -524,9 +1346,81 @@ class Component extends DCLogic {
       showTodayButton: s.reportDate!==todayStr, goToday: () => this.goToday(),
       prevDay: () => this.prevDay(), nextDay: () => this.nextDay(),
 
-      goHome: () => this.goHome(), goReport: () => this.goReport(),
-      homeTabColor: s.view==='home' ? accentColor : '#B7A79E',
-      reportTabColor: s.view==='report' ? accentColor : '#B7A79E',
+      goHome: () => this.goHome(), goReport: () => this.goReport(), goReminders: () => this.goReminders(),
+      homeTabColor: s.view==='home' ? accentColor : 'var(--text-tertiary)',
+      reportTabColor: s.view==='report' ? accentColor : 'var(--text-tertiary)',
+      remindersTabColor: s.view==='reminders' ? accentColor : 'var(--text-tertiary)',
+      darkMode: dm, toggleDarkMode: () => this.toggleDarkMode(), themeStyle,
+      darkModeTrackStyle: `background:${dm?accentColor:T.bgSoft};`,
+      darkModeThumbStyle: `left:${dm?'25px':'3px'};`,
+      isReminders: s.view==='reminders',
+      showFab: true,
+      fabIsReminder: s.view==='reminders',
+      fabIsDiaper: s.view==='diapers',
+      fabIsReport: s.view==='report',
+      fabIsFeed: s.view==='home',
+      fabAccent: s.view==='diapers' ? DIAPER_ACCENT : accentColor,
+      onFabClick: s.view==='reminders' ? (() => this.openNewReminder()) : (s.view==='diapers' ? (() => this.openNewDiaper()) : (s.view==='report' ? (() => this.openQuickLogSheet()) : (() => this.openNewLog()))),
+      quickLogOptions,
+      quickLogSheetOpen: s.quickLogSheetOpen,
+      openQuickLogSheet: () => this.openQuickLogSheet(),
+      closeQuickLogSheet: () => this.closeQuickLogSheet(),
+      toast: s.toast, hasToast: !!s.toast,
+      reminderLoggedCount,
+      confirmingDeleteReminderLogId: s.confirmingDeleteReminderLogId,
+      cancelDeleteReminderLog: () => this.cancelDeleteReminderLog(), confirmDeleteReminderLog: () => this.confirmDeleteReminderLog(),
+      editingReminderLogId: s.editingReminderLogId,
+      reminderLogDraft: s.reminderLogDraft || { category:'medicine', date:todayStr, time:nowTimeStr },
+      reminderLogEditCategoryLabel: s.reminderLogDraft ? CATEGORY_META[s.reminderLogDraft.category].label : '',
+      onReminderLogDateChange: (e)=>this.onReminderLogDateChange(e), onReminderLogTimeChange: (e)=>this.onReminderLogTimeChange(e),
+      closeEditReminderLog: () => this.closeEditReminderLog(), saveReminderLogEdit: () => this.saveReminderLogEdit(),
+
+      allReminders, hasReminders: allReminders.length>0,
+      dueReminders, hasDueReminders: dueReminders.length>0,
+      openNewReminder: () => this.openNewReminder(),
+
+      reminderSheetOpen: s.reminderSheetOpen,
+      reminderSheetTitle: s.editingReminderId ? 'Edit reminder' : 'Add reminder',
+      reminderDraft: rDraft,
+      onReminderLabelChange: (e)=>this.onReminderLabelChange(e),
+      reminderCategoryOptions,
+      setReminderModeFixed: () => this.setReminderModeFixed(), setReminderModeInterval: () => this.setReminderModeInterval(),
+      fixedModePillStyle: rDraft.mode==='fixed' ? `background:${accentColor};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};`,
+      intervalModePillStyle: rDraft.mode==='interval' ? `background:${accentColor};color:#fff;border:none;` : `background:${T.bgCard};color:${T.iconNeutral};border:1.5px solid ${T.bgSoft};`,
+      showFixedTimeField: rDraft.mode==='fixed', showIntervalField: rDraft.mode==='interval',
+      onReminderFixedTimeChange: (e)=>this.onReminderFixedTimeChange(e),
+      decReminderInterval: () => this.decReminderInterval(), incReminderInterval: () => this.incReminderInterval(),
+      reminderIntervalDisplay: rDraft.intervalHours+'h',
+      reminderFormError: s.reminderFormError,
+      closeReminderSheet: () => this.closeReminderSheet(), saveReminder: () => this.saveReminder(),
+
+      confirmingDeleteReminderId: s.confirmingDeleteReminderId,
+      cancelDeleteReminder: () => this.cancelDeleteReminder(), confirmDeleteReminder: () => this.confirmDeleteReminder(),
+
+      reportFilter: s.reportFilter,
+      setFilterAll: () => this.setReportFilter('all'), setFilterFeed: () => this.setReportFilter('feed'), setFilterReminder: () => this.setReportFilter('reminder'), setFilterDiaper: () => this.setReportFilter('diaper'),
+      filterAllStyle: s.reportFilter==='all' ? `background:${T.bgCard};color:${accentColor};` : `background:transparent;color:${T.textSecondary};`,
+      filterFeedStyle: s.reportFilter==='feed' ? `background:${T.bgCard};color:${accentColor};` : `background:transparent;color:${T.textSecondary};`,
+      filterReminderStyle: s.reportFilter==='reminder' ? `background:${T.bgCard};color:${accentColor};` : `background:transparent;color:${T.textSecondary};`,
+      filterDiaperStyle: s.reportFilter==='diaper' ? `background:${T.bgCard};color:${DIAPER_ACCENT};` : `background:transparent;color:${T.textSecondary};`,
+      showFeedStats: s.reportFilter!=='reminder' && s.reportFilter!=='diaper',
+      showReminderStats: s.reportFilter==='reminder',
+      showDiaperStats: s.reportFilter==='diaper',
+      diaperReportStats: this.computeDiaperStats(s.diapers.filter(d=>d.date===s.reportDate)),
+      reminderCompletedCount, reminderMissedCount,
+      reportItems, hasReportItems: reportItems.length>0,
+
+      diaperSheetOpen: s.diaperSheetOpen,
+      diaperSheetTitle: s.editingDiaperId ? 'Edit diaper change' : 'Log a diaper change',
+      diaperDraft: dDraft,
+      diaperTypeOptions,
+      onDiaperDateChange: (e)=>this.onDiaperDateChange(e), onDiaperTimeChange: (e)=>this.onDiaperTimeChange(e), onDiaperNoteChange: (e)=>this.onDiaperNoteChange(e),
+      showPeeColorField, showPoopFields,
+      peeColorOptions, poopColorOptions, poopAmountOptions,
+      diaperFormError: s.diaperFormError,
+      closeDiaperSheet: () => this.closeDiaperSheet(), saveDiaper: () => this.saveDiaper(),
+      confirmingDeleteDiaperId: s.confirmingDeleteDiaperId,
+      cancelDeleteDiaper: () => this.cancelDeleteDiaper(), confirmDeleteDiaper: () => this.confirmDeleteDiaper(),
 
       sheetOpen: s.sheetOpen,
       sheetTitle: s.editingId ? 'Edit feed' : 'Log a feed',
@@ -535,8 +1429,8 @@ class Component extends DCLogic {
       onDateChange: (e)=>this.onDateChange(e), onTimeChange: (e)=>this.onTimeChange(e), onNoteChange: (e)=>this.onNoteChange(e),
       showAmountField,
       setUnitMl: () => this.setUnitMl(), setUnitOz: () => this.setUnitOz(),
-      mlPillStyle: s.unitPref==='ml' ? `background:#fff;color:${accentColor};` : 'background:transparent;color:#9C8A82;',
-      ozPillStyle: s.unitPref==='oz' ? `background:#fff;color:${accentColor};` : 'background:transparent;color:#9C8A82;',
+      mlPillStyle: s.unitPref==='ml' ? `background:${T.bgCard};color:${accentColor};` : `background:transparent;color:${T.textSecondary};`,
+      ozPillStyle: s.unitPref==='oz' ? `background:${T.bgCard};color:${accentColor};` : `background:transparent;color:${T.textSecondary};`,
       decAmount: () => this.decAmount(), incAmount: () => this.incAmount(),
       amountDisplay,
       durationLabel, durationHint,

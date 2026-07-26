@@ -24,7 +24,7 @@ class CustomTimerBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = overdue ? const Color(0xFFF9E2DC) : AppColors.surfaceSecondary;
+    final bg = overdue ? AppColors.overdueBanner : AppColors.surfaceSecondary;
     const accent = AppColors.accentBlush;
 
     return Container(
@@ -54,18 +54,18 @@ class CustomTimerBanner extends StatelessWidget {
                   children: [
                     Text(
                       overdue ? '$label done' : label,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText, letterSpacing: 0.2),
                     ),
                     Text(
                       countdownLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: balooFamily, fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                     ),
                     if (atLabel != null)
                       Text(
                         atLabel!,
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText),
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.reminderTitleText),
                       ),
                   ],
                 ),
@@ -81,7 +81,7 @@ class CustomTimerBanner extends StatelessWidget {
                   child: TextButton(
                     onPressed: onAddFive,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.67),
+                      backgroundColor: AppColors.cardWhite.withValues(alpha: 0.67),
                       foregroundColor: AppColors.textPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),

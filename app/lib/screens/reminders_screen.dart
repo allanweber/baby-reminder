@@ -37,10 +37,10 @@ class RemindersScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
                   child: Text(title,
-                      style: const TextStyle(fontFamily: balooFamily, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 26, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
                   child: Text('Medicine, vitamins, tummy time and other care routines.',
                       style: TextStyle(fontSize: 13, color: AppColors.textMuted, fontWeight: FontWeight.w600)),
                 ),
@@ -61,13 +61,13 @@ class RemindersScreen extends StatelessWidget {
                           .toList(),
                     ),
                   ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 16, 20, 2),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 2),
                   child: Text('Quick log',
                       style: TextStyle(fontFamily: balooFamily, fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                   child: Text('Log a category right now, no schedule needed.',
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                 ),
@@ -77,16 +77,16 @@ class RemindersScreen extends StatelessWidget {
                     onSelect: (category) => performQuickLog(context, appState, category),
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
                   child: Text('All reminders',
                       style: TextStyle(fontFamily: balooFamily, fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                   child: all.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 30, horizontal: 10),
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                           child: Center(
                             child: Text('No reminders yet. Tap the bell to add one.',
                                 style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
@@ -137,7 +137,7 @@ class _DueReminderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
-        color: meta.soft,
+        color: softTint(meta.color),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -155,7 +155,7 @@ class _DueReminderCard extends StatelessWidget {
                     const SizedBox(height: 1),
                     Text(
                       reminder.label.isNotEmpty ? reminder.label : meta.label,
-                      style: const TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      style: TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -187,7 +187,7 @@ class _DueReminderCard extends StatelessWidget {
                   child: TextButton(
                     onPressed: onSnooze,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: AppColors.cardWhite,
                       foregroundColor: AppColors.reminderTitleText,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
@@ -202,7 +202,7 @@ class _DueReminderCard extends StatelessWidget {
                   child: TextButton(
                     onPressed: onDismiss,
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: AppColors.cardWhite,
                       foregroundColor: AppColors.reminderTitleText,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),

@@ -45,9 +45,9 @@ class _SheetChrome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
       child: SafeArea(
@@ -117,7 +117,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
               _NavArrow(icon: Icons.chevron_left, onTap: _canGoPrev ? () => _changeMonth(-1) : null),
               Text(
                 '${_monthNames[_month.month - 1]} ${_month.year}',
-                style: const TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
               _NavArrow(icon: Icons.chevron_right, onTap: _canGoNext ? () => _changeMonth(1) : null),
             ],
@@ -127,7 +127,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
             children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
                 .map((d) => Expanded(
                       child: Center(
-                        child: Text(d, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
+                        child: Text(d, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
                       ),
                     ))
                 .toList(),
@@ -253,7 +253,7 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'Select time (24h)',
             style: TextStyle(fontFamily: balooFamily, fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
           ),
@@ -267,8 +267,8 @@ class _TimePickerSheetState extends State<_TimePickerSheet> {
                 active: _field == _TimeField.hour,
                 onTap: () => setState(() => _field = _TimeField.hour),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Text(':', style: TextStyle(fontFamily: balooFamily, fontSize: 34, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               ),
               _TimeFieldChip(

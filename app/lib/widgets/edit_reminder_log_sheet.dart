@@ -61,9 +61,9 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
   Widget build(BuildContext context) {
     final meta = reminderCategories[widget.log.category]!;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
       child: SafeArea(
@@ -80,10 +80,10 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
                 decoration: BoxDecoration(color: AppColors.dragHandle, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const Text('Edit log',
+            Text('Edit log',
                 style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 4),
-            Text(meta.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+            Text(meta.label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +148,7 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         const SizedBox(height: 6),
         InkWell(
           onTap: onTap,
@@ -157,11 +157,11 @@ class _Field extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardWhite,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border, width: 1.5),
             ),
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 14)),
+            child: Text(value, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 14)),
           ),
         ),
       ],

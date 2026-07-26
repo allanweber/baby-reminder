@@ -23,6 +23,7 @@ class StorageService {
   static const _kReminderLogs = 'reminderLogs';
   static const _kNextReminderAlarmId = 'nextReminderAlarmId';
   static const _kDiapers = 'diapers';
+  static const _kDarkMode = 'darkMode';
   static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
@@ -53,6 +54,9 @@ class StorageService {
 
   String loadUnitPref() => _prefs.getString(_kUnitPref) ?? 'ml';
   Future<void> saveUnitPref(String unit) => _prefs.setString(_kUnitPref, unit);
+
+  bool loadDarkMode() => _prefs.getBool(_kDarkMode) ?? false;
+  Future<void> saveDarkMode(bool on) => _prefs.setBool(_kDarkMode, on);
 
   int loadReminderIntervalMin() => _prefs.getInt(_kReminderIntervalMin) ?? 180;
   Future<void> saveReminderIntervalMin(int min) => _prefs.setInt(_kReminderIntervalMin, min);

@@ -153,9 +153,9 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
+            borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
           child: ListView(
@@ -171,7 +171,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
               ),
               Text(
                 isEditing ? 'Edit feed' : 'Log a feed',
-                style: const TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 14),
               Row(
@@ -191,9 +191,9 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                             });
                           },
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: active ? meta.color : Colors.white,
+                            backgroundColor: active ? meta.color : AppColors.cardWhite,
                             foregroundColor: active ? Colors.white : AppColors.gearStroke,
-                            side: active ? BorderSide.none : const BorderSide(color: AppColors.border, width: 1.5),
+                            side: active ? BorderSide.none : BorderSide(color: AppColors.border, width: 1.5),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                           ),
@@ -217,13 +217,13 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
               if (showAmount) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                  decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(20)),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('AMOUNT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                          Text('AMOUNT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
                           Container(
                             padding: const EdgeInsets.all(3),
                             decoration: BoxDecoration(color: AppColors.surfaceSecondary, borderRadius: BorderRadius.circular(12)),
@@ -246,7 +246,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                             child: Text(
                               amountDisplay,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontFamily: balooFamily, fontSize: 32, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                              style: TextStyle(fontFamily: balooFamily, fontSize: 32, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                             ),
                           ),
                           _StepperButton(label: '+', size: 44, bg: accent, fg: Colors.white, onTap: _incAmount),
@@ -259,7 +259,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
               ],
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(20)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -268,9 +268,9 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(durationLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                          Text(durationLabel, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
                           const SizedBox(height: 1),
-                          Text(durationHint, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textMuted2)),
+                          Text(durationHint, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textMuted2)),
                         ],
                       ),
                     ),
@@ -282,7 +282,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                           child: Text(
                             '$durationMin m',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                            style: TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                           ),
                         ),
                         _StepperButton(label: '+', size: 36, bg: AppColors.surfaceSecondary, fg: AppColors.textPrimary, onTap: _incDuration, fontSize: 18),
@@ -292,26 +292,27 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('NOTE (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text('NOTE (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
               const SizedBox(height: 6),
               TextField(
                 controller: noteController,
                 minLines: 2,
                 maxLines: 4,
-                style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'e.g. spit up a little, fussy before feed…',
+                  hintStyle: TextStyle(color: AppColors.textMuted),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.cardWhite,
                   contentPadding: const EdgeInsets.all(12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.border, width: 1.5)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
                 ),
               ),
               if (formError != null) ...[
                 const SizedBox(height: 10),
-                Text(formError!, style: const TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(formError!, style: TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
               ],
               const SizedBox(height: 16),
               Row(
@@ -369,7 +370,7 @@ class _DateTimeField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
         const SizedBox(height: 6),
         InkWell(
           onTap: onTap,
@@ -378,11 +379,11 @@ class _DateTimeField extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardWhite,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.border, width: 1.5),
             ),
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 14)),
+            child: Text(value, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 14)),
           ),
         ),
       ],
@@ -400,7 +401,7 @@ class _UnitPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? Colors.white : Colors.transparent,
+      color: active ? AppColors.cardWhite : Colors.transparent,
       borderRadius: BorderRadius.circular(9),
       child: InkWell(
         onTap: onTap,

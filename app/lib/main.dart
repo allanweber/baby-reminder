@@ -54,10 +54,15 @@ class BabyFeedTrackerApp extends StatelessWidget {
       animation: appState,
       builder: (context, _) {
         final title = appState.babyName.isNotEmpty ? "${appState.babyName}'s Feeds" : 'Nestling';
+        // Point the neutral tokens at the active theme before the tree builds,
+        // so every AppColors getter below resolves consistently this frame.
+        applyPalette(dark: appState.darkMode);
         return MaterialApp(
           title: title,
           debugShowCheckedModeBanner: false,
-          theme: buildAppTheme(AppColors.accentBlush),
+          theme: buildAppTheme(AppColors.accentBlush, brightness: Brightness.light),
+          darkTheme: buildAppTheme(AppColors.accentBlush, brightness: Brightness.dark),
+          themeMode: appState.darkMode ? ThemeMode.dark : ThemeMode.light,
           home: AppShell(appState: appState),
         );
       },

@@ -47,7 +47,7 @@ class QuickLogReportRow extends StatelessWidget {
               Container(
                 width: 38,
                 height: 38,
-                decoration: BoxDecoration(color: meta.soft, borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(color: softTint(meta.color), borderRadius: BorderRadius.circular(14)),
                 alignment: Alignment.center,
                 child: Container(
                   width: 10,
@@ -63,14 +63,14 @@ class QuickLogReportRow extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      style: TextStyle(fontFamily: nunitoFamily, fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       reminderTime12h(time),
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -85,7 +85,7 @@ class QuickLogReportRow extends StatelessWidget {
                   child: InkWell(
                     onTap: onDelete,
                     borderRadius: BorderRadius.circular(10),
-                    child: const Center(
+                    child: Center(
                       child: Text('×', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.errorText)),
                     ),
                   ),
