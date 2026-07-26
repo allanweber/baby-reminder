@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
-
 /// Shows a brief bottom-anchored dark toast (the quick-log confirmation), then
 /// auto-dismisses after ~1.5s. Bespoke overlay rather than a SnackBar so it
 /// matches the app's look and sits above the bottom nav on any tab.
