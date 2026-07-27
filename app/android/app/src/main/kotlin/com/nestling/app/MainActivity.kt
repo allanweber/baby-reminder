@@ -1,18 +1,11 @@
 package com.nestling.app
 
-import android.os.Build
-import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity : FlutterActivity() {
-    // Let the app (and so the full-screen feed alarm) appear over the lock
-    // screen and wake the display, so the alarm can be seen and dismissed
-    // without unlocking the phone first.
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
-        }
-    }
-}
+// The full-screen feed/reminder alarm is shown over the lock screen and wakes
+// the display by the `alarm` package itself: its AlarmPlugin observes the
+// ringing state and toggles setShowWhenLocked / setTurnScreenOn (and dismisses
+// the keyguard) only while an alarm is sounding, reverting them when it stops.
+// So this activity must NOT set those flags itself — doing so unconditionally
+// left the whole app visible over the lock screen for its entire lifetime.
+class MainActivity : FlutterActivity()
