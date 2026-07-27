@@ -107,7 +107,7 @@ requirements, which is correct for this app.
 
 **App name** (≤30 chars):
 ```
-Nestling: Baby Feed Tracker
+Nestling
 ```
 
 **Short description** (≤80 chars):
