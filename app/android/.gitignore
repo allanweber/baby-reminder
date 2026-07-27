@@ -8,14 +8,11 @@ GeneratedPluginRegistrant.java
 
 # Remember to never publicly share your keystore.
 # See https://flutter.dev/to/reference-keystore
+#
+# The release keystore and its passwords are NOT committed. CI signs by
+# decoding the keystore from a GitHub Actions secret (ANDROID_KEYSTORE_BASE64)
+# and passing the passwords via env vars; for local release builds, create your
+# own key.properties pointing at your backed-up keystore (see app/README.md).
 key.properties
 **/*.keystore
 **/*.jks
-
-# Intentionally tracked: a shared release keystore so every build (local and
-# CI) signs identically and Android can update an installed app in place. This
-# is a throwaway key for a personal, sideloaded app that is NOT published to
-# the Play Store. If this app is ever published, generate a private keystore,
-# move it to CI secrets, and delete these two lines.
-!key.properties
-!app/upload-keystore.jks

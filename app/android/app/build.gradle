@@ -5,16 +5,23 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-// Load the release signing config from android/key.properties so every build
-// (local or CI) is signed with the same committed keystore. A stable signing
-// identity is what lets Android install a new APK on top of a previously
-// installed one; without it, each build was signed with a throwaway debug key
-// and updates failed with "App not installed".
+// Release signing resolves from one of two sources, in priority order:
+//   1. Environment variables (ANDROID_KEYSTORE_PATH / _PASSWORD / _KEY_ALIAS /
+//      ANDROID_KEY_PASSWORD) — how CI signs, decoding the keystore from a
+//      GitHub Actions secret. Nothing sensitive is committed.
+//   2. A local, git-ignored android/key.properties pointing at a keystore on
+//      the developer's machine — for local `flutter build --release`.
+// If neither is present the release build falls back to debug signing so the
+// build still succeeds (e.g. PRs from forks with no secrets).
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("key.properties")
-if (keystorePropertiesFile.exists()) {
+def hasKeystoreFile = keystorePropertiesFile.exists()
+if (hasKeystoreFile) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+def envKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+def useEnvSigning = envKeystorePath != null && !envKeystorePath.isEmpty()
+def hasReleaseSigning = useEnvSigning || hasKeystoreFile
 
 android {
     namespace = "com.nestling.app"
@@ -50,21 +57,26 @@ android {
 
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"]
-                keyPassword = keystoreProperties["keyPassword"]
+            if (useEnvSigning) {
+                storeFile = file(envKeystorePath)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            } else if (hasKeystoreFile) {
                 storeFile = keystoreProperties["storeFile"] ? file(keystoreProperties["storeFile"]) : null
                 storePassword = keystoreProperties["storePassword"]
+                keyAlias = keystoreProperties["keyAlias"]
+                keyPassword = keystoreProperties["keyPassword"]
             }
         }
     }
 
     buildTypes {
         release {
-            // Use the committed release keystore when key.properties is present,
-            // otherwise fall back to debug signing so `flutter run --release`
-            // still works on a machine without the keystore.
-            signingConfig = keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
+            // Sign with the real upload key when either signing source is
+            // available (env vars in CI, or a local key.properties); otherwise
+            // fall back to debug signing so the build still succeeds.
+            signingConfig = hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
         }
     }
 }

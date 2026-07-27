@@ -16,8 +16,13 @@ flutter pub get
 flutter run            # run on a connected device/emulator
 flutter analyze         # static analysis
 flutter test             # widget tests
-flutter build apk --release   # Android APK (signed with the debug keystore for now)
+flutter build appbundle --release  # Android App Bundle (.aab) for Google Play
+flutter build apk --release        # APK for sideload testing
 ```
+
+For a release-signed local build, create `android/key.properties` (git-ignored)
+pointing at your keystore — see "Release signing" below. Without it, local
+release builds fall back to debug signing.
 
 ## Structure
 
@@ -37,14 +42,42 @@ flutter build apk --release   # Android APK (signed with the debug keystore for 
 
 ## CI
 
-`.github/workflows/android-build.yml` (repo root) builds and uploads a release
-APK on every push/PR touching `app/`. iOS packaging isn't wired up yet — it
-needs Apple signing credentials, per the handoff doc.
+`.github/workflows/android-build.yml` (repo root) builds and uploads a
+release-signed App Bundle (`nestling-appbundle`, the `.aab` for Play) and an
+APK (`nestling-apk`, for sideload testing) on every push/PR touching `app/`.
+Signing uses the GitHub Actions secrets listed below; if they're absent (e.g.
+a fork PR) the build falls back to debug signing so CI still passes. iOS
+packaging isn't wired up yet — it needs Apple signing credentials, per the
+handoff doc.
 
-## Notes / follow-ups
+## Release signing
 
-- The release APK is currently signed with the Flutter debug keystore
-  (see `android/app/build.gradle`) so CI needs no secrets. Add a real
-  signing config + `secrets.*` before shipping to the Play Store.
-- No custom launcher icon was specified in the design (it only defines
-  in-app iconography); the default Flutter launcher icon is currently in use.
+The upload keystore and its passwords are **not** committed. Release signing
+resolves in this order (see `android/app/build.gradle`):
+
+1. **Environment variables** — how CI signs:
+   - `ANDROID_KEYSTORE_PATH` — path to the decoded keystore file
+   - `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
+2. **`android/key.properties`** — a git-ignored file for local release builds:
+   ```properties
+   storeFile=/absolute/path/to/upload-keystore.jks
+   storePassword=…
+   keyAlias=upload
+   keyPassword=…
+   ```
+3. Otherwise, **debug signing** (build still succeeds; not uploadable to Play).
+
+### CI secrets to configure
+
+In the repo's **Settings → Secrets and variables → Actions**, add:
+
+| Secret | Value |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | base64 of `upload-keystore.jks` (`base64 -w0 upload-keystore.jks`) |
+| `ANDROID_KEYSTORE_PASSWORD` | the keystore (store) password |
+| `ANDROID_KEY_ALIAS` | `upload` |
+| `ANDROID_KEY_PASSWORD` | the key password |
+
+Keep an offline backup of the keystore + passwords. If you enroll in **Play App
+Signing** (recommended), Google holds the app-signing key and this keystore is
+only the *upload* key, which Google can reset if it's ever lost or leaked.
