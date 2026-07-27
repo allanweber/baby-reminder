@@ -161,14 +161,14 @@ These are images you upload in **Main store listing → Graphics**. Required:
 
 | Asset | Spec | Notes |
 | --- | --- | --- |
-| **App icon** | 512×512 PNG, 32-bit, ≤1 MB | Reuse your launcher icon art (`android/app/src/main/res/mipmap-*/ic_launcher.png` / `_foreground.png`) exported at 512×512. |
+| **App icon** | 512×512 PNG, 32-bit, ≤1 MB | ✅ **Ready:** `docs/store-assets/icon-512.png` — composited from the app's adaptive-icon layers (regenerate with `docs/store-assets/make_icon512.js`). |
 | **Feature graphic** | 1024×500 PNG or JPG | ✅ **Ready:** `docs/store-assets/feature-graphic.png` — brand banner matching the app (regenerate with `docs/store-assets/make_feature_graphic.js`). |
 | **Phone screenshots** | 2–8 images, PNG/JPG; 16:9 or 9:16; each side 320–3840 px | Capture on a device/emulator: (1) home with "Next feed in" banner, (2) the log-feed sheet, (3) the full-screen alarm, (4) the daily report, (5) dark mode. |
 | **Tablet screenshots** | Optional | Only if you want tablet placement. |
 
-The **feature graphic is done** (`docs/store-assets/feature-graphic.png`, exactly
-1024×500). The remaining items are the **512×512 icon** (export your launcher art
-at that size) and the **phone screenshots** — capture those on a device (the
+The **feature graphic** (`docs/store-assets/feature-graphic.png`, 1024×500) and
+the **512×512 icon** (`docs/store-assets/icon-512.png`) are both ready. The only
+remaining assets are the **phone screenshots** — capture those on a device (the
 Log-a-feed sheet, daily report, diapers, reminders, and the full-screen alarm all
 make good shots).
 
