@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/diaper.dart';
 import '../models/feed.dart';
 import '../models/reminder.dart';
+import '../models/weight.dart';
 
 /// On-device persistence. This is a single-user, single-baby, offline-first
 /// app — everything lives in [SharedPreferences], no backend involved.
@@ -23,6 +24,8 @@ class StorageService {
   static const _kReminderLogs = 'reminderLogs';
   static const _kNextReminderAlarmId = 'nextReminderAlarmId';
   static const _kDiapers = 'diapers';
+  static const _kWeights = 'weights';
+  static const _kWeightUnitPref = 'weightUnitPref';
   static const _kDarkMode = 'darkMode';
   static const _kSeeded = 'seeded';
 
@@ -125,4 +128,19 @@ class StorageService {
     final raw = jsonEncode(diapers.map((d) => d.toJson()).toList());
     await _prefs.setString(_kDiapers, raw);
   }
+
+  List<Weight> loadWeights() {
+    final raw = _prefs.getString(_kWeights);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list.map((e) => Weight.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveWeights(List<Weight> weights) async {
+    final raw = jsonEncode(weights.map((w) => w.toJson()).toList());
+    await _prefs.setString(_kWeights, raw);
+  }
+
+  String loadWeightUnitPref() => _prefs.getString(_kWeightUnitPref) ?? 'kg';
+  Future<void> saveWeightUnitPref(String unit) => _prefs.setString(_kWeightUnitPref, unit);
 }

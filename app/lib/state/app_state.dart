@@ -7,12 +7,14 @@ import 'package:uuid/uuid.dart';
 import '../models/diaper.dart';
 import '../models/feed.dart';
 import '../models/reminder.dart';
+import '../models/weight.dart';
 import '../services/alarm_service.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 
 const mlPerOz = 29.5735;
+const lbPerKg = 2.2046226218; // 1 kg in pounds; weight is stored canonically in kg
 const _uuid = Uuid();
 
 String pad2(int n) => n < 10 ? '0$n' : '$n';
@@ -58,11 +60,13 @@ class AppState extends ChangeNotifier {
 
   List<Feed> feeds = [];
   List<Diaper> diapers = [];
+  List<Weight> weights = [];
   List<Reminder> reminders = [];
   List<ReminderLog> reminderLogs = [];
   int _nextReminderAlarmId = 1000;
   String babyName = '';
   String unitPref = 'ml';
+  String weightUnitPref = 'kg';
   bool darkMode = false;
   int reminderIntervalMin = 180;
   int nextReminderAt = 0;
@@ -120,11 +124,13 @@ class AppState extends ChangeNotifier {
     } else {
       feeds = storage.loadFeeds();
       diapers = storage.loadDiapers();
+      weights = storage.loadWeights();
       reminders = storage.loadReminders();
       reminderLogs = storage.loadReminderLogs();
       _nextReminderAlarmId = storage.loadNextReminderAlarmId();
       babyName = storage.loadBabyName() ?? '';
       unitPref = storage.loadUnitPref();
+      weightUnitPref = storage.loadWeightUnitPref();
       darkMode = storage.loadDarkMode();
       reminderIntervalMin = storage.loadReminderIntervalMin();
       nextReminderAt = storage.loadNextReminderAt() ??
@@ -242,13 +248,27 @@ class AppState extends ChangeNotifier {
       Diaper(id: 'd2', date: dateStr(yest), time: '14:10', type: DiaperType.both, peeColor: PeeColor.pale, poopColor: PoopColor.brown, poopAmount: 'Medium'),
       Diaper(id: 'd3', date: dateStr(nowDt), time: '07:15', type: DiaperType.poop, poopColor: PoopColor.yellow, poopAmount: 'Small'),
     ];
+
+    // A few sample weigh-ins (a lower-frequency measurement) so the Weight tab's
+    // latest card, history rows and delta pills aren't empty on first run.
+    final w1 = nowDt.subtract(const Duration(days: 28));
+    final w2 = nowDt.subtract(const Duration(days: 14));
+    final w3 = nowDt.subtract(const Duration(days: 3));
+    weightUnitPref = 'kg';
+    weights = [
+      Weight(id: 'w1', date: dateStr(w1), kg: 3.60),
+      Weight(id: 'w2', date: dateStr(w2), kg: 4.05),
+      Weight(id: 'w3', date: dateStr(w3), kg: 4.50),
+    ];
   }
 
   Future<void> _persistAll() async {
     await storage.saveFeeds(feeds);
     await storage.saveDiapers(diapers);
+    await storage.saveWeights(weights);
     await storage.saveBabyName(babyName);
     await storage.saveUnitPref(unitPref);
+    await storage.saveWeightUnitPref(weightUnitPref);
     await storage.saveDarkMode(darkMode);
     await storage.saveReminderIntervalMin(reminderIntervalMin);
     await storage.saveNextReminderAt(nextReminderAt);
@@ -364,6 +384,72 @@ class AppState extends ChangeNotifier {
     final pee = list.where((d) => d.hasPee).length;
     final poop = list.where((d) => d.hasPoop).length;
     return DiaperStats(total: list.length, peeCount: pee, poopCount: poop);
+  }
+
+  // --- Weights (logging only, no schedule) ----------------------------------
+
+  String newWeightId() => 'w${_uuid.v4()}';
+
+  /// Weigh-ins oldest → newest. The canonical order for computing the
+  /// "change since the previous entry" deltas.
+  List<Weight> get weightsAscending {
+    final list = [...weights]..sort((a, b) => a.sortKey.compareTo(b.sortKey));
+    return list;
+  }
+
+  /// Weigh-ins newest → oldest, for the reverse-chronological history list.
+  List<Weight> get weightsDescending => weightsAscending.reversed.toList();
+
+  /// The most recent weigh-in, or null when none have been logged.
+  Weight? get latestWeight {
+    final asc = weightsAscending;
+    return asc.isEmpty ? null : asc.last;
+  }
+
+  /// The kg change of [w] since the chronologically previous weigh-in, or null
+  /// when it's the earliest entry (nothing to compare against). Drives the
+  /// history rows' delta pills.
+  double? weightDeltaKg(Weight w) {
+    final asc = weightsAscending;
+    final i = asc.indexWhere((x) => x.id == w.id);
+    if (i <= 0) return null;
+    return w.kg - asc[i - 1].kg;
+  }
+
+  /// Saves a weigh-in (new or edited). Like diapers, weights never touch the
+  /// feed reminder — they're log-only.
+  Future<void> saveWeight(Weight weight, {required bool isNew}) async {
+    weights = isNew ? [...weights, weight] : weights.map((w) => w.id == weight.id ? weight : w).toList();
+    weights.sort((a, b) => a.sortKey.compareTo(b.sortKey));
+    await storage.saveWeights(weights);
+    notifyListeners();
+  }
+
+  Future<void> deleteWeight(String id) async {
+    weights = weights.where((w) => w.id != id).toList();
+    await storage.saveWeights(weights);
+    notifyListeners();
+  }
+
+  Future<void> setWeightUnitPref(String unit) async {
+    weightUnitPref = unit;
+    await storage.saveWeightUnitPref(unit);
+    notifyListeners();
+  }
+
+  /// Converts a canonical kg value into the current display unit (kg or lb).
+  double kgToDisplayUnit(double kg) => weightUnitPref == 'lb' ? kg * lbPerKg : kg;
+
+  /// A weight formatted to exactly 2 decimals in the current unit, e.g.
+  /// "4.50 kg" or "9.92 lb". Used for the latest card and history rows.
+  String weightLabel(double kg) => '${kgToDisplayUnit(kg).toStringAsFixed(2)} $weightUnitPref';
+
+  /// A signed delta formatted to exactly 2 decimals in the current unit, e.g.
+  /// "+0.45 kg" or "-0.10 lb". Used for the history rows' delta pills.
+  String weightDeltaLabel(double kgDelta) {
+    final v = weightUnitPref == 'lb' ? kgDelta * lbPerKg : kgDelta;
+    final sign = v < 0 ? '-' : '+';
+    return '$sign${v.abs().toStringAsFixed(2)} $weightUnitPref';
   }
 
   Future<void> setBabyName(String name) async {
@@ -822,22 +908,24 @@ class AppState extends ChangeNotifier {
   // reinstall) would otherwise wipe it. These let the user save everything to
   // a JSON file they keep, and read it back.
 
-  static const backupVersion = 3;
+  static const backupVersion = 4;
 
-  /// Serialises every feed, diaper, reminder and setting to a portable JSON
-  /// string.
+  /// Serialises every feed, diaper, weight, reminder and setting to a portable
+  /// JSON string.
   String exportData() => jsonEncode({
         'app': 'baby_feed_tracker',
         'version': backupVersion,
         'exportedAt': DateTime.now().toIso8601String(),
         'babyName': babyName,
         'unitPref': unitPref,
+        'weightUnitPref': weightUnitPref,
         'darkMode': darkMode,
         'reminderIntervalMin': reminderIntervalMin,
         'alarmSound': alarmSound,
         'alarmVolume': alarmVolume,
         'feeds': feeds.map((f) => f.toJson()).toList(),
         'diapers': diapers.map((d) => d.toJson()).toList(),
+        'weights': weights.map((w) => w.toJson()).toList(),
         'reminders': reminders.map((r) => r.toJson()).toList(),
         'reminderLogs': reminderLogs.map((l) => l.toJson()).toList(),
       });
@@ -856,6 +944,7 @@ class AppState extends ChangeNotifier {
       feeds = imported;
       babyName = (data['babyName'] as String?) ?? babyName;
       unitPref = (data['unitPref'] as String?) ?? unitPref;
+      weightUnitPref = (data['weightUnitPref'] as String?) ?? weightUnitPref;
       darkMode = (data['darkMode'] as bool?) ?? darkMode;
       reminderIntervalMin = (data['reminderIntervalMin'] as int?) ?? reminderIntervalMin;
       alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
@@ -867,6 +956,16 @@ class AppState extends ChangeNotifier {
       if (data.containsKey('diapers')) {
         diapers = (data['diapers'] as List<dynamic>)
             .map((e) => Diaper.fromJson(e as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) => a.sortKey.compareTo(b.sortKey));
+      }
+
+      // Weights, like diapers, are only replaced when the backup actually
+      // carries them, so restoring an older backup (no weights key) leaves
+      // existing weigh-ins intact.
+      if (data.containsKey('weights')) {
+        weights = (data['weights'] as List<dynamic>)
+            .map((e) => Weight.fromJson(e as Map<String, dynamic>))
             .toList()
           ..sort((a, b) => a.sortKey.compareTo(b.sortKey));
       }
