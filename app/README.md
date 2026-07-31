@@ -26,9 +26,11 @@ release builds fall back to debug signing.
 
 ## Structure
 
-- `lib/models/feed.dart` — the `Feed` data model.
-- `lib/state/app_state.dart` — all domain logic: feeds, reminder scheduling,
-  stats, persistence (ported from the prototype's `Component` class).
+- `lib/models/feed.dart` — the `Feed` data model (plus `diaper.dart`,
+  `reminder.dart` and `weight.dart` for the other tabs' models).
+- `lib/state/app_state.dart` — all domain logic: feeds, diapers, weights,
+  reminder scheduling, stats, persistence (ported from the prototype's
+  `Component` class).
 - `lib/services/storage_service.dart` — `SharedPreferences`-backed persistence.
 - `lib/services/notification_service.dart` — schedules the next-feed reminder
   as a real local notification (`flutter_local_notifications`), so it fires
@@ -37,8 +39,10 @@ release builds fall back to debug signing.
   handoff.
 - `lib/widgets/` — reusable pieces: feed list row, reminder banner, log-feed
   sheet, settings sheet, delete confirmation, FAB, icons.
-- `lib/screens/` — `HomeScreen`, `ReportScreen`, and the `AppShell` that hosts
-  the persistent bottom tab bar + FAB around both.
+- `lib/screens/` — `RemindersScreen`, `WeightScreen`, `HomeScreen` (Feed),
+  `DiapersScreen`, `ReportScreen`, and the `AppShell` that hosts the persistent
+  bottom tab bar + context-aware FAB around them. Tab order:
+  Reminders · Weight · Feed (primary) · Diapers · Report.
 
 ## CI
 
