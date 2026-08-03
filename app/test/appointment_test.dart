@@ -55,7 +55,7 @@ void main() {
     });
 
     test('displayTitle falls back to the category label when blank', () async {
-      final a = Appointment(
+      const a = Appointment(
         id: 'x', leadAlarmId: 1, atAlarmId: 2, title: '', category: AppointmentCategory.dentist,
         atMs: 0, lead: AppointmentLead.none, description: '', doneAtMs: null, createdAt: 0,
       );

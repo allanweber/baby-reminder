@@ -169,6 +169,14 @@ class AppColors {
   // diaper entry never reads as a Feed or Reminder. The solid teal is constant;
   // the surfaces around it (soft card, × button, swatch ring) follow the theme.
   static const diaperAccent = Color(0xFF5B94AC);
+
+  // Weight feature accent — a distinct sage green used ONLY for this feature so
+  // a weight entry never reads as a Feed, Reminder or Diaper. The solid sage is
+  // constant across themes (like every other accent); its soft tint is computed
+  // per-theme via [softTint] where needed (latest card, delta pills).
+  static const weightAccent = Color(0xFF8FAE7B);
+  static const weightSoft = Color(0xFFEDF3E6); // reference light-mode soft tint
+
   static Color get diaperSoft => _activePalette.diaperSoft;
   static Color get diaperText => _activePalette.diaperText; // row title on teal-tinted cards
   static Color get diaperSubtext => _activePalette.diaperSubtext; // row detail line

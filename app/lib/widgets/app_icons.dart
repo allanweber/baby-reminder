@@ -87,6 +87,25 @@ class AppIcons {
     );
   }
 
+  static Widget gauge({double size = 20, required Color color, double strokeWidth = 1.8}) {
+    final stroke = _hex(color);
+    return SvgPicture.string(
+      '''
+<svg width="$size" height="$size" viewBox="0 0 24 24" fill="none" stroke="$stroke" stroke-width="$strokeWidth" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"></circle>
+  <path d="M12 3.5v2"></path>
+  <path d="M20.5 12h-2"></path>
+  <path d="M12 20.5v-2"></path>
+  <path d="M3.5 12h2"></path>
+  <path d="M12 12l4.2-3.4"></path>
+  <circle cx="12" cy="12" r="1.4" fill="$stroke" stroke="none"></circle>
+</svg>
+''',
+      width: size,
+      height: size,
+    );
+  }
+
   static Widget bottle({double size = 26, required Color color}) {
     final stroke = _hex(color);
     return SvgPicture.string(
