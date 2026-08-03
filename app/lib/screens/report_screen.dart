@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/reminder.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/appointment_list_item.dart';
 import '../widgets/date_time_pickers.dart';
 import '../widgets/delete_confirm_dialog.dart';
 import '../widgets/diaper_list_item.dart';
@@ -115,6 +116,7 @@ class _ReportScreenState extends State<ReportScreen> {
         final completed = appState.completedLogsForDate(reportDateStr);
         final quickLogs = appState.quickLogsForDate(reportDateStr);
         final missed = appState.missedRemindersForDate(reportDateStr);
+        final doneAppointments = appState.doneAppointmentsForDate(reportDateStr);
 
         final showFeeds = filter == ReportFilter.all || filter == ReportFilter.feed;
         final showDiapers = filter == ReportFilter.all || filter == ReportFilter.diapers;
@@ -185,6 +187,12 @@ class _ReportScreenState extends State<ReportScreen> {
                 onEdit: () => showEditReminderLogSheet(context, appState, l),
                 onDelete: () => _handleDeleteLog(context, l.id),
               ),
+            ));
+          }
+          for (final a in doneAppointments) {
+            items.add(_TimelineItem(
+              a.timeStr,
+              AppointmentReportRow(appointment: a),
             ));
           }
         }

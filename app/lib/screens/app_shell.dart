@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../models/appointment.dart';
 import '../models/reminder.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_icons.dart';
+import '../widgets/appointment_sheet.dart';
 import '../widgets/feed_fab.dart';
 import '../widgets/log_diaper_sheet.dart';
 import '../widgets/log_feed_sheet.dart';
@@ -30,6 +32,9 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   // 0 = Reminders, 1 = Feed (primary, default), 2 = Diapers, 3 = Report.
   int _tabIndex = 1;
+  // Which sub-tab the Reminders tab is showing: 0 = Reminders, 1 = Appointments.
+  // Lifted here so the FAB can switch between "add reminder" and "add appointment".
+  int _remindersSubTab = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +43,18 @@ class _AppShellState extends State<AppShell> {
     return AnimatedBuilder(
       animation: widget.appState,
       builder: (context, _) {
+        final ringingAppointment = widget.appState.ringingAppointment;
         final ringingReminder = widget.appState.ringingReminder;
         return Stack(
           children: [
             _buildShell(context),
-            if (ringingReminder != null)
+            if (ringingAppointment != null)
+              _AppointmentAlarmOverlay(
+                appState: widget.appState,
+                appointment: ringingAppointment,
+                isLead: widget.appState.ringingAppointmentIsLead,
+              )
+            else if (ringingReminder != null)
               _ReminderAlarmOverlay(appState: widget.appState, reminder: ringingReminder)
             else if (widget.appState.alarmRinging)
               _AlarmOverlay(
@@ -58,6 +70,15 @@ class _AppShellState extends State<AppShell> {
   Widget? _buildFab(BuildContext context) {
     const accent = AppColors.accentBlush;
     if (_tabIndex == 0) {
+      // On the Appointments sub-tab the FAB adds an appointment (calendar);
+      // on the Reminders sub-tab it adds a reminder (bell).
+      if (_remindersSubTab == 1) {
+        return FeedFab(
+          accentColor: accent,
+          icon: AppIcons.calendar(size: 24, color: Colors.white),
+          onTap: () => showAppointmentSheet(context, widget.appState),
+        );
+      }
       return FeedFab(
         accentColor: accent,
         icon: AppIcons.bell(color: Colors.white),
@@ -92,7 +113,11 @@ class _AppShellState extends State<AppShell> {
       body: IndexedStack(
         index: _tabIndex,
         children: [
-          RemindersScreen(appState: widget.appState),
+          RemindersScreen(
+            appState: widget.appState,
+            subTab: _remindersSubTab,
+            onSubTabChanged: (i) => setState(() => _remindersSubTab = i),
+          ),
           HomeScreen(appState: widget.appState),
           DiapersScreen(appState: widget.appState),
           ReportScreen(appState: widget.appState),
@@ -340,6 +365,125 @@ class _ReminderAlarmOverlay extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Full-screen alarm for an appointment. The at-time alarm offers Mark done /
+/// Postpone / Dismiss; the earlier lead (1h/1d) alarm is a heads-up, so it only
+/// offers Dismiss + Postpone (you can't be "done" before it happens).
+class _AppointmentAlarmOverlay extends StatelessWidget {
+  final AppState appState;
+  final Appointment appointment;
+  final bool isLead;
+  const _AppointmentAlarmOverlay({required this.appState, required this.appointment, required this.isLead});
+
+  Future<void> _postpone(BuildContext context) async {
+    // Silence the ringing alarm first, then let the user pick a new time.
+    await appState.dismissAppointmentAlarm(appointment);
+    if (!context.mounted) return;
+    final now = DateTime.now();
+    final initial = appointment.at.isAfter(now) ? appointment.at : now.add(const Duration(days: 1));
+    final picked = await pickRescheduleDateTime(context, initial: initial);
+    if (picked == null || !picked.isAfter(DateTime.now())) return;
+    await appState.postponeAppointment(appointment, picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = appointmentCategories[appointment.category]!;
+    final subtitle = isLead
+        ? '${meta.label} appointment ${appointment.lead.shortLabel}'
+        : '${meta.label} appointment';
+    return Positioned.fill(
+      child: Material(
+        color: meta.color,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            child: Column(
+              children: [
+                const Spacer(),
+                const Icon(Icons.event_available_rounded, size: 96, color: Colors.white),
+                const SizedBox(height: 24),
+                Text(
+                  appointment.displayTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontFamily: balooFamily, fontSize: 30, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70),
+                ),
+                const Spacer(),
+                if (!isLead) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton(
+                      onPressed: () => appState.markAppointmentDone(appointment),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: meta.color,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      ),
+                      child: const Text('Mark done', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _outlined('Postpone', () => _postpone(context))),
+                      const SizedBox(width: 12),
+                      Expanded(child: _outlined('Dismiss', () => appState.dismissAppointmentAlarm(appointment))),
+                    ],
+                  ),
+                ] else ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton(
+                      onPressed: () => appState.dismissAppointmentAlarm(appointment),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: meta.color,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      ),
+                      child: const Text('Dismiss', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: _outlined('Postpone', () => _postpone(context)),
+                  ),
+                ],
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _outlined(String label, VoidCallback onTap) {
+    return SizedBox(
+      height: 50,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.white,
+          side: const BorderSide(color: Colors.white70, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
       ),
     );
   }
