@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/appointment.dart';
 import '../models/diaper.dart';
 import '../models/feed.dart';
 import '../models/reminder.dart';
@@ -22,6 +23,7 @@ class StorageService {
   static const _kCustomTimerLabel = 'customTimerLabel';
   static const _kReminders = 'reminders';
   static const _kReminderLogs = 'reminderLogs';
+  static const _kAppointments = 'appointments';
   static const _kNextReminderAlarmId = 'nextReminderAlarmId';
   static const _kDiapers = 'diapers';
   static const _kWeights = 'weights';
@@ -116,6 +118,18 @@ class StorageService {
   // and the diagnostic test alarm (2) so their native alarms never collide.
   int loadNextReminderAlarmId() => _prefs.getInt(_kNextReminderAlarmId) ?? 1000;
   Future<void> saveNextReminderAlarmId(int id) => _prefs.setInt(_kNextReminderAlarmId, id);
+
+  List<Appointment> loadAppointments() {
+    final raw = _prefs.getString(_kAppointments);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List<dynamic>;
+    return list.map((e) => Appointment.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveAppointments(List<Appointment> appointments) async {
+    final raw = jsonEncode(appointments.map((a) => a.toJson()).toList());
+    await _prefs.setString(_kAppointments, raw);
+  }
 
   List<Diaper> loadDiapers() {
     final raw = _prefs.getString(_kDiapers);

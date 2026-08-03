@@ -245,6 +245,34 @@ ReminderCategory reminderCategoryFromString(String s) => ReminderCategory.values
       orElse: () => ReminderCategory.other,
     );
 
+/// The kinds of one-off dated events an [Appointment] can be filed under — a
+/// distinct set from the recurring care [ReminderCategory] list, with its own
+/// colours. Backgrounds are computed on the fly via [softTint], so only the
+/// accent colour is stored here.
+enum AppointmentCategory { doctor, vaccination, dentist, checkup, specialist, therapy, photos, other }
+
+class AppointmentCategoryColors {
+  final String label;
+  final Color color; // dot + tag text + tile accent
+  const AppointmentCategoryColors({required this.label, required this.color});
+}
+
+const appointmentCategories = {
+  AppointmentCategory.doctor: AppointmentCategoryColors(label: 'Doctor', color: Color(0xFF5B94AC)),
+  AppointmentCategory.vaccination: AppointmentCategoryColors(label: 'Vaccination', color: Color(0xFFC9695C)),
+  AppointmentCategory.dentist: AppointmentCategoryColors(label: 'Dentist', color: Color(0xFF6FA8A0)),
+  AppointmentCategory.checkup: AppointmentCategoryColors(label: 'Checkup', color: Color(0xFF8FAE7B)),
+  AppointmentCategory.specialist: AppointmentCategoryColors(label: 'Specialist', color: Color(0xFFB08FC4)),
+  AppointmentCategory.therapy: AppointmentCategoryColors(label: 'Therapy', color: Color(0xFFD9A441)),
+  AppointmentCategory.photos: AppointmentCategoryColors(label: 'Photos', color: Color(0xFFD98E8E)),
+  AppointmentCategory.other: AppointmentCategoryColors(label: 'Other', color: Color(0xFFA79A8F)),
+};
+
+AppointmentCategory appointmentCategoryFromString(String s) => AppointmentCategory.values.firstWhere(
+      (c) => c.name == s,
+      orElse: () => AppointmentCategory.other,
+    );
+
 /// What a diaper change contained. `both` = pee & poop in one change.
 enum DiaperType { pee, poop, both }
 

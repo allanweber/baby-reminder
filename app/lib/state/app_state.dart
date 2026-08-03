@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/appointment.dart';
 import '../models/diaper.dart';
 import '../models/feed.dart';
 import '../models/reminder.dart';
@@ -63,6 +64,7 @@ class AppState extends ChangeNotifier {
   List<Weight> weights = [];
   List<Reminder> reminders = [];
   List<ReminderLog> reminderLogs = [];
+  List<Appointment> appointments = [];
   int _nextReminderAlarmId = 1000;
   String babyName = '';
   String unitPref = 'ml';
@@ -85,6 +87,8 @@ class AppState extends ChangeNotifier {
   Timer? _ticker;
   bool _alarmRinging = false;
   String? _ringingReminderId;
+  String? _ringingAppointmentId;
+  bool _ringingAppointmentIsLead = false;
 
   bool get alarmRinging => _alarmRinging;
   bool get customTimerActive => customTimerAt != null;
@@ -97,6 +101,36 @@ class AppState extends ChangeNotifier {
       if (r.id == _ringingReminderId) return r;
     }
     return null;
+  }
+
+  /// The appointment whose full-screen alarm is currently sounding, if any.
+  Appointment? get ringingAppointment {
+    if (_ringingAppointmentId == null) return null;
+    for (final a in appointments) {
+      if (a.id == _ringingAppointmentId) return a;
+    }
+    return null;
+  }
+
+  /// Whether the currently ringing appointment alarm is its *lead* (1h/1d
+  /// heads-up) rather than the at-time alarm — the overlay shows fewer actions
+  /// for a lead alarm (you can't be "done" before the appointment happens).
+  bool get ringingAppointmentIsLead => _ringingAppointmentIsLead;
+
+  /// Appointments whose time has passed and were never resolved — shown as
+  /// "overdue" cards at the top of the Appointments tab, earliest first.
+  List<Appointment> get overdueAppointments {
+    final list = appointments.where((a) => a.isOverdue(now)).toList()
+      ..sort((a, b) => a.atMs.compareTo(b.atMs));
+    return list;
+  }
+
+  /// Upcoming (not-yet-due, not-done) appointments, soonest first.
+  List<Appointment> get upcomingAppointments {
+    final nowMs = now.millisecondsSinceEpoch;
+    final list = appointments.where((a) => !a.isDone && a.atMs >= nowMs).toList()
+      ..sort((a, b) => a.atMs.compareTo(b.atMs));
+    return list;
   }
 
   /// Reminders whose armed time has passed and haven't been acted on yet —
@@ -127,6 +161,7 @@ class AppState extends ChangeNotifier {
       weights = storage.loadWeights();
       reminders = storage.loadReminders();
       reminderLogs = storage.loadReminderLogs();
+      appointments = storage.loadAppointments();
       _nextReminderAlarmId = storage.loadNextReminderAlarmId();
       babyName = storage.loadBabyName() ?? '';
       unitPref = storage.loadUnitPref();
@@ -161,6 +196,20 @@ class AppState extends ChangeNotifier {
           break;
         }
       }
+      String? apptId;
+      var apptIsLead = false;
+      for (final a in appointments) {
+        if (ids.contains(a.atAlarmId)) {
+          apptId = a.id;
+          apptIsLead = false;
+          break;
+        }
+        if (ids.contains(a.leadAlarmId)) {
+          apptId = a.id;
+          apptIsLead = true;
+          break;
+        }
+      }
       var changed = false;
       if (feedRinging != _alarmRinging) {
         _alarmRinging = feedRinging;
@@ -170,6 +219,11 @@ class AppState extends ChangeNotifier {
         _ringingReminderId = remId;
         changed = true;
       }
+      if (apptId != _ringingAppointmentId || apptIsLead != _ringingAppointmentIsLead) {
+        _ringingAppointmentId = apptId;
+        _ringingAppointmentIsLead = apptIsLead;
+        changed = true;
+      }
       if (changed) notifyListeners();
     });
     // Make sure a real OS alarm is armed for any pending reminder/timer/care
@@ -177,6 +231,7 @@ class AppState extends ChangeNotifier {
     // notification was only (re)scheduled when the user changed something.
     await _rescheduleNotification();
     await _rescheduleAllReminders();
+    await _rescheduleAllAppointments();
     notifyListeners();
   }
 
@@ -235,7 +290,23 @@ class AppState extends ChangeNotifier {
         createdAt: createdMs,
       ),
     ];
-    _nextReminderAlarmId = 1002;
+    // One upcoming appointment so the Appointments tab isn't empty on first run.
+    final apptAt = DateTime(nowDt.year, nowDt.month, nowDt.day, 10, 30).add(const Duration(days: 3));
+    appointments = [
+      Appointment(
+        id: 'a1',
+        leadAlarmId: 1002,
+        atAlarmId: 1003,
+        title: '4-month checkup',
+        category: AppointmentCategory.checkup,
+        atMs: apptAt.millisecondsSinceEpoch,
+        lead: AppointmentLead.oneDay,
+        description: 'Bring the vaccination booklet.',
+        doneAtMs: null,
+        createdAt: createdMs,
+      ),
+    ];
+    _nextReminderAlarmId = 1004;
     // One completed reminder today so the report's "Done" row + counts show.
     reminderLogs = [
       ReminderLog(id: 'rl1', reminderId: 'r1', label: 'Vitamin D drops', category: ReminderCategory.vitamins, date: dateStr(nowDt), time: '09:00'),
@@ -279,6 +350,7 @@ class AppState extends ChangeNotifier {
     await storage.saveCustomTimerLabel(customTimerLabel);
     await storage.saveReminders(reminders);
     await storage.saveReminderLogs(reminderLogs);
+    await storage.saveAppointments(appointments);
     await storage.saveNextReminderAlarmId(_nextReminderAlarmId);
   }
 
@@ -903,6 +975,200 @@ class AppState extends ChangeNotifier {
     return !reminderLogs.any((l) => l.reminderId == r.id && l.date == todayStr);
   }
 
+  // --- Appointments (one-off dated events) ----------------------------------
+
+  String newAppointmentId() => 'a${_uuid.v4()}';
+
+  /// Creates an appointment from the Add/Edit sheet's fields. Allocates its two
+  /// stable alarm ids (lead + at-time) and arms both. Returns the created one.
+  Future<Appointment> addAppointment({
+    required String title,
+    required AppointmentCategory category,
+    required int atMs,
+    required AppointmentLead lead,
+    required String description,
+  }) async {
+    final appointment = Appointment(
+      id: newAppointmentId(),
+      leadAlarmId: _allocReminderAlarmId(),
+      atAlarmId: _allocReminderAlarmId(),
+      title: title.trim(),
+      category: category,
+      atMs: atMs,
+      lead: lead,
+      description: description.trim(),
+      doneAtMs: null,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+    );
+    appointments = [...appointments, appointment];
+    await storage.saveAppointments(appointments);
+    await storage.saveNextReminderAlarmId(_nextReminderAlarmId);
+    await _armAppointment(appointment);
+    notifyListeners();
+    return appointment;
+  }
+
+  /// Applies edits to an appointment, keeping its alarm ids, and re-arms both
+  /// alarms for the (possibly new) time. Editing does not clear a "done" state.
+  Future<void> updateAppointment(
+    String id, {
+    required String title,
+    required AppointmentCategory category,
+    required int atMs,
+    required AppointmentLead lead,
+    required String description,
+  }) async {
+    Appointment? updated;
+    appointments = appointments.map((a) {
+      if (a.id != id) return a;
+      updated = a.copyWith(
+        title: title.trim(),
+        category: category,
+        atMs: atMs,
+        lead: lead,
+        description: description.trim(),
+      );
+      return updated!;
+    }).toList();
+    await storage.saveAppointments(appointments);
+    if (updated != null) await _armAppointment(updated!);
+    notifyListeners();
+  }
+
+  Future<void> deleteAppointment(String id) async {
+    Appointment? removed;
+    for (final a in appointments) {
+      if (a.id == id) removed = a;
+    }
+    appointments = appointments.where((a) => a.id != id).toList();
+    if (removed != null) {
+      try {
+        await notifications.cancelAlarm(removed.leadAlarmId);
+        await notifications.cancelAlarm(removed.atAlarmId);
+      } catch (_) {}
+    }
+    if (_ringingAppointmentId == id) _ringingAppointmentId = null;
+    await storage.saveAppointments(appointments);
+    notifyListeners();
+  }
+
+  /// Marks an appointment done (records the moment) and cancels both its alarms.
+  /// A done appointment shows in the daily report and drops off the Appointments
+  /// tab.
+  Future<void> markAppointmentDone(Appointment appointment) async {
+    appointments = appointments
+        .map((a) => a.id == appointment.id
+            ? a.copyWith(doneAtMs: DateTime.now().millisecondsSinceEpoch)
+            : a)
+        .toList();
+    if (_ringingAppointmentId == appointment.id) _ringingAppointmentId = null;
+    await storage.saveAppointments(appointments);
+    try {
+      await notifications.cancelAlarm(appointment.leadAlarmId);
+      await notifications.cancelAlarm(appointment.atAlarmId);
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// Reschedules an appointment to [newAt] (the "Postpone" action). It stays
+  /// not-done; both alarms re-arm for the new time.
+  Future<void> postponeAppointment(Appointment appointment, DateTime newAt) async {
+    Appointment? updated;
+    appointments = appointments.map((a) {
+      if (a.id != appointment.id) return a;
+      updated = a.copyWith(atMs: newAt.millisecondsSinceEpoch, clearDone: true);
+      return updated!;
+    }).toList();
+    if (_ringingAppointmentId == appointment.id) _ringingAppointmentId = null;
+    await storage.saveAppointments(appointments);
+    if (updated != null) await _armAppointment(updated!);
+    notifyListeners();
+  }
+
+  /// Silences a ringing appointment alarm without resolving the appointment.
+  /// The lead alarm is a one-shot heads-up; dismissing the at-time alarm leaves
+  /// the appointment as an overdue card. Neither reschedules (appointments don't
+  /// recur), so the fired alarm is simply cancelled.
+  Future<void> dismissAppointmentAlarm(Appointment appointment) async {
+    _ringingAppointmentId = null;
+    try {
+      if (_ringingAppointmentIsLead) {
+        await notifications.cancelAlarm(appointment.leadAlarmId);
+      } else {
+        await notifications.cancelAlarm(appointment.atAlarmId);
+      }
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// Arms an appointment's lead and at-time alarms — but only for moments still
+  /// in the future. A past at-time (an overdue appointment reopened later) is
+  /// deliberately not re-armed: it simply shows as an overdue card rather than
+  /// re-ringing on every app open. A done appointment arms nothing.
+  Future<void> _armAppointment(Appointment appointment) async {
+    if (appointment.isDone) {
+      try {
+        await notifications.cancelAlarm(appointment.leadAlarmId);
+        await notifications.cancelAlarm(appointment.atAlarmId);
+      } catch (_) {}
+      return;
+    }
+    final n = DateTime.now();
+    final title = appointment.displayTitle;
+    final catLabel = appointmentCategories[appointment.category]!.label;
+    // At-time alarm.
+    try {
+      if (appointment.at.isAfter(n)) {
+        await notifications.scheduleAlarmAt(
+          id: appointment.atAlarmId,
+          at: appointment.at,
+          title: title,
+          body: '$catLabel appointment',
+          soundId: alarmSound,
+          volume: alarmVolume,
+        );
+      } else {
+        await notifications.cancelAlarm(appointment.atAlarmId);
+      }
+    } catch (e) {
+      debugPrint('Failed to arm appointment at-time alarm: $e');
+    }
+    // Lead alarm (1h / 1d before), when set and still ahead.
+    try {
+      final leadAt = appointment.leadAt;
+      if (leadAt != null && leadAt.isAfter(n)) {
+        await notifications.scheduleAlarmAt(
+          id: appointment.leadAlarmId,
+          at: leadAt,
+          title: title,
+          body: '$catLabel appointment ${appointment.lead.shortLabel}',
+          soundId: alarmSound,
+          volume: alarmVolume,
+        );
+      } else {
+        await notifications.cancelAlarm(appointment.leadAlarmId);
+      }
+    } catch (e) {
+      debugPrint('Failed to arm appointment lead alarm: $e');
+    }
+  }
+
+  /// Re-arms every appointment's future alarms (called once on load) so they
+  /// still fire after the app has been closed.
+  Future<void> _rescheduleAllAppointments() async {
+    for (final a in appointments) {
+      await _armAppointment(a);
+    }
+  }
+
+  /// Done appointments whose scheduled day is [date] — the report shows each at
+  /// its scheduled time (when it actually happened), earliest first.
+  List<Appointment> doneAppointmentsForDate(String date) {
+    final list = appointments.where((a) => a.isDone && a.dateStr == date).toList()
+      ..sort((a, b) => a.timeStr.compareTo(b.timeStr));
+    return list;
+  }
+
   // --- Backup & restore ------------------------------------------------------
   // All state is on-device, so an uninstall (or the one-time signing-key
   // reinstall) would otherwise wipe it. These let the user save everything to
@@ -928,6 +1194,7 @@ class AppState extends ChangeNotifier {
         'weights': weights.map((w) => w.toJson()).toList(),
         'reminders': reminders.map((r) => r.toJson()).toList(),
         'reminderLogs': reminderLogs.map((l) => l.toJson()).toList(),
+        'appointments': appointments.map((a) => a.toJson()).toList(),
       });
 
   /// Restores from a backup produced by [exportData]. Returns the number of
@@ -988,8 +1255,23 @@ class AppState extends ChangeNotifier {
             .toList();
       }
 
+      // Appointments, like reminders, are only replaced when the backup carries
+      // them, so an older backup (no appointments key) leaves existing ones
+      // intact. Keep the shared alarm-id counter ahead of every imported
+      // appointment's two ids so newly added items never reuse a live alarm id.
+      if (data.containsKey('appointments')) {
+        appointments = (data['appointments'] as List<dynamic>)
+            .map((e) => Appointment.fromJson(e as Map<String, dynamic>))
+            .toList();
+        for (final a in appointments) {
+          if (a.leadAlarmId >= _nextReminderAlarmId) _nextReminderAlarmId = a.leadAlarmId + 1;
+          if (a.atAlarmId >= _nextReminderAlarmId) _nextReminderAlarmId = a.atAlarmId + 1;
+        }
+      }
+
       await _persistAll();
       await _rescheduleAllReminders();
+      await _rescheduleAllAppointments();
       notifyListeners();
       return imported.length;
     } catch (e) {
