@@ -25,6 +25,7 @@ class StorageService {
   static const _kReminderLogs = 'reminderLogs';
   static const _kAppointments = 'appointments';
   static const _kNextReminderAlarmId = 'nextReminderAlarmId';
+  static const _kFeedTags = 'feedTags';
   static const _kDiapers = 'diapers';
   static const _kWeights = 'weights';
   static const _kWeightUnitPref = 'weightUnitPref';
@@ -53,6 +54,10 @@ class StorageService {
     final raw = jsonEncode(feeds.map((f) => f.toJson()).toList());
     await _prefs.setString(_kFeeds, raw);
   }
+
+  /// The remembered, reusable feed-tag vocabulary (order preserved).
+  List<String> loadFeedTags() => _prefs.getStringList(_kFeedTags) ?? [];
+  Future<void> saveFeedTags(List<String> tags) => _prefs.setStringList(_kFeedTags, tags);
 
   String? loadBabyName() => _prefs.getString(_kBabyName);
   Future<void> saveBabyName(String name) => _prefs.setString(_kBabyName, name);
