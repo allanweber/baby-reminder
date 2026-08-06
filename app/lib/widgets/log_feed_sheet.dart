@@ -33,6 +33,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
   late int amountMl;
   late int durationMin;
   late final TextEditingController noteController;
+  late List<String> tags;
   String? formError;
 
   bool get isEditing => widget.existing != null;
@@ -49,6 +50,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
       amountMl = e.amountMl > 0 ? e.amountMl : 120;
       durationMin = e.durationMin;
       noteController = TextEditingController(text: e.note);
+      tags = [...e.tags];
     } else {
       final now = DateTime.now();
       final last = widget.appState.feeds.isNotEmpty ? widget.appState.feeds.last : null;
@@ -58,6 +60,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
       amountMl = last != null && last.amountMl > 0 ? last.amountMl : 120;
       durationMin = last?.durationMin ?? 0;
       noteController = TextEditingController();
+      tags = [];
     }
   }
 
@@ -132,6 +135,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
       amountMl: needsAmount ? amountMl : 0,
       durationMin: durationMin,
       note: noteController.text,
+      tags: tags,
     );
     widget.appState.saveFeed(feed, isNew: !isEditing);
     Navigator.of(context).pop();
@@ -310,6 +314,14 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
                 ),
               ),
+              const SizedBox(height: 16),
+              Text('TAGS (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              const SizedBox(height: 6),
+              _TagField(
+                selected: tags,
+                known: widget.appState.feedTags,
+                onChanged: (next) => setState(() => tags = next),
+              ),
               if (formError != null) ...[
                 const SizedBox(height: 10),
                 Text(formError!, style: TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
@@ -411,6 +423,181 @@ class _UnitPill extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: active ? accent : AppColors.textSecondary),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Free-form tag entry with reusable suggestions. Selected tags show as
+/// removable chips; typing and submitting adds a new one; when the field is
+/// focused, the remembered [known] tags (minus those already chosen, filtered by
+/// what's typed) appear as tappable chips below it.
+class _TagField extends StatefulWidget {
+  final List<String> selected;
+  final List<String> known;
+  final ValueChanged<List<String>> onChanged;
+  const _TagField({required this.selected, required this.known, required this.onChanged});
+
+  @override
+  State<_TagField> createState() => _TagFieldState();
+}
+
+class _TagFieldState extends State<_TagField> {
+  final _controller = TextEditingController();
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() => setState(() {}));
+    _controller.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  bool _has(String tag) => widget.selected.any((t) => t.toLowerCase() == tag.toLowerCase());
+
+  void _add(String raw) {
+    final tag = raw.trim();
+    if (tag.isEmpty || _has(tag)) {
+      _controller.clear();
+      return;
+    }
+    widget.onChanged([...widget.selected, tag]);
+    _controller.clear();
+  }
+
+  void _remove(String tag) => widget.onChanged(widget.selected.where((t) => t != tag).toList());
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _controller.text.trim().toLowerCase();
+    final suggestions = widget.known
+        .where((t) => !_has(t) && (query.isEmpty || t.toLowerCase().contains(query)))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+          decoration: BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border, width: 1.5),
+          ),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              ...widget.selected.map((t) => _SelectedTagChip(label: t, onRemove: () => _remove(t))),
+              // The text input sits inline with the chips, growing to fill.
+              SizedBox(
+                width: 150,
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focus,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (v) {
+                    _add(v);
+                    // Keep the field focused so several tags can be added in a row.
+                    _focus.requestFocus();
+                  },
+                  style: TextStyle(fontSize: 13.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: InputBorder.none,
+                    hintText: widget.selected.isEmpty ? 'Add a tag…' : 'Add another…',
+                    hintStyle: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Reusable-tag suggestions, revealed while the field is focused.
+        if (_focus.hasFocus && suggestions.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text('TAP TO REUSE', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.textMuted)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: suggestions
+                .map((t) => _SuggestionChip(label: t, onTap: () {
+                      _add(t);
+                      _focus.requestFocus();
+                    }))
+                .toList(),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _SelectedTagChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onRemove;
+  const _SelectedTagChip({required this.label, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = AppColors.accentBlush;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+      decoration: BoxDecoration(color: softTint(accent), borderRadius: BorderRadius.circular(999)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A4E))),
+          const SizedBox(width: 4),
+          InkWell(
+            onTap: onRemove,
+            customBorder: const CircleBorder(),
+            child: const Padding(
+              padding: EdgeInsets.all(2),
+              child: Icon(Icons.close_rounded, size: 15, color: Color(0xFF8A5A4E)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _SuggestionChip({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceSecondary,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_rounded, size: 14, color: AppColors.textSecondary),
+              const SizedBox(width: 4),
+              Text(label, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+            ],
           ),
         ),
       ),

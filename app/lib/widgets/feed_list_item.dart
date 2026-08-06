@@ -51,6 +51,7 @@ class FeedListItem extends StatelessWidget {
             boxShadow: smallCardShadow(),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 38,
@@ -88,6 +89,14 @@ class FeedListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (feed.tags.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: feed.tags.map((t) => _FeedTagChip(label: t)).toList(),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -113,6 +122,25 @@ class FeedListItem extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A small read-only tag pill shown on a feed row (in the list and the report).
+class _FeedTagChip extends StatelessWidget {
+  final String label;
+  const _FeedTagChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = AppColors.accentBlush;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: softTint(accent), borderRadius: BorderRadius.circular(999)),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF8A5A4E)),
       ),
     );
   }

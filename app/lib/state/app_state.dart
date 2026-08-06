@@ -62,6 +62,9 @@ class AppState extends ChangeNotifier {
   List<Feed> feeds = [];
   List<Diaper> diapers = [];
   List<Weight> weights = [];
+  /// The remembered, reusable feed-tag vocabulary — every tag ever attached to
+  /// a feed, in first-seen order, so the log-feed sheet can offer them again.
+  List<String> feedTags = [];
   List<Reminder> reminders = [];
   List<ReminderLog> reminderLogs = [];
   List<Appointment> appointments = [];
@@ -157,6 +160,7 @@ class AppState extends ChangeNotifier {
       await _persistAll();
     } else {
       feeds = storage.loadFeeds();
+      feedTags = storage.loadFeedTags();
       diapers = storage.loadDiapers();
       weights = storage.loadWeights();
       reminders = storage.loadReminders();
@@ -252,11 +256,13 @@ class AppState extends ChangeNotifier {
       Feed(id: 'y2', date: dateStr(yest), time: '10:15', type: FeedType.breastfeeding, amountMl: 0, durationMin: 18, note: ''),
       Feed(id: 'y3', date: dateStr(yest), time: '13:30', type: FeedType.formula, amountMl: 120, durationMin: 0, note: ''),
       Feed(id: 'y4', date: dateStr(yest), time: '16:45', type: FeedType.breastBottle, amountMl: 100, durationMin: 0, note: ''),
-      Feed(id: 'y5', date: dateStr(yest), time: '19:50', type: FeedType.formula, amountMl: 130, durationMin: 20, note: 'Settled quickly after'),
+      Feed(id: 'y5', date: dateStr(yest), time: '19:50', type: FeedType.formula, amountMl: 130, durationMin: 20, note: 'Settled quickly after', tags: ['Sleepy']),
       Feed(id: 't1', date: dateStr(nowDt), time: '06:30', type: FeedType.formula, amountMl: 120, durationMin: 0, note: ''),
-      Feed(id: 't2', date: dateStr(nowDt), time: '09:45', type: FeedType.breastBottle, amountMl: 100, durationMin: 0, note: ''),
-      Feed(id: 't3', date: dateStr(t3), time: timeStr(t3), type: FeedType.formula, amountMl: 130, durationMin: 22, note: 'Fussy, took a bit longer'),
+      Feed(id: 't2', date: dateStr(nowDt), time: '09:45', type: FeedType.breastBottle, amountMl: 100, durationMin: 0, note: '', tags: ['Good latch']),
+      Feed(id: 't3', date: dateStr(t3), time: timeStr(t3), type: FeedType.formula, amountMl: 130, durationMin: 22, note: 'Fussy, took a bit longer', tags: ['Fussy', 'Spit up']),
     ];
+    // A small starter vocabulary so the tag picker isn't empty on first run.
+    feedTags = ['Fussy', 'Spit up', 'Sleepy', 'Good latch', 'Gassy'];
     babyName = '';
     unitPref = 'ml';
     reminderIntervalMin = 180;
@@ -335,6 +341,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _persistAll() async {
     await storage.saveFeeds(feeds);
+    await storage.saveFeedTags(feedTags);
     await storage.saveDiapers(diapers);
     await storage.saveWeights(weights);
     await storage.saveBabyName(babyName);
@@ -396,9 +403,30 @@ class AppState extends ChangeNotifier {
   String newFeedId() => 'f${_uuid.v4()}';
 
   /// Saves a feed (new or edited). Recomputes the reminder only for new feeds.
+  /// Adds any tags not already known (case-insensitive) to the reusable
+  /// vocabulary, preserving first-seen order and the original casing. Returns
+  /// whether the vocabulary changed.
+  bool _mergeFeedTags(Iterable<String> tags) {
+    var changed = false;
+    for (final raw in tags) {
+      final tag = raw.trim();
+      if (tag.isEmpty) continue;
+      final exists = feedTags.any((t) => t.toLowerCase() == tag.toLowerCase());
+      if (!exists) {
+        feedTags = [...feedTags, tag];
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   Future<void> saveFeed(Feed feed, {required bool isNew}) async {
     feeds = isNew ? [...feeds, feed] : feeds.map((f) => f.id == feed.id ? feed : f).toList();
     feeds.sort((a, b) => a.sortKey.compareTo(b.sortKey));
+    // Remember any new tags so they can be reused on future feeds.
+    if (_mergeFeedTags(feed.tags)) {
+      await storage.saveFeedTags(feedTags);
+    }
     // Logging a *recent* feed restarts the countdown to the next one. A feed
     // back-filled from far enough in the past that its reminder would already
     // be due (e.g. 3h+ ago with a 3h interval) is treated as history: it must
@@ -1174,7 +1202,7 @@ class AppState extends ChangeNotifier {
   // reinstall) would otherwise wipe it. These let the user save everything to
   // a JSON file they keep, and read it back.
 
-  static const backupVersion = 4;
+  static const backupVersion = 5;
 
   /// Serialises every feed, diaper, weight, reminder and setting to a portable
   /// JSON string.
@@ -1190,6 +1218,7 @@ class AppState extends ChangeNotifier {
         'alarmSound': alarmSound,
         'alarmVolume': alarmVolume,
         'feeds': feeds.map((f) => f.toJson()).toList(),
+        'feedTags': feedTags,
         'diapers': diapers.map((d) => d.toJson()).toList(),
         'weights': weights.map((w) => w.toJson()).toList(),
         'reminders': reminders.map((r) => r.toJson()).toList(),
@@ -1209,6 +1238,13 @@ class AppState extends ChangeNotifier {
         ..sort((a, b) => a.sortKey.compareTo(b.sortKey));
 
       feeds = imported;
+      // Restore the saved tag vocabulary when present, then make sure every tag
+      // actually used by an imported feed is in it (older backups predating the
+      // vocabulary still repopulate it from their feeds).
+      if (data.containsKey('feedTags')) {
+        feedTags = (data['feedTags'] as List<dynamic>).map((e) => e as String).toList();
+      }
+      _mergeFeedTags(imported.expand((f) => f.tags));
       babyName = (data['babyName'] as String?) ?? babyName;
       unitPref = (data['unitPref'] as String?) ?? unitPref;
       weightUnitPref = (data['weightUnitPref'] as String?) ?? weightUnitPref;

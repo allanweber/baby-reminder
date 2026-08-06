@@ -10,6 +10,10 @@ class Feed {
   final int amountMl;
   final int durationMin;
   final String note;
+  /// Free-form, reusable labels attached to this feed (e.g. "Spit up",
+  /// "Fussy"). The set of known tags is remembered app-wide so they can be
+  /// reused; see [AppState.feedTags].
+  final List<String> tags;
 
   const Feed({
     required this.id,
@@ -19,6 +23,7 @@ class Feed {
     required this.amountMl,
     required this.durationMin,
     required this.note,
+    this.tags = const [],
   });
 
   /// Sort key combining date+time so lexical comparison equals chronological order.
@@ -33,6 +38,7 @@ class Feed {
     int? amountMl,
     int? durationMin,
     String? note,
+    List<String>? tags,
   }) {
     return Feed(
       id: id,
@@ -42,6 +48,7 @@ class Feed {
       amountMl: amountMl ?? this.amountMl,
       durationMin: durationMin ?? this.durationMin,
       note: note ?? this.note,
+      tags: tags ?? this.tags,
     );
   }
 
@@ -53,6 +60,7 @@ class Feed {
         'amountMl': amountMl,
         'durationMin': durationMin,
         'note': note,
+        'tags': tags,
       };
 
   factory Feed.fromJson(Map<String, dynamic> json) => Feed(
@@ -63,5 +71,7 @@ class Feed {
         amountMl: json['amountMl'] as int,
         durationMin: json['durationMin'] as int,
         note: json['note'] as String? ?? '',
+        // Older backups have no 'tags' key → an untagged feed.
+        tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
       );
 }
