@@ -6,7 +6,7 @@ offline, stores everything on-device via `SharedPreferences`, and contains no
 analytics, ads, crash-reporting, or network calls.
 
 - **App name:** Nestling
-- **Package / application ID:** `com.nestling.app`
+- **Package / application ID:** `com.allanweber.nestling`
 - **Category (suggested):** Parenting (or Health & Fitness)
 - **Contact email:** a.cassianoweber@gmail.com
 - **Privacy policy URL:** see "Privacy policy" below.

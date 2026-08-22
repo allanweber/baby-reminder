@@ -1,4 +1,4 @@
-package com.nestling.app
+package com.allanweber.nestling
 
 import io.flutter.embedding.android.FlutterActivity
 

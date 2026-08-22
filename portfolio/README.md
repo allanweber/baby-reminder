@@ -4,7 +4,7 @@
 > appointments, diapers and weight — and never miss a feed thanks to a real
 > full-screen alarm that rings even when the phone is locked.
 
-**Platform:** Android (Flutter) · **Package:** `com.nestling.app`
+**Platform:** Android (Flutter) · **Package:** `com.allanweber.nestling`
 **Live landing page:** https://allanweber.github.io/baby-reminder/
 **Status:** Release-signed CI build, Play Store submission pack prepared.
 
@@ -153,7 +153,7 @@ Dark mode carries through every screen, including appointments:
 
 - **Landing page (GitHub Pages):** https://allanweber.github.io/baby-reminder/
 - **Privacy policy:** https://allanweber.github.io/baby-reminder/privacy-policy.html
-- **Google Play (target):** `com.nestling.app`
+- **Google Play (target):** `com.allanweber.nestling`
 
 *Screenshots in this folder are rendered directly from the app's widgets with
 its production fonts, on seeded sample data.*
