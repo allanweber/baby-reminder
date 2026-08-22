@@ -77,6 +77,15 @@ android {
             // available (env vars in CI, or a local key.properties); otherwise
             // fall back to debug signing so the build still succeeds.
             signingConfig = hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
+
+            // Bundle the native (C/C++) debug symbols into the .aab so Google
+            // Play can symbolicate native crashes and ANRs (libflutter.so and
+            // plugin .so files) instead of showing raw addresses. Play extracts
+            // these from the bundle; they are not shipped to devices. Without
+            // this, Play warns "you've not uploaded debug symbols" on upload.
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
 }
