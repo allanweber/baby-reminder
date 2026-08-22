@@ -117,27 +117,61 @@ Track baby feeds & diapers with reliable reminders. Fully offline & private.
 
 **Full description** (≤4000 chars):
 ```
-Nestling is a calm, one-handed tracker for your baby's feeds — built for tired
-parents and the middle of the night.
+Nestling is a calm, one-handed tracker for everything you log for your baby —
+feeds, diapers, weight, appointments, and daily care — built for tired parents
+and the middle of the night.
 
-Log a bottle, formula, or breastfeeding session in a couple of taps, and let
-Nestling remind you when the next feed is due. The reminder rings like a proper
+Log a feed, a diaper change, or a dose of medicine in a couple of taps, and let
+Nestling remind you when the next one is due. Reminders ring like a proper
 alarm — sound, vibration, and a full-screen alert even over the lock screen — so
-you never miss it, even if your phone is in your pocket or the app is closed.
+you never miss one, even if your phone is in your pocket or the app is closed.
 
 Everything stays on your phone. There is no account to create, no sign-in, and
 no internet connection required. Your baby's data is yours alone — Nestling has
 no ads, no tracking, and no analytics.
 
-FEATURES
-• Fast logging of formula, bottle, and breastfeeding sessions
-• A reliable "next feed" reminder with a real alarm (sound + vibration)
-• Full-screen alarm that shows over the lock screen when a feed is due
+FEEDS
+• Fast logging of formula, bottle, and breastfeeding sessions, with amount
+  (ml or oz), duration, and notes
+• Reusable tags (like "Spit up" or "Fussy") that Nestling remembers and offers
+  again on later feeds
+• A reliable "next feed" reminder with a real alarm, plus daily totals and the
+  average gap between feeds
+• An on-demand timer for a one-off countdown without touching your feed schedule
+
+DIAPERS
+• Log pee, poop, or both, with color, amount, and notes
+• Color options include the shades worth watching for, so the log helps you
+  spot problems, not just "normal" changes
+• Daily diaper counts at a glance
+
+CARE REMINDERS
+• Recurring reminders for medicine, vitamins, tummy time, exercises, activities,
+  baths, and more
+• Repeat daily at a set time, or every few hours
+• Mark done, snooze, or nudge — and missed reminders are flagged
+
+APPOINTMENTS
+• Keep doctor visits, vaccinations, dentist, check-ups, and more in a simple
+  calendar
+• Get a heads-up alarm 1 hour or 1 day ahead, plus one at the appointment time
+• Postpone or mark done in a tap
+
+WEIGHT
+• Track weigh-ins over time in kg or lb, and see the change since last time
+
+DAILY REPORT
+• A clean per-day timeline of feeds, diapers, care, and appointments, with quick
+  day-to-day navigation
+
+THE ALARM, DONE RIGHT
+• Full-screen alarm over the lock screen, with sound and vibration
 • Snooze, dismiss, or nudge a reminder by +5 / +15 / +30 minutes
-• Diaper-change logging
-• A clean per-day report of the day's feeds
-• Adjustable feed interval, alarm sound, and volume
+• Survives a restart, so scheduled reminders keep ringing
+
+MORE
 • Light and dark themes
+• Adjustable feed interval, alarm sound, and volume
 • Manual backup & restore to a file you control — so your history survives a
   reinstall or a new phone
 • 100% offline: no account, no server, no ads, no tracking
