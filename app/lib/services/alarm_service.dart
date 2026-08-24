@@ -16,7 +16,6 @@ const kAlarmSounds = <AlarmSound>[
 ];
 
 const kDefaultAlarmSound = 'alarm_chime';
-const kDefaultAlarmVolume = 0.8;
 
 String resolveAlarmSoundId(String? id) =>
     kAlarmSounds.any((s) => s.id == id) ? id! : kDefaultAlarmSound;
@@ -47,13 +46,16 @@ class AlarmService {
       );
 
   /// One-shot, non-looping playback for the settings preview.
-  Future<void> previewSound({required String soundId, required double volume}) async {
+  ///
+  /// Plays on the alarm audio stream at full player volume, so the preview
+  /// tracks the device's current alarm volume — the same loudness a real
+  /// reminder rings at. It deliberately does not force a fixed level.
+  Future<void> previewSound({required String soundId}) async {
     final id = resolveAlarmSoundId(soundId);
-    final v = volume.clamp(0.0, 1.0);
     try {
       await _preview.setReleaseMode(ReleaseMode.release);
       await _preview.setAudioContext(_alarmContext);
-      await _preview.play(AssetSource('sounds/$id.wav'), volume: v);
+      await _preview.play(AssetSource('sounds/$id.wav'), volume: 1.0);
     } catch (_) {}
   }
 

@@ -323,13 +323,15 @@ class _SettingsSheetState extends State<SettingsSheet> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Row(
                 children: [
-                  Text('VOLUME', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
-                  const Spacer(),
-                  Text('${(widget.appState.alarmVolume * 100).round()}%',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                  Expanded(
+                    child: Text(
+                      'Reminders ring at your phone’s alarm volume, so they stay quiet when it’s turned down or muted. Adjust the volume with your side buttons while a preview or alarm is playing.',
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: () => widget.appState.previewAlarm(),
@@ -343,18 +345,6 @@ class _SettingsSheetState extends State<SettingsSheet> {
                     ),
                   ),
                 ],
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: accent,
-                  thumbColor: accent,
-                  inactiveTrackColor: AppColors.surfaceSecondary,
-                  overlayColor: accent.withValues(alpha: 0.15),
-                ),
-                child: Slider(
-                  value: widget.appState.alarmVolume,
-                  onChanged: (v) => widget.appState.setAlarmVolume(v),
-                ),
               ),
               const SizedBox(height: 22),
               Text('Notifications & alarm', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
