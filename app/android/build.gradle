@@ -5,14 +5,37 @@ allprojects {
     }
 }
 
-rootProject.buildDir = "../build"
+// Gradle 9 removed Project.buildDir; the build output is redirected via the
+// layout.buildDirectory provider instead. Mirrors Flutter's current template.
+def newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
+rootProject.layout.buildDirectory.value(newBuildDir)
+
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.layout.buildDirectory.value(newBuildDir.dir(project.name))
 }
+// file_picker 8.x compiles against android-34, but flutter_plugin_android_lifecycle
+// now requires consumers to compile against 36+, which AGP 9 enforces via AAR
+// metadata. file_picker can't be bumped -- 12.0.0 needs Dart >=3.10 / Flutter
+// >=3.38 and this project is pinned to Dart 3.5.4 -- so raise the plugin
+// modules' compileSdk here instead. compileSdk only controls which APIs compile;
+// minSdk and targetSdk are untouched.
+subprojects {
+    afterEvaluate {
+        if (project.plugins.hasPlugin("com.android.library")
+                || project.plugins.hasPlugin("com.android.application")) {
+            project.android {
+                if (compileSdk == null || compileSdk < 36) {
+                    compileSdk = 36
+                }
+            }
+        }
+    }
+}
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+    delete(rootProject.layout.buildDirectory)
 }

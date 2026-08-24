@@ -30,6 +30,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+# Gradle 9 writes its problems report here before the build-dir redirect in
+# android/build.gradle takes effect, so this is never the real output dir.
+/android/build/
 
 # Symbolication related
 app.*.symbols

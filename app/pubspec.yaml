@@ -40,12 +40,11 @@ dependencies:
   # Reliable alarm that rings (sound + vibration + lock-screen notification)
   # even when the app is closed or the process is killed — backed by a
   # foreground service + AlarmManager. This is what actually fires the feed
-  # reminder while the app isn't open. Pinned to 5.1.5: it's the newest release
-  # still compatible with our Dart 3.5.4 — alarm 5.2.0+ requires
-  # shared_preferences 2.5.4 (needs Dart 3.9) and 5.5.0 needs Flutter >= 3.41.
-  # The public API (AlarmSettings/VolumeSettings/NotificationSettings) is the
-  # same across the 5.x line.
-  alarm: 5.1.5
+  # reminder while the app isn't open. 5.11.0+ is required for AGP 9: it applies
+  # the Kotlin Gradle Plugin conditionally, so it works under Flutter's built-in
+  # Kotlin (android.builtInKotlin=true). The old 5.1.5 pin was for Dart 3.5.4;
+  # Flutter 3.47 ships Dart 3.13, so that constraint no longer binds.
+  alarm: ^5.11.0
   # Kept only for the notification/exact-alarm permission diagnostics in
   # Settings; no longer used to schedule anything.
   flutter_local_notifications: ^18.0.1
