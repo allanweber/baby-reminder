@@ -171,7 +171,7 @@ THE ALARM, DONE RIGHT
 
 MORE
 • Light and dark themes
-• Adjustable feed interval, alarm sound, and volume
+• Adjustable feed interval and alarm sound; alarms ring at your phone's alarm volume
 • Manual backup & restore to a file you control — so your history survives a
   reinstall or a new phone
 • 100% offline: no account, no server, no ads, no tracking

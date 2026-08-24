@@ -18,7 +18,6 @@ class StorageService {
   static const _kNextReminderAt = 'nextReminderAt';
   static const _kReminderDismissed = 'reminderDismissed';
   static const _kAlarmSound = 'alarmSound';
-  static const _kAlarmVolume = 'alarmVolume';
   static const _kCustomTimerAt = 'customTimerAt';
   static const _kCustomTimerLabel = 'customTimerLabel';
   static const _kReminders = 'reminders';
@@ -79,9 +78,6 @@ class StorageService {
 
   String? loadAlarmSound() => _prefs.getString(_kAlarmSound);
   Future<void> saveAlarmSound(String id) => _prefs.setString(_kAlarmSound, id);
-
-  double loadAlarmVolume() => _prefs.getDouble(_kAlarmVolume) ?? 0.8;
-  Future<void> saveAlarmVolume(double v) => _prefs.setDouble(_kAlarmVolume, v);
 
   int? loadCustomTimerAt() => _prefs.getInt(_kCustomTimerAt);
   Future<void> saveCustomTimerAt(int? millis) async {

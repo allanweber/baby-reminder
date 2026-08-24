@@ -77,7 +77,6 @@ class AppState extends ChangeNotifier {
   int nextReminderAt = 0;
   bool reminderDismissed = false;
   String alarmSound = kDefaultAlarmSound;
-  double alarmVolume = kDefaultAlarmVolume;
   DateTime now = DateTime.now();
 
   /// An on-demand countdown the user sets themselves. When active it takes over
@@ -176,7 +175,6 @@ class AppState extends ChangeNotifier {
           DateTime.now().add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
       reminderDismissed = storage.loadReminderDismissed();
       alarmSound = resolveAlarmSoundId(storage.loadAlarmSound());
-      alarmVolume = storage.loadAlarmVolume();
       customTimerAt = storage.loadCustomTimerAt();
       customTimerLabel = storage.loadCustomTimerLabel() ?? 'Timer';
     }
@@ -352,7 +350,6 @@ class AppState extends ChangeNotifier {
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
     await storage.saveAlarmSound(alarmSound);
-    await storage.saveAlarmVolume(alarmVolume);
     await storage.saveCustomTimerAt(customTimerAt);
     await storage.saveCustomTimerLabel(customTimerLabel);
     await storage.saveReminders(reminders);
@@ -381,7 +378,6 @@ class AppState extends ChangeNotifier {
           DateTime.fromMillisecondsSinceEpoch(customTimerAt!),
           babyName: babyName,
           soundId: alarmSound,
-          volume: alarmVolume,
           title: customTimerLabel.isNotEmpty ? customTimerLabel : 'Timer',
           body: 'Your timer is up.',
         );
@@ -392,7 +388,6 @@ class AppState extends ChangeNotifier {
           DateTime.fromMillisecondsSinceEpoch(nextReminderAt),
           babyName: babyName,
           soundId: alarmSound,
-          volume: alarmVolume,
         );
       }
     } catch (e) {
@@ -688,17 +683,10 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setAlarmVolume(double volume) async {
-    alarmVolume = volume.clamp(0.0, 1.0);
-    await storage.saveAlarmVolume(alarmVolume);
-    // Applies to the next time the alarm is (re)armed; the value is read at
-    // schedule time. Avoids rescheduling on every slider movement.
-    notifyListeners();
-  }
-
-  /// Plays a short, non-looping preview of the given (or current) sound.
+  /// Plays a short, non-looping preview of the given (or current) sound at the
+  /// device's alarm volume — the same loudness a real reminder will ring at.
   Future<void> previewAlarm([String? id]) =>
-      alarm.previewSound(soundId: id ?? alarmSound, volume: alarmVolume);
+      alarm.previewSound(soundId: id ?? alarmSound);
 
   // --- Reminders (non-feed care alarms) -------------------------------------
 
@@ -899,7 +887,6 @@ class AppState extends ChangeNotifier {
         title: reminder.label.isNotEmpty ? reminder.label : 'Reminder',
         body: reminderCategories[reminder.category]!.label,
         soundId: alarmSound,
-        volume: alarmVolume,
       );
     } catch (e) {
       debugPrint('Failed to arm reminder alarm: $e');
@@ -1153,7 +1140,6 @@ class AppState extends ChangeNotifier {
           title: title,
           body: '$catLabel appointment',
           soundId: alarmSound,
-          volume: alarmVolume,
         );
       } else {
         await notifications.cancelAlarm(appointment.atAlarmId);
@@ -1171,7 +1157,6 @@ class AppState extends ChangeNotifier {
           title: title,
           body: '$catLabel appointment ${appointment.lead.shortLabel}',
           soundId: alarmSound,
-          volume: alarmVolume,
         );
       } else {
         await notifications.cancelAlarm(appointment.leadAlarmId);
@@ -1216,7 +1201,6 @@ class AppState extends ChangeNotifier {
         'darkMode': darkMode,
         'reminderIntervalMin': reminderIntervalMin,
         'alarmSound': alarmSound,
-        'alarmVolume': alarmVolume,
         'feeds': feeds.map((f) => f.toJson()).toList(),
         'feedTags': feedTags,
         'diapers': diapers.map((d) => d.toJson()).toList(),
@@ -1251,7 +1235,6 @@ class AppState extends ChangeNotifier {
       darkMode = (data['darkMode'] as bool?) ?? darkMode;
       reminderIntervalMin = (data['reminderIntervalMin'] as int?) ?? reminderIntervalMin;
       alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
-      alarmVolume = ((data['alarmVolume'] as num?)?.toDouble() ?? alarmVolume).clamp(0.0, 1.0);
 
       // Diapers, like reminders, are only replaced when the backup actually
       // carries them, so restoring an older backup (v1/v2, no diapers key)

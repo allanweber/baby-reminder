@@ -113,7 +113,6 @@ class NotificationService {
     required String title,
     required String body,
     required String soundId,
-    required double volume,
   }) {
     return AlarmSettings(
       id: id,
@@ -128,7 +127,12 @@ class NotificationService {
       // surfaces it over the lock screen and keeps it up until the user
       // dismisses it or adds more time.
       androidFullScreenIntent: true,
-      volumeSettings: VolumeSettings.fixed(volume: volume.clamp(0.0, 1.0)),
+      // Ring at the device's current alarm-stream volume instead of forcing a
+      // fixed level. Passing no volume (the default) means the `alarm` package
+      // does not override the system volume, so the alarm honours the phone's
+      // alarm volume and stays silent when the user has muted it — rather than
+      // blasting at a hard-coded level even on a muted phone.
+      volumeSettings: VolumeSettings.fixed(),
       notificationSettings: NotificationSettings(
         title: title,
         body: body,
@@ -143,7 +147,6 @@ class NotificationService {
     DateTime at, {
     required String babyName,
     required String soundId,
-    required double volume,
     String? title,
     String? body,
   }) async {
@@ -170,7 +173,6 @@ class NotificationService {
         title: resolvedTitle,
         body: resolvedBody,
         soundId: soundId,
-        volume: volume,
       ),
     );
     await ErrorLog.breadcrumb('schedule: reminder set OK');
@@ -187,7 +189,6 @@ class NotificationService {
     required String title,
     required String body,
     required String soundId,
-    required double volume,
   }) async {
     if (_inFlutterTest) return;
     await init();
@@ -201,7 +202,6 @@ class NotificationService {
         title: title,
         body: body,
         soundId: soundId,
-        volume: volume,
       ),
     );
   }
@@ -219,7 +219,6 @@ class NotificationService {
   Future<void> scheduleTest({
     Duration delay = const Duration(seconds: 10),
     required String soundId,
-    required double volume,
   }) async {
     if (_inFlutterTest) return;
     await init();
@@ -232,7 +231,6 @@ class NotificationService {
         title: 'Test alarm',
         body: 'If you can see and hear this with the app closed, real reminders will work too.',
         soundId: soundId,
-        volume: volume,
       ),
     );
     await ErrorLog.breadcrumb('test: set OK');
