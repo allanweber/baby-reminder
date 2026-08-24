@@ -132,7 +132,7 @@ class NotificationService {
       // does not override the system volume, so the alarm honours the phone's
       // alarm volume and stays silent when the user has muted it — rather than
       // blasting at a hard-coded level even on a muted phone.
-      volumeSettings: VolumeSettings.fixed(),
+      volumeSettings: const VolumeSettings.fixed(),
       notificationSettings: NotificationSettings(
         title: title,
         body: body,
