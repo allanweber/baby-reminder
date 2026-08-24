@@ -20,6 +20,9 @@ version: 1.7.1+19
 
 environment:
   sdk: ^3.5.4
+  # alarm 5.11.0 needs this floor. Stated explicitly so a stale CI pin fails at
+  # `pub get` with a clear message instead of deep in the Gradle build.
+  flutter: ">=3.41.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
