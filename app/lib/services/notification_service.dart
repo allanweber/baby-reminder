@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'alarm_service.dart';
 import 'error_log.dart';
+import 'ring_policy.dart';
 
 /// Schedules the "next feed" reminder as a real OS alarm using the `alarm`
 /// package, which rings with sound + vibration and posts a lock-screen
@@ -104,42 +105,65 @@ class NotificationService {
     _ringingSub = null;
   }
 
-  /// Builds the alarm shared by the real reminder and the diagnostic test, so a
-  /// passing test genuinely exercises the same sound / vibration / lock-screen
-  /// delivery the feed reminder uses.
-  AlarmSettings _buildAlarm({
+  /// Arms the alarm shared by the real reminder, the per-reminder care alarms
+  /// and the diagnostic test, so a passing test genuinely exercises the same
+  /// sound / vibration / lock-screen delivery a feed reminder uses.
+  ///
+  /// The phone's mute / Do Not Disturb state is applied here and re-applied
+  /// natively just before the alarm rings (see [RingPolicyBridge]): Android's
+  /// alarm stream ignores both, so the app has to honour them itself, and a
+  /// reminder armed after a feed is usually hours old by the time it goes off.
+  Future<void> _armAlarm({
     required int id,
     required DateTime at,
     required String title,
     required String body,
     required String soundId,
-  }) {
-    return AlarmSettings(
-      id: id,
-      dateTime: at,
-      assetAudioPath: 'assets/sounds/${resolveAlarmSoundId(soundId)}.wav',
-      loopAudio: true,
-      vibrate: true,
-      // Warn the user if Android kills the alarm's foreground service, so a
-      // due feed can't silently disappear.
-      warningNotificationOnKill: true,
-      // Take over the whole screen like the OS alarm clock — this is what
-      // surfaces it over the lock screen and keeps it up until the user
-      // dismisses it or adds more time.
-      androidFullScreenIntent: true,
-      // Ring at the device's current alarm-stream volume instead of forcing a
-      // fixed level. Passing no volume (the default) means the `alarm` package
-      // does not override the system volume, so the alarm honours the phone's
-      // alarm volume and stays silent when the user has muted it — rather than
-      // blasting at a hard-coded level even on a muted phone.
-      volumeSettings: const VolumeSettings.fixed(),
-      notificationSettings: NotificationSettings(
-        title: title,
-        body: body,
-        stopButton: 'Stop',
-        icon: 'ic_stat_bottle',
-        iconColor: const Color(0xFFE39C8B),
+  }) async {
+    final soundAsset = 'assets/sounds/${resolveAlarmSoundId(soundId)}.wav';
+    final policy = await RingPolicyBridge.current();
+
+    await Alarm.set(
+      alarmSettings: AlarmSettings(
+        id: id,
+        dateTime: at,
+        // Muting swaps in a silent track rather than turning a volume down, so
+        // the alarm still takes over the screen and the device's own alarm
+        // volume is never touched.
+        assetAudioPath:
+            policy.isAudible ? soundAsset : RingPolicyBridge.silentAsset,
+        loopAudio: true,
+        vibrate: policy.vibrates,
+        // Warn the user if Android kills the alarm's foreground service, so a
+        // due feed can't silently disappear.
+        warningNotificationOnKill: true,
+        // Take over the whole screen like the OS alarm clock — this is what
+        // surfaces it over the lock screen and keeps it up until the user
+        // dismisses it or adds more time.
+        androidFullScreenIntent: true,
+        // Ring at the device's current alarm-stream volume instead of forcing a
+        // fixed level. Passing no volume (the default) means the `alarm` package
+        // does not override the system volume, so the alarm honours the phone's
+        // alarm volume rather than blasting at a hard-coded one.
+        volumeSettings: const VolumeSettings.fixed(),
+        notificationSettings: NotificationSettings(
+          title: title,
+          body: body,
+          stopButton: 'Stop',
+          icon: 'ic_stat_bottle',
+          iconColor: const Color(0xFFE39C8B),
+        ),
       ),
+    );
+
+    // Hand the *intended* sound to the native guard, not the one just armed:
+    // that is what lets it restore full volume if the phone is unmuted before
+    // the alarm is due, as well as silence it if it is muted after this point.
+    await RingPolicyBridge.arm(
+      id: id,
+      at: at,
+      assetAudioPath: soundAsset,
+      vibrate: true,
     );
   }
 
@@ -166,14 +190,12 @@ class NotificationService {
     final resolvedBody = body ?? "It's about time for the next feed.";
 
     await ErrorLog.breadcrumb('schedule: Alarm.set reminder');
-    await Alarm.set(
-      alarmSettings: _buildAlarm(
-        id: _reminderAlarmId,
-        at: fireAt,
-        title: resolvedTitle,
-        body: resolvedBody,
-        soundId: soundId,
-      ),
+    await _armAlarm(
+      id: _reminderAlarmId,
+      at: fireAt,
+      title: resolvedTitle,
+      body: resolvedBody,
+      soundId: soundId,
     );
     await ErrorLog.breadcrumb('schedule: reminder set OK');
   }
@@ -195,14 +217,12 @@ class NotificationService {
     await Alarm.stop(id);
     final now = DateTime.now();
     final fireAt = at.isAfter(now) ? at : now.add(const Duration(seconds: 2));
-    await Alarm.set(
-      alarmSettings: _buildAlarm(
-        id: id,
-        at: fireAt,
-        title: title,
-        body: body,
-        soundId: soundId,
-      ),
+    await _armAlarm(
+      id: id,
+      at: fireAt,
+      title: title,
+      body: body,
+      soundId: soundId,
     );
   }
 
@@ -211,6 +231,7 @@ class NotificationService {
   Future<void> cancelAlarm(int id) async {
     if (_inFlutterTest) return;
     await Alarm.stop(id);
+    await RingPolicyBridge.cancel(id);
   }
 
   /// Schedules a one-off diagnostic alarm [delay] from now, using the exact
@@ -224,14 +245,12 @@ class NotificationService {
     await init();
     await Alarm.stop(_testAlarmId);
     await ErrorLog.breadcrumb('test: Alarm.set');
-    await Alarm.set(
-      alarmSettings: _buildAlarm(
-        id: _testAlarmId,
-        at: DateTime.now().add(delay),
-        title: 'Test alarm',
-        body: 'If you can see and hear this with the app closed, real reminders will work too.',
-        soundId: soundId,
-      ),
+    await _armAlarm(
+      id: _testAlarmId,
+      at: DateTime.now().add(delay),
+      title: 'Test alarm',
+      body: 'If you can see and hear this with the app closed, real reminders will work too.',
+      soundId: soundId,
     );
     await ErrorLog.breadcrumb('test: set OK');
   }
@@ -239,6 +258,7 @@ class NotificationService {
   Future<void> cancelReminder() async {
     if (_inFlutterTest) return;
     await Alarm.stop(_reminderAlarmId);
+    await RingPolicyBridge.cancel(_reminderAlarmId);
   }
 
   AndroidFlutterLocalNotificationsPlugin? get _android =>

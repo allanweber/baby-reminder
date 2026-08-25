@@ -52,6 +52,24 @@
              from the plugin manifest automatically, but this one must be
              declared by the app (see the package's example). -->
         <service android:name="com.gdelataillade.alarm.services.NotificationOnKillService" />
+        <!-- Re-checks the phone's mute / Do Not Disturb state a few seconds
+             before a reminder is due and rewrites the pending alarm to ring
+             silently if needed (see RingPolicyGuard). Not exported: only our
+             own AlarmManager PendingIntent triggers it. -->
+        <receiver
+            android:name=".RingPolicyGuardReceiver"
+            android:exported="false" />
+        <!-- AlarmManager forgets the guards above across a restart, so they are
+             re-armed at boot alongside the `alarm` package's own restore. -->
+        <receiver
+            android:name=".RingPolicyBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
