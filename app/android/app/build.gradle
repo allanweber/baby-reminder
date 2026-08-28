@@ -51,7 +51,13 @@ android {
         // pinning our own -- MinSdkVersionMigration rewrites any lower hardcoded
         // value on every build anyway.
         minSdkVersion = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // Google Play requires apps to target Android 16 (API 36) or higher to
+        // stay updatable (enforced from 31 Aug 2026). Flutter's default
+        // `targetSdkVersion` still lags at 35, so we pin 36 explicitly instead
+        // of tracking it -- compileSdk above already resolves to 36+ from
+        // flutter.compileSdkVersion, so the APIs are available. Revisit when
+        // Flutter's default catches up (then this can track flutter again).
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
