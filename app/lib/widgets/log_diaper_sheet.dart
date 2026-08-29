@@ -34,7 +34,11 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
   PoopColor? poopColor;
   String? poopAmount;
   late final TextEditingController noteController;
-  String? formError;
+  // Per-field validation flags, set on a failed save and cleared the moment the
+  // field is filled — so the error points right at the missing colour selector
+  // rather than at a single easy-to-miss message elsewhere on the sheet.
+  bool peeColorError = false;
+  bool poopColorError = false;
 
   bool get isEditing => widget.existing != null;
   bool get showPee => type == DiaperType.pee || type == DiaperType.both;
@@ -79,27 +83,23 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
       if (t == DiaperType.poop) {
         peeColor = null;
       }
-      formError = null;
+      // A type change can hide a field, so drop any error for a now-hidden one.
+      if (!showPee) peeColorError = false;
+      if (!showPoop) poopColorError = false;
     });
   }
 
   Future<void> _pickDate() async {
     final picked = await pickDateSheet(context, initialDate: date, firstDate: DateTime(2015), lastDate: DateTime(2100));
     if (picked != null) {
-      setState(() {
-        date = picked;
-        formError = null;
-      });
+      setState(() => date = picked);
     }
   }
 
   Future<void> _pickTime() async {
     final picked = await pickTimeSheet(context, initialTime: time);
     if (picked != null) {
-      setState(() {
-        time = picked;
-        formError = null;
-      });
+      setState(() => time = picked);
     }
   }
 
@@ -108,12 +108,14 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
   void _save() {
     final needsPee = showPee;
     final needsPoop = showPoop;
-    if (needsPee && peeColor == null) {
-      setState(() => formError = 'Select a pee color.');
-      return;
-    }
-    if (needsPoop && poopColor == null) {
-      setState(() => formError = 'Select a poop color.');
+    final peeMissing = needsPee && peeColor == null;
+    final poopMissing = needsPoop && poopColor == null;
+    if (peeMissing || poopMissing) {
+      // Point at every missing colour at once rather than one at a time.
+      setState(() {
+        peeColorError = peeMissing;
+        poopColorError = poopMissing;
+      });
       return;
     }
     final diaper = Diaper(
@@ -200,6 +202,7 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
               if (showPee) ...[
                 _ColorCard(
                   label: 'PEE COLOR',
+                  error: peeColorError,
                   child: Wrap(
                     spacing: 14,
                     runSpacing: 12,
@@ -211,7 +214,7 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
                         selected: peeColor == c,
                         onTap: () => setState(() {
                           peeColor = c;
-                          formError = null;
+                          peeColorError = false;
                         }),
                       );
                     }).toList(),
@@ -222,6 +225,7 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
               if (showPoop) ...[
                 _ColorCard(
                   label: 'POOP COLOR',
+                  error: poopColorError,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -236,7 +240,7 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
                             selected: poopColor == c,
                             onTap: () => setState(() {
                               poopColor = c;
-                              formError = null;
+                              poopColorError = false;
                             }),
                           );
                         }).toList(),
@@ -282,10 +286,6 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border, width: 1.5)),
                 ),
               ),
-              if (formError != null) ...[
-                const SizedBox(height: 10),
-                Text(formError!, style: TextStyle(color: AppColors.errorText, fontSize: 13, fontWeight: FontWeight.w700)),
-              ],
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -334,19 +334,30 @@ class _LogDiaperSheetState extends State<LogDiaperSheet> {
 class _ColorCard extends StatelessWidget {
   final String label;
   final Widget child;
-  const _ColorCard({required this.label, required this.child});
+  /// When true the card is a required colour selector left empty on save: it
+  /// gains a red outline, a red label and an inline "Pick a colour" message.
+  final bool error;
+  const _ColorCard({required this.label, required this.child, this.error = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: AppColors.cardWhite, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(20),
+        border: error ? Border.all(color: AppColors.errorSolid, width: 1.5) : null,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: error ? AppColors.errorText : AppColors.textSecondary)),
           const SizedBox(height: 10),
           child,
+          if (error) ...[
+            const SizedBox(height: 10),
+            Text('Pick a colour', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.errorText)),
+          ],
         ],
       ),
     );
