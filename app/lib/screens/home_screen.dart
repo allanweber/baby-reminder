@@ -145,7 +145,9 @@ class HomeScreen extends StatelessWidget {
                   )
                 else
                   ReminderBanner(
-                    showCountdown: !appState.reminderDismissed,
+                    // With the automatic reminder off, the banner collapses to a
+                    // plain "Log feed" action — no countdown, no armed alarm.
+                    showCountdown: appState.feedReminderEnabled && !appState.reminderDismissed,
                     overdue: overdue,
                     reminderLabel: reminderLabel,
                     atLabel: ringAtLabel,

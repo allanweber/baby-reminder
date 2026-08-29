@@ -265,25 +265,37 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 "Get nudged when it's about time for the next bottle.",
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _presets.map((m) {
-                  final active = widget.appState.reminderIntervalMin == m;
-                  return OutlinedButton(
-                    onPressed: () => widget.appState.setReminderInterval(m),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: active ? accent : AppColors.cardWhite,
-                      foregroundColor: active ? Colors.white : AppColors.gearStroke,
-                      side: active ? BorderSide.none : BorderSide(color: AppColors.border, width: 1.5),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Text(_presetLabel(m), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                  );
-                }).toList(),
+              const SizedBox(height: 12),
+              _ToggleRow(
+                title: 'Automatic next-feed reminder',
+                subtitle: 'Start a countdown after each logged feed. Off by default — handy for scheduled feeds, skip it for on-demand.',
+                value: widget.appState.feedReminderEnabled,
+                accent: accent,
+                onChanged: (v) => widget.appState.setFeedReminderEnabled(v),
               ),
+              if (widget.appState.feedReminderEnabled) ...[
+                const SizedBox(height: 14),
+                Text('REMIND EVERY', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _presets.map((m) {
+                    final active = widget.appState.reminderIntervalMin == m;
+                    return OutlinedButton(
+                      onPressed: () => widget.appState.setReminderInterval(m),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: active ? accent : AppColors.cardWhite,
+                        foregroundColor: active ? Colors.white : AppColors.gearStroke,
+                        side: active ? BorderSide.none : BorderSide(color: AppColors.border, width: 1.5),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Text(_presetLabel(m), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    );
+                  }).toList(),
+                ),
+              ],
               const SizedBox(height: 22),
               Text('Appearance', style: TextStyle(fontFamily: balooFamily, fontSize: 19, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               const SizedBox(height: 10),
@@ -521,6 +533,55 @@ class _DarkModeRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text('Easier on the eyes for night feeds.',
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            _PillSwitch(value: value, accent: accent, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A generic labelled toggle row (title + description on the left, a pill switch
+/// on the right). Used for the automatic feed-reminder toggle.
+class _ToggleRow extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool value;
+  final Color accent;
+  final ValueChanged<bool> onChanged;
+  const _ToggleRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.accent,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => onChanged(!value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.cardWhite,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border, width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                 ],
               ),
             ),
