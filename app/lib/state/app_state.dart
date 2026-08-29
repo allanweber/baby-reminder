@@ -18,6 +18,11 @@ const mlPerOz = 29.5735;
 const lbPerKg = 2.2046226218; // 1 kg in pounds; weight is stored canonically in kg
 const _uuid = Uuid();
 
+/// Sentinel distinguishing "leave the note untouched" from "clear it to null"
+/// in [AppState.updateReminderLog] (a nullable optional arg can't tell them
+/// apart on its own).
+const Object _keepNote = Object();
+
 String pad2(int n) => n < 10 ? '0$n' : '$n';
 String dateStr(DateTime d) => '${d.year}-${pad2(d.month)}-${pad2(d.day)}';
 String timeStr(DateTime d) => '${pad2(d.hour)}:${pad2(d.minute)}';
@@ -841,10 +846,16 @@ class AppState extends ChangeNotifier {
     return log;
   }
 
-  /// Edits the date/time of a log (used by the report's compact edit sheet;
-  /// quick logs are the only rows the report makes editable).
-  Future<void> updateReminderLog(String id, {required String date, required String time}) async {
-    reminderLogs = reminderLogs.map((l) => l.id == id ? l.copyWith(date: date, time: time) : l).toList();
+  /// Edits the date/time (and optional free-text [note]) of a log — used by the
+  /// report's compact edit sheet; quick logs are the only rows the report makes
+  /// editable. Passing `note: null` clears any existing note; omitting it leaves
+  /// the note untouched.
+  Future<void> updateReminderLog(String id, {required String date, required String time, Object? note = _keepNote}) async {
+    reminderLogs = reminderLogs
+        .map((l) => l.id == id
+            ? l.copyWith(date: date, time: time, note: identical(note, _keepNote) ? l.note : note as String?)
+            : l)
+        .toList();
     await storage.saveReminderLogs(reminderLogs);
     notifyListeners();
   }

@@ -11,6 +11,7 @@ class QuickLogReportRow extends StatelessWidget {
   final ReminderCategory category;
   final String label;
   final String time; // HH:MM 24h
+  final String? note;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -19,6 +20,7 @@ class QuickLogReportRow extends StatelessWidget {
     required this.category,
     required this.label,
     required this.time,
+    this.note,
     required this.onEdit,
     required this.onDelete,
   });
@@ -72,6 +74,13 @@ class QuickLogReportRow extends StatelessWidget {
                       reminderTime12h(time),
                       style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                     ),
+                    if (note != null && note!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        note!,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textPrimary, height: 1.25),
+                      ),
+                    ],
                   ],
                 ),
               ),
