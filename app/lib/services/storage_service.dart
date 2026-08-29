@@ -15,6 +15,7 @@ class StorageService {
   static const _kBabyName = 'babyName';
   static const _kUnitPref = 'unitPref';
   static const _kReminderIntervalMin = 'reminderIntervalMin';
+  static const _kFeedReminderEnabled = 'feedReminderEnabled';
   static const _kNextReminderAt = 'nextReminderAt';
   static const _kReminderDismissed = 'reminderDismissed';
   static const _kAlarmSound = 'alarmSound';
@@ -62,6 +63,11 @@ class StorageService {
 
   bool loadDarkMode() => _prefs.getBool(_kDarkMode) ?? false;
   Future<void> saveDarkMode(bool on) => _prefs.setBool(_kDarkMode, on);
+
+  // The automatic next-feed reminder defaults OFF — on-demand feeding doesn't
+  // fit a periodic countdown, so a fresh install starts quiet.
+  bool loadFeedReminderEnabled() => _prefs.getBool(_kFeedReminderEnabled) ?? false;
+  Future<void> saveFeedReminderEnabled(bool on) => _prefs.setBool(_kFeedReminderEnabled, on);
 
   int loadReminderIntervalMin() => _prefs.getInt(_kReminderIntervalMin) ?? 180;
   Future<void> saveReminderIntervalMin(int min) => _prefs.setInt(_kReminderIntervalMin, min);

@@ -78,6 +78,11 @@ class AppState extends ChangeNotifier {
   String unitPref = 'ml';
   String weightUnitPref = 'kg';
   bool darkMode = false;
+  /// Whether logging a feed automatically starts a countdown to the next feed
+  /// (and arms its alarm). Off by default — on-demand breastfeeding doesn't fit
+  /// a fixed periodic reminder. The [reminderIntervalMin] presets only apply
+  /// while this is on.
+  bool feedReminderEnabled = false;
   int reminderIntervalMin = 180;
   int nextReminderAt = 0;
   bool reminderDismissed = false;
@@ -184,6 +189,7 @@ class AppState extends ChangeNotifier {
     unitPref = storage.loadUnitPref();
     weightUnitPref = storage.loadWeightUnitPref();
     darkMode = storage.loadDarkMode();
+    feedReminderEnabled = storage.loadFeedReminderEnabled();
     reminderIntervalMin = storage.loadReminderIntervalMin();
     nextReminderAt = storage.loadNextReminderAt() ??
         DateTime.now().add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
@@ -267,6 +273,7 @@ class AppState extends ChangeNotifier {
     await storage.saveUnitPref(unitPref);
     await storage.saveWeightUnitPref(weightUnitPref);
     await storage.saveDarkMode(darkMode);
+    await storage.saveFeedReminderEnabled(feedReminderEnabled);
     await storage.saveReminderIntervalMin(reminderIntervalMin);
     await storage.saveNextReminderAt(nextReminderAt);
     await storage.saveReminderDismissed(reminderDismissed);
@@ -302,7 +309,10 @@ class AppState extends ChangeNotifier {
           title: customTimerLabel.isNotEmpty ? customTimerLabel : 'Timer',
           body: 'Your timer is up.',
         );
-      } else if (reminderDismissed) {
+      } else if (!feedReminderEnabled || reminderDismissed) {
+        // The automatic next-feed reminder is off (or was dismissed): make sure
+        // no feed alarm is armed. A running custom timer is handled above and is
+        // unaffected.
         await notifications.cancelReminder();
       } else {
         await notifications.scheduleReminder(
@@ -348,7 +358,8 @@ class AppState extends ChangeNotifier {
     // be due (e.g. 3h+ ago with a 3h interval) is treated as history: it must
     // not start or reschedule an alarm, and it leaves any running reminder be.
     final candidate = dtToMs(feed.date, feed.time) + reminderIntervalMin * 60000;
-    final startsReminder = isNew && candidate > DateTime.now().millisecondsSinceEpoch;
+    final startsReminder =
+        isNew && feedReminderEnabled && candidate > DateTime.now().millisecondsSinceEpoch;
     if (startsReminder) {
       nextReminderAt = candidate;
       reminderDismissed = false;
@@ -490,6 +501,25 @@ class AppState extends ChangeNotifier {
     // tokens in the same frame, not one frame late.
     applyPalette(dark: on);
     await storage.saveDarkMode(on);
+    notifyListeners();
+  }
+
+  /// Turns the automatic next-feed reminder on or off.
+  ///
+  /// Turning it on starts a fresh countdown from now using the chosen interval
+  /// and arms the alarm. Turning it off cancels any pending feed alarm; a
+  /// running custom timer is left alone (it's scheduled independently).
+  Future<void> setFeedReminderEnabled(bool on) async {
+    feedReminderEnabled = on;
+    await storage.saveFeedReminderEnabled(on);
+    if (on) {
+      nextReminderAt = DateTime.now().millisecondsSinceEpoch + reminderIntervalMin * 60000;
+      reminderDismissed = false;
+      await storage.saveNextReminderAt(nextReminderAt);
+      await storage.saveReminderDismissed(reminderDismissed);
+    }
+    _alarmRinging = false;
+    await _rescheduleNotification();
     notifyListeners();
   }
 
@@ -1126,6 +1156,7 @@ class AppState extends ChangeNotifier {
         'unitPref': unitPref,
         'weightUnitPref': weightUnitPref,
         'darkMode': darkMode,
+        'feedReminderEnabled': feedReminderEnabled,
         'reminderIntervalMin': reminderIntervalMin,
         'alarmSound': alarmSound,
         'feeds': feeds.map((f) => f.toJson()).toList(),
@@ -1160,6 +1191,9 @@ class AppState extends ChangeNotifier {
       unitPref = (data['unitPref'] as String?) ?? unitPref;
       weightUnitPref = (data['weightUnitPref'] as String?) ?? weightUnitPref;
       darkMode = (data['darkMode'] as bool?) ?? darkMode;
+      // Older backups predate the toggle → leave the current setting untouched
+      // (same as darkMode); a fresh install's default is already OFF.
+      feedReminderEnabled = (data['feedReminderEnabled'] as bool?) ?? feedReminderEnabled;
       reminderIntervalMin = (data['reminderIntervalMin'] as int?) ?? reminderIntervalMin;
       alarmSound = resolveAlarmSoundId(data['alarmSound'] as String?);
 
@@ -1215,7 +1249,16 @@ class AppState extends ChangeNotifier {
         }
       }
 
+      // Match the feed-reminder schedule to the imported toggle: start a fresh
+      // countdown when it's on, otherwise leave it cancelled. (nextReminderAt is
+      // device-local and not carried in the backup.)
+      if (feedReminderEnabled && customTimerAt == null) {
+        nextReminderAt = DateTime.now().millisecondsSinceEpoch + reminderIntervalMin * 60000;
+        reminderDismissed = false;
+      }
+
       await _persistAll();
+      await _rescheduleNotification();
       await _rescheduleAllReminders();
       await _rescheduleAllAppointments();
       notifyListeners();

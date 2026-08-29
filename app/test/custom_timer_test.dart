@@ -88,6 +88,9 @@ void main() {
   group('feed reminder scheduling', () {
     test('logging a recent feed restarts the countdown', () async {
       final s = await _loadedState();
+      // The automatic feed reminder is off by default now, so enable it first —
+      // only then does logging a feed restart the countdown.
+      await s.setFeedReminderEnabled(true);
       final recent = DateTime.now().subtract(const Duration(minutes: 5));
       await s.saveFeed(_feedAt(s, recent), isNew: true);
       final expected = dtToMs(dateStr(recent), timeStr(recent)) + s.reminderIntervalMin * 60000;
@@ -97,6 +100,7 @@ void main() {
 
     test('back-filling an old feed does not move the reminder', () async {
       final s = await _loadedState();
+      await s.setFeedReminderEnabled(true);
       final before = s.nextReminderAt;
       // Older than the reminder interval, so its reminder would already be due:
       // treated as history, must not reschedule.
