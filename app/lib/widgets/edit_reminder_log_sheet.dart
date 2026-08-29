@@ -129,7 +129,7 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: AppColors.accentBlush, width: 1.5),
+                  borderSide: const BorderSide(color: AppColors.accentBlush, width: 1.5),
                 ),
               ),
             ),
