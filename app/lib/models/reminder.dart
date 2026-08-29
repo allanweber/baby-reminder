@@ -117,6 +117,9 @@ class ReminderLog {
   /// done late" — it renders as a distinct "Done (late)" pill in the report and
   /// (unlike a plain scheduled completion) is deletable there.
   final bool isLate;
+  /// Optional free-text note (e.g. what the "Other" was, which medication /
+  /// dose). Null when the log has no note; shown on the report row when present.
+  final String? note;
 
   const ReminderLog({
     required this.id,
@@ -126,6 +129,7 @@ class ReminderLog {
     required this.date,
     required this.time,
     this.isLate = false,
+    this.note,
   });
 
   /// True when this is an ad-hoc quick log rather than a scheduled-reminder
@@ -133,7 +137,11 @@ class ReminderLog {
   /// and are editable/deletable in the report.
   bool get isQuickLog => reminderId == null;
 
-  ReminderLog copyWith({String? date, String? time}) => ReminderLog(
+  /// Sentinel so [copyWith] can tell "leave the note as-is" apart from
+  /// "explicitly clear it to null" (passing `note: null`).
+  static const Object _keepNote = Object();
+
+  ReminderLog copyWith({String? date, String? time, Object? note = _keepNote}) => ReminderLog(
         id: id,
         reminderId: reminderId,
         label: label,
@@ -141,6 +149,7 @@ class ReminderLog {
         date: date ?? this.date,
         time: time ?? this.time,
         isLate: isLate,
+        note: identical(note, _keepNote) ? this.note : note as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -151,6 +160,7 @@ class ReminderLog {
         'date': date,
         'time': time,
         'late': isLate,
+        if (note != null) 'note': note,
       };
 
   factory ReminderLog.fromJson(Map<String, dynamic> json) => ReminderLog(
@@ -164,6 +174,8 @@ class ReminderLog {
         time: json['time'] as String,
         // Older backups have no 'late' key → treated as a plain "Done".
         isLate: json['late'] as bool? ?? false,
+        // Absent or empty note → null. Older backups without a note load fine.
+        note: (json['note'] as String?)?.isNotEmpty == true ? json['note'] as String : null,
       );
 }
 

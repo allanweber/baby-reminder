@@ -6,8 +6,8 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'date_time_pickers.dart';
 
-/// Opens the compact "Edit log" sheet for a quick log — date and time only
-/// (a quick log has no schedule, note or amount to edit).
+/// Opens the compact "Edit log" sheet for a quick log — date, time and an
+/// optional free-text note (e.g. what the "Other" was, which medication/dose).
 Future<void> showEditReminderLogSheet(BuildContext context, AppState appState, ReminderLog log) {
   return showModalBottomSheet(
     context: context,
@@ -29,6 +29,7 @@ class _EditReminderLogSheet extends StatefulWidget {
 class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
   late DateTime date;
   late TimeOfDay time;
+  late final TextEditingController _noteController;
 
   @override
   void initState() {
@@ -36,6 +37,13 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
     date = DateTime.parse(widget.log.date);
     final t = widget.log.time.split(':');
     time = TimeOfDay(hour: int.parse(t[0]), minute: int.parse(t[1]));
+    _noteController = TextEditingController(text: widget.log.note ?? '');
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickDate() async {
@@ -49,10 +57,12 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
   }
 
   void _save() {
+    final trimmed = _noteController.text.trim();
     widget.appState.updateReminderLog(
       widget.log.id,
       date: dateStr(date),
       time: '${pad2(time.hour)}:${pad2(time.minute)}',
+      note: trimmed.isEmpty ? null : trimmed,
     );
     Navigator.of(context).pop();
   }
@@ -65,7 +75,8 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
         color: AppColors.background,
         borderRadius: const BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      // Lift the sheet above the keyboard so the note field stays visible.
+      padding: EdgeInsets.fromLTRB(20, 18, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
       child: SafeArea(
         top: false,
         child: Column(
@@ -92,6 +103,35 @@ class _EditReminderLogSheetState extends State<_EditReminderLogSheet> {
                 const SizedBox(width: 10),
                 Expanded(child: _Field(label: 'TIME', value: time.format(context), onTap: _pickTime)),
               ],
+            ),
+            const SizedBox(height: 14),
+            Text('NOTE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _noteController,
+              minLines: 2,
+              maxLines: 4,
+              textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Add details (which medication, dose…)',
+                hintStyle: TextStyle(fontWeight: FontWeight.w500, color: AppColors.textSecondary, fontSize: 14),
+                filled: true,
+                fillColor: AppColors.cardWhite,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.border, width: 1.5),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.border, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.accentBlush, width: 1.5),
+                ),
+              ),
             ),
             const SizedBox(height: 18),
             Row(

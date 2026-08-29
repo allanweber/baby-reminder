@@ -184,6 +184,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 category: l.category,
                 label: l.label,
                 time: l.time,
+                note: l.note,
                 onEdit: () => showEditReminderLogSheet(context, appState, l),
                 onDelete: () => _handleDeleteLog(context, l.id),
               ),

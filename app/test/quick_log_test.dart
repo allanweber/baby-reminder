@@ -36,6 +36,29 @@ void main() {
       final legacy = ReminderLog.fromJson({'id': 'x', 'reminderId': '', 'label': 'Bath', 'category': 'bath', 'date': '2026-07-25', 'time': '10:00'});
       expect(legacy.isQuickLog, isTrue);
     });
+
+    test('a note round-trips through JSON', () {
+      const withNote = ReminderLog(id: 'a', reminderId: null, label: 'Medication', category: ReminderCategory.medicine, date: '2026-07-25', time: '10:00', note: 'Paracetamol 2.5ml');
+      final back = ReminderLog.fromJson(withNote.toJson());
+      expect(back.note, 'Paracetamol 2.5ml');
+    });
+
+    test('a log with no note omits the key and decodes as null', () {
+      const noNote = ReminderLog(id: 'a', reminderId: null, label: 'Bath', category: ReminderCategory.bath, date: '2026-07-25', time: '10:00');
+      expect(noNote.toJson().containsKey('note'), isFalse);
+      // An older backup without a note key still loads (note stays null).
+      final legacy = ReminderLog.fromJson({'id': 'x', 'reminderId': null, 'label': 'Bath', 'category': 'bath', 'date': '2026-07-25', 'time': '10:00'});
+      expect(legacy.note, isNull);
+    });
+
+    test('copyWith leaves the note untouched unless explicitly changed', () {
+      const original = ReminderLog(id: 'a', reminderId: null, label: 'Other', category: ReminderCategory.other, date: '2026-07-25', time: '10:00', note: 'kept');
+      // Editing only date/time keeps the note.
+      expect(original.copyWith(time: '11:00').note, 'kept');
+      // Passing a new note replaces it; passing null clears it.
+      expect(original.copyWith(note: 'changed').note, 'changed');
+      expect(original.copyWith(note: null).note, isNull);
+    });
   });
 
   group('quick log state', () {
@@ -72,6 +95,23 @@ void main() {
       expect(after.date, '2026-07-20');
       expect(after.time, '08:30');
       expect(after.isQuickLog, isTrue);
+      s.dispose();
+    });
+
+    test('editing a quick log adds, keeps and clears a note', () async {
+      final s = await _loadedState();
+      final log = await s.quickLog(ReminderCategory.medicine);
+
+      await s.updateReminderLog(log.id, date: log.date, time: log.time, note: 'Ibuprofen 3ml');
+      expect(s.reminderLogs.firstWhere((l) => l.id == log.id).note, 'Ibuprofen 3ml');
+
+      // Omitting `note` on a later edit leaves it in place.
+      await s.updateReminderLog(log.id, date: '2026-07-20', time: log.time);
+      expect(s.reminderLogs.firstWhere((l) => l.id == log.id).note, 'Ibuprofen 3ml');
+
+      // Passing null clears it.
+      await s.updateReminderLog(log.id, date: log.date, time: log.time, note: null);
+      expect(s.reminderLogs.firstWhere((l) => l.id == log.id).note, isNull);
       s.dispose();
     });
 
