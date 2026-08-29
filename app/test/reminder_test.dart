@@ -68,8 +68,7 @@ void main() {
         intervalHours: 3,
       );
       // Even though an interval reminder exists, a fixed reminder can take any
-      // free clock slot — interval reminders don't occupy one. (11:11 is a time
-      // no seeded reminder uses.)
+      // free clock slot — interval reminders don't occupy one.
       expect(s.fixedTimeConflict('11:11'), isNull);
       s.dispose();
     });
@@ -154,13 +153,20 @@ void main() {
 
     test('restoring an old feeds-only backup leaves existing reminders intact', () async {
       final s = await _loadedState();
-      // A v1-style backup with no reminders key at all.
+      // Create a reminder, then restore a v1-style backup with no reminders key.
+      await s.addReminder(
+        label: 'Existing',
+        category: ReminderCategory.other,
+        mode: ReminderMode.fixed,
+        fixedTime: '12:00',
+        intervalHours: 0,
+      );
       const oldBackup = '{"app":"baby_feed_tracker","version":1,"feeds":[],"babyName":"Mia"}';
       final remindersBefore = s.reminders.length;
       final ok = await s.importData(oldBackup);
       expect(ok, isNotNull);
       expect(s.babyName, 'Mia');
-      // Seed reminders survive because the backup didn't carry a reminders key.
+      // The existing reminder survives because the backup didn't carry a reminders key.
       expect(s.reminders.length, remindersBefore);
       s.dispose();
     });

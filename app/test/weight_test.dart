@@ -99,12 +99,15 @@ void main() {
 
     test('restoring an old backup without a weights key leaves weights intact', () async {
       final s = await _loadedState();
+      // Log a weigh-in, then restore a backup that carries no weights key.
+      final w = Weight(id: s.newWeightId(), date: '2026-07-25', kg: 4.0);
+      await s.saveWeight(w, isNew: true);
       const oldBackup = '{"app":"baby_feed_tracker","version":2,"feeds":[],"babyName":"Mia","reminders":[]}';
       final before = s.weights.length;
       final ok = await s.importData(oldBackup);
       expect(ok, isNotNull);
       expect(s.babyName, 'Mia');
-      // Seed weights survive because the backup didn't carry a weights key.
+      // The existing weigh-in survives because the backup didn't carry a weights key.
       expect(s.weights.length, before);
       s.dispose();
     });

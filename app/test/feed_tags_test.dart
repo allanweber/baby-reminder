@@ -58,8 +58,10 @@ void main() {
 
     test('an already-known tag is not duplicated (case-insensitive)', () async {
       final s = await _loadedState();
+      // Establish 'Fussy' in the vocabulary, then re-add it in a different case:
+      // it must not grow the list.
+      await s.saveFeed(_feed(s, tags: ['Fussy']), isNew: true);
       final before = s.feedTags.length;
-      // 'Fussy' is a seeded tag; re-adding it (different case) must not grow the list.
       await s.saveFeed(_feed(s, tags: ['fussy']), isNew: true);
       expect(s.feedTags.length, before);
       s.dispose();
