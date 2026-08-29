@@ -19,10 +19,11 @@ import 'report_screen.dart';
 import 'weight_screen.dart';
 
 /// Persistent shell: bottom tab bar + FAB stay put while Reminders / Weight /
-/// Feed / Diapers / Report swap underneath. "Feed" is the primary (emphasized)
-/// tab; the FAB is context-aware (bottle on Feed, bell on Reminders, dial-gauge
-/// on Weight, folded diaper on Diapers, quick-log plus on Report). The Weight
-/// tab uses its own sage accent so it never reads as another feature's entry.
+/// Feed / Diapers / Home (the daily report) swap underneath. The app opens on
+/// Home; "Feed" stays the primary (emphasized) quick-log tab. The FAB is
+/// context-aware (bottle on Feed, bell on Reminders, dial-gauge on Weight,
+/// folded diaper on Diapers, quick-log plus on Home). The Weight tab uses its
+/// own sage accent so it never reads as another feature's entry.
 class AppShell extends StatefulWidget {
   final AppState appState;
   const AppShell({super.key, required this.appState});
@@ -32,9 +33,9 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  // 0 = Reminders, 1 = Weight, 2 = Feed (primary, default), 3 = Diapers,
-  // 4 = Report.
-  int _tabIndex = 2;
+  // 0 = Reminders, 1 = Weight, 2 = Feed (primary), 3 = Diapers,
+  // 4 = Home (daily report, default landing).
+  int _tabIndex = 4;
   // Which sub-tab the Reminders tab is showing: 0 = Reminders, 1 = Appointments.
   // Lifted here so the FAB can switch between "add reminder" and "add appointment".
   int _remindersSubTab = 0;
@@ -108,7 +109,7 @@ class _AppShellState extends State<AppShell> {
         onTap: () => showLogDiaperSheet(context, widget.appState),
       );
     }
-    // Report: a quick-log FAB (Report previously had none).
+    // Home (daily report): a quick-log FAB.
     return FeedFab(
       accentColor: accent,
       icon: AppIcons.plus(color: Colors.white),
@@ -166,7 +167,7 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.house(size: 25, color: _tabIndex == 2 ? accent : AppColors.textMuted),
+                  icon: AppIcons.bottle(size: 24, color: _tabIndex == 2 ? accent : AppColors.textMuted),
                   label: 'Feed',
                   active: _tabIndex == 2,
                   accent: accent,
@@ -185,8 +186,8 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.calendar(size: 20, color: _tabIndex == 4 ? accent : AppColors.textMuted),
-                  label: 'Report',
+                  icon: AppIcons.house(size: 22, color: _tabIndex == 4 ? accent : AppColors.textMuted),
+                  label: 'Home',
                   active: _tabIndex == 4,
                   accent: accent,
                   onTap: () => setState(() => _tabIndex = 4),
