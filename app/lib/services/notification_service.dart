@@ -134,9 +134,11 @@ class NotificationService {
             policy.isAudible ? soundAsset : RingPolicyBridge.silentAsset,
         loopAudio: true,
         vibrate: policy.vibrates,
-        // Warn the user if Android kills the alarm's foreground service, so a
-        // due feed can't silently disappear.
-        warningNotificationOnKill: true,
+        // Don't warn on kill: alarms are scheduled through Android's
+        // AlarmManager and still fire with the app closed, so the "reopen so
+        // alarms can ring" notification was misleading (and showed up even when
+        // nothing was armed).
+        warningNotificationOnKill: false,
         // Take over the whole screen like the OS alarm clock — this is what
         // surfaces it over the lock screen and keeps it up until the user
         // dismisses it or adds more time.
