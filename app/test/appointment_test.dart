@@ -146,13 +146,23 @@ void main() {
       s2.dispose();
     });
 
-    test('restoring an old backup with no appointments key leaves seeds intact', () async {
+    test('restoring an old backup with no appointments key leaves existing appointments intact', () async {
       final s = await _loadedState();
+      // Create an appointment, then restore a backup with no appointments key.
+      final at = DateTime.now().add(const Duration(days: 2));
+      await s.addAppointment(
+        title: 'Existing',
+        category: AppointmentCategory.checkup,
+        atMs: at.millisecondsSinceEpoch,
+        lead: AppointmentLead.none,
+        description: '',
+      );
       const oldBackup = '{"app":"baby_feed_tracker","version":1,"feeds":[],"babyName":"Mia"}';
       final before = s.appointments.length;
       final ok = await s.importData(oldBackup);
       expect(ok, isNotNull);
       expect(s.babyName, 'Mia');
+      // The existing appointment survives because the backup didn't carry an appointments key.
       expect(s.appointments.length, before);
       s.dispose();
     });

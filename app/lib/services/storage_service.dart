@@ -29,7 +29,6 @@ class StorageService {
   static const _kWeights = 'weights';
   static const _kWeightUnitPref = 'weightUnitPref';
   static const _kDarkMode = 'darkMode';
-  static const _kSeeded = 'seeded';
 
   final SharedPreferences _prefs;
   StorageService(this._prefs);
@@ -38,9 +37,6 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     return StorageService(prefs);
   }
-
-  bool get hasSeeded => _prefs.getBool(_kSeeded) ?? false;
-  Future<void> markSeeded() => _prefs.setBool(_kSeeded, true);
 
   List<Feed> loadFeeds() {
     final raw = _prefs.getString(_kFeeds);

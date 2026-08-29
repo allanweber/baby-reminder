@@ -96,12 +96,15 @@ void main() {
 
     test('restoring an old backup without a diapers key leaves diapers intact', () async {
       final s = await _loadedState();
+      // Log a diaper, then restore a backup that carries no diapers key.
+      final d = Diaper(id: s.newDiaperId(), date: '2026-07-25', time: '09:00', type: DiaperType.pee, peeColor: PeeColor.yellow);
+      await s.saveDiaper(d, isNew: true);
       const oldBackup = '{"app":"baby_feed_tracker","version":2,"feeds":[],"babyName":"Mia","reminders":[]}';
       final before = s.diapers.length;
       final ok = await s.importData(oldBackup);
       expect(ok, isNotNull);
       expect(s.babyName, 'Mia');
-      // Seed diapers survive because the backup didn't carry a diapers key.
+      // The existing diaper survives because the backup didn't carry a diapers key.
       expect(s.diapers.length, before);
       s.dispose();
     });

@@ -153,31 +153,27 @@ class AppState extends ChangeNotifier {
   bool get alarmIsCustomTimer => customTimerAt != null;
 
   Future<void> load() async {
-    if (!storage.hasSeeded) {
-      _seedSampleData();
-      await storage.markSeeded();
-      await _persistAll();
-    } else {
-      feeds = storage.loadFeeds();
-      feedTags = storage.loadFeedTags();
-      diapers = storage.loadDiapers();
-      weights = storage.loadWeights();
-      reminders = storage.loadReminders();
-      reminderLogs = storage.loadReminderLogs();
-      appointments = storage.loadAppointments();
-      _nextReminderAlarmId = storage.loadNextReminderAlarmId();
-      babyName = storage.loadBabyName() ?? '';
-      unitPref = storage.loadUnitPref();
-      weightUnitPref = storage.loadWeightUnitPref();
-      darkMode = storage.loadDarkMode();
-      reminderIntervalMin = storage.loadReminderIntervalMin();
-      nextReminderAt = storage.loadNextReminderAt() ??
-          DateTime.now().add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
-      reminderDismissed = storage.loadReminderDismissed();
-      alarmSound = resolveAlarmSoundId(storage.loadAlarmSound());
-      customTimerAt = storage.loadCustomTimerAt();
-      customTimerLabel = storage.loadCustomTimerLabel() ?? 'Timer';
-    }
+    // A fresh install starts empty — no sample/seed data is written. Every
+    // screen has its own empty state, so there is nothing to clear on first run.
+    feeds = storage.loadFeeds();
+    feedTags = storage.loadFeedTags();
+    diapers = storage.loadDiapers();
+    weights = storage.loadWeights();
+    reminders = storage.loadReminders();
+    reminderLogs = storage.loadReminderLogs();
+    appointments = storage.loadAppointments();
+    _nextReminderAlarmId = storage.loadNextReminderAlarmId();
+    babyName = storage.loadBabyName() ?? '';
+    unitPref = storage.loadUnitPref();
+    weightUnitPref = storage.loadWeightUnitPref();
+    darkMode = storage.loadDarkMode();
+    reminderIntervalMin = storage.loadReminderIntervalMin();
+    nextReminderAt = storage.loadNextReminderAt() ??
+        DateTime.now().add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
+    reminderDismissed = storage.loadReminderDismissed();
+    alarmSound = resolveAlarmSoundId(storage.loadAlarmSound());
+    customTimerAt = storage.loadCustomTimerAt();
+    customTimerLabel = storage.loadCustomTimerLabel() ?? 'Timer';
     // Tick every second so the home page — the live countdown especially —
     // stays in sync to the second.
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -243,98 +239,6 @@ class AppState extends ChangeNotifier {
     notifications.dispose();
     alarm.dispose();
     super.dispose();
-  }
-
-  void _seedSampleData() {
-    final nowDt = DateTime.now();
-    final t3 = nowDt.subtract(const Duration(minutes: 40));
-    final yest = nowDt.subtract(const Duration(days: 1));
-    feeds = [
-      Feed(id: 'y1', date: dateStr(yest), time: '07:00', type: FeedType.formula, amountMl: 110, durationMin: 0, note: ''),
-      Feed(id: 'y2', date: dateStr(yest), time: '10:15', type: FeedType.breastfeeding, amountMl: 0, durationMin: 18, note: ''),
-      Feed(id: 'y3', date: dateStr(yest), time: '13:30', type: FeedType.formula, amountMl: 120, durationMin: 0, note: ''),
-      Feed(id: 'y4', date: dateStr(yest), time: '16:45', type: FeedType.breastBottle, amountMl: 100, durationMin: 0, note: ''),
-      Feed(id: 'y5', date: dateStr(yest), time: '19:50', type: FeedType.formula, amountMl: 130, durationMin: 20, note: 'Settled quickly after', tags: ['Sleepy']),
-      Feed(id: 't1', date: dateStr(nowDt), time: '06:30', type: FeedType.formula, amountMl: 120, durationMin: 0, note: ''),
-      Feed(id: 't2', date: dateStr(nowDt), time: '09:45', type: FeedType.breastBottle, amountMl: 100, durationMin: 0, note: '', tags: ['Good latch']),
-      Feed(id: 't3', date: dateStr(t3), time: timeStr(t3), type: FeedType.formula, amountMl: 130, durationMin: 22, note: 'Fussy, took a bit longer', tags: ['Fussy', 'Spit up']),
-    ];
-    // A small starter vocabulary so the tag picker isn't empty on first run.
-    feedTags = ['Fussy', 'Spit up', 'Sleepy', 'Good latch', 'Gassy'];
-    babyName = '';
-    unitPref = 'ml';
-    reminderIntervalMin = 180;
-    nextReminderAt = t3.add(Duration(minutes: reminderIntervalMin)).millisecondsSinceEpoch;
-    reminderDismissed = false;
-
-    // A small starter set so the Reminders tab and the report's reminder view
-    // aren't empty on first run.
-    final createdMs = nowDt.millisecondsSinceEpoch;
-    reminders = [
-      Reminder(
-        id: 'r1',
-        alarmId: 1000,
-        label: 'Vitamin D drops',
-        category: ReminderCategory.vitamins,
-        mode: ReminderMode.fixed,
-        fixedTime: '09:00',
-        intervalHours: 0,
-        nextDueAt: Reminder.nextFixedOccurrence('09:00', nowDt).millisecondsSinceEpoch,
-        createdAt: createdMs,
-      ),
-      Reminder(
-        id: 'r2',
-        alarmId: 1001,
-        label: 'Tummy time',
-        category: ReminderCategory.tummyTime,
-        mode: ReminderMode.interval,
-        fixedTime: '',
-        intervalHours: 4,
-        nextDueAt: nowDt.add(const Duration(hours: 4)).millisecondsSinceEpoch,
-        createdAt: createdMs,
-      ),
-    ];
-    // One upcoming appointment so the Appointments tab isn't empty on first run.
-    final apptAt = DateTime(nowDt.year, nowDt.month, nowDt.day, 10, 30).add(const Duration(days: 3));
-    appointments = [
-      Appointment(
-        id: 'a1',
-        leadAlarmId: 1002,
-        atAlarmId: 1003,
-        title: '4-month checkup',
-        category: AppointmentCategory.checkup,
-        atMs: apptAt.millisecondsSinceEpoch,
-        lead: AppointmentLead.oneDay,
-        description: 'Bring the vaccination booklet.',
-        doneAtMs: null,
-        createdAt: createdMs,
-      ),
-    ];
-    _nextReminderAlarmId = 1004;
-    // One completed reminder today so the report's "Done" row + counts show.
-    reminderLogs = [
-      ReminderLog(id: 'rl1', reminderId: 'r1', label: 'Vitamin D drops', category: ReminderCategory.vitamins, date: dateStr(nowDt), time: '09:00'),
-    ];
-
-    // A couple of sample diaper changes (one today) so the Diapers tab and the
-    // report's diaper view aren't empty on first run.
-    diapers = [
-      Diaper(id: 'd1', date: dateStr(yest), time: '08:20', type: DiaperType.pee, peeColor: PeeColor.yellow),
-      Diaper(id: 'd2', date: dateStr(yest), time: '14:10', type: DiaperType.both, peeColor: PeeColor.pale, poopColor: PoopColor.brown, poopAmount: 'Medium'),
-      Diaper(id: 'd3', date: dateStr(nowDt), time: '07:15', type: DiaperType.poop, poopColor: PoopColor.yellow, poopAmount: 'Small'),
-    ];
-
-    // A few sample weigh-ins (a lower-frequency measurement) so the Weight tab's
-    // latest card, history rows and delta pills aren't empty on first run.
-    final w1 = nowDt.subtract(const Duration(days: 28));
-    final w2 = nowDt.subtract(const Duration(days: 14));
-    final w3 = nowDt.subtract(const Duration(days: 3));
-    weightUnitPref = 'kg';
-    weights = [
-      Weight(id: 'w1', date: dateStr(w1), kg: 3.60),
-      Weight(id: 'w2', date: dateStr(w2), kg: 4.05),
-      Weight(id: 'w3', date: dateStr(w3), kg: 4.50),
-    ];
   }
 
   Future<void> _persistAll() async {
