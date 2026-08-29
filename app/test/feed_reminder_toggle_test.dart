@@ -6,6 +6,7 @@ import 'package:baby_feed_tracker/services/alarm_service.dart';
 import 'package:baby_feed_tracker/services/notification_service.dart';
 import 'package:baby_feed_tracker/services/storage_service.dart';
 import 'package:baby_feed_tracker/state/app_state.dart';
+import 'package:baby_feed_tracker/theme/app_theme.dart';
 
 Future<AppState> _freshState() async {
   SharedPreferences.setMockInitialValues({});
