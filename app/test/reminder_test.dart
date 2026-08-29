@@ -129,6 +129,45 @@ void main() {
       s.dispose();
     });
 
+    test('a past-due fixed reminder is "due" once, and drops out of due/missed once logged', () async {
+      final s = await _loadedState();
+      final now = DateTime.now();
+      // Skip near midnight where "an hour ago" could fall on the previous day.
+      if (now.hour < 1) {
+        s.dispose();
+        return;
+      }
+      final past = now.subtract(const Duration(hours: 1));
+      // A daily reminder whose slot has already passed today without being acted
+      // on: its nextDueAt still points at today's (past) time — the real state
+      // that made it show as both a "due now" card and a list row.
+      final r = Reminder(
+        id: 'rem-vitd',
+        alarmId: 1000,
+        label: 'Vitamin D',
+        category: ReminderCategory.vitamins,
+        mode: ReminderMode.fixed,
+        fixedTime: '${_pad2(past.hour)}:${_pad2(past.minute)}',
+        intervalHours: 0,
+        nextDueAt: past.millisecondsSinceEpoch,
+        createdAt: now.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
+      );
+      s.reminders = [r];
+
+      // Before logging it is both due (the "due now" card) and missed for today.
+      // The Reminders tab keeps due reminders out of the list, so a single row
+      // (the due card) represents it — never two.
+      expect(s.dueReminders.where((x) => x.id == 'rem-vitd'), hasLength(1));
+      expect(s.missedRemindersForDate(dateStr(now)).any((m) => m.reminder.id == 'rem-vitd'), isTrue);
+
+      // Logging it late (as tapping the report's dotted row does) must clear both
+      // the "due" and "missed" states, even though the slot itself isn't moved.
+      await s.markReminderDoneLate(r, date: dateStr(now));
+      expect(s.dueReminders.any((x) => x.id == 'rem-vitd'), isFalse);
+      expect(s.missedRemindersForDate(dateStr(now)).any((m) => m.reminder.id == 'rem-vitd'), isFalse);
+      s.dispose();
+    });
+
     test('backup round-trips reminders and completion history', () async {
       final s = await _loadedState();
       await s.addReminder(

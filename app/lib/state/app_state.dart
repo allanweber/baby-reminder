@@ -142,9 +142,21 @@ class AppState extends ChangeNotifier {
 
   /// Reminders whose armed time has passed and haven't been acted on yet —
   /// these surface as "due now" cards at the top of the Reminders tab.
+  ///
+  /// A fixed reminder already completed today is excluded even if its
+  /// [Reminder.nextDueAt] still points at today's (past) slot: a "mark done
+  /// late" logs the completion without rescheduling, so without this guard the
+  /// reminder would keep showing as due after it had already been logged.
   List<Reminder> get dueReminders {
     final nowMs = now.millisecondsSinceEpoch;
-    final due = reminders.where((r) => r.nextDueAt <= nowMs).toList()
+    final todayStr = dateStr(now);
+    final due = reminders.where((r) {
+      if (r.nextDueAt > nowMs) return false;
+      if (r.isFixed && reminderLogs.any((l) => l.reminderId == r.id && l.date == todayStr)) {
+        return false;
+      }
+      return true;
+    }).toList()
       ..sort((a, b) => a.nextDueAt.compareTo(b.nextDueAt));
     return due;
   }
