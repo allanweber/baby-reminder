@@ -6,6 +6,14 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'date_time_pickers.dart';
 
+/// Feed-duration bounds shared by the stepper and the type-to-enter path. The
+/// +/- buttons move in [kFeedDurationStepMin]-minute steps so a long feed (e.g.
+/// 40 min) is a few taps rather than dozens; any value (typed or stepped) is
+/// clamped to a sensible 0..[kMaxFeedDurationMin] range.
+const int kMaxFeedDurationMin = 240;
+const int kFeedDurationStepMin = 5;
+int clampFeedDuration(int minutes) => minutes.clamp(0, kMaxFeedDurationMin);
+
 /// Opens the "Log a feed" / "Edit feed" bottom sheet. Pass [existing] to
 /// edit an in-place feed, or omit it to log a new one.
 Future<void> showLogFeedSheet(BuildContext context, AppState appState, {Feed? existing}) {
@@ -111,13 +119,8 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
     });
   }
 
-  // The +/- buttons move in 5-minute steps so a long feed (e.g. 40 min) is a
-  // few taps rather than dozens; tapping the number types an exact value.
-  static const _durationStep = 5;
-  static const _maxDuration = 240;
-
-  void _incDuration() => setState(() => durationMin = (durationMin + _durationStep).clamp(0, _maxDuration));
-  void _decDuration() => setState(() => durationMin = (durationMin - _durationStep).clamp(0, _maxDuration));
+  void _incDuration() => setState(() => durationMin = clampFeedDuration(durationMin + kFeedDurationStepMin));
+  void _decDuration() => setState(() => durationMin = clampFeedDuration(durationMin - kFeedDurationStepMin));
 
   /// Opens a small dialog to type the duration in minutes directly — the fast
   /// path for an exact long duration without tapping the stepper repeatedly.
@@ -157,7 +160,7 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
     );
     controller.dispose();
     if (entered != null) {
-      setState(() => durationMin = entered.clamp(0, _maxDuration));
+      setState(() => durationMin = clampFeedDuration(entered));
     }
   }
 
