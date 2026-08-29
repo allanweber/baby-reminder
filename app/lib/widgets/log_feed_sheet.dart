@@ -6,6 +6,14 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'date_time_pickers.dart';
 
+/// Feed-duration bounds shared by the stepper and the type-to-enter path. The
+/// +/- buttons move in [kFeedDurationStepMin]-minute steps so a long feed (e.g.
+/// 40 min) is a few taps rather than dozens; any value (typed or stepped) is
+/// clamped to a sensible 0..[kMaxFeedDurationMin] range.
+const int kMaxFeedDurationMin = 240;
+const int kFeedDurationStepMin = 5;
+int clampFeedDuration(int minutes) => minutes.clamp(0, kMaxFeedDurationMin);
+
 /// Opens the "Log a feed" / "Edit feed" bottom sheet. Pass [existing] to
 /// edit an in-place feed, or omit it to log a new one.
 Future<void> showLogFeedSheet(BuildContext context, AppState appState, {Feed? existing}) {
@@ -111,8 +119,50 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
     });
   }
 
-  void _incDuration() => setState(() => durationMin = (durationMin + 1).clamp(0, 90));
-  void _decDuration() => setState(() => durationMin = (durationMin - 1).clamp(0, 90));
+  void _incDuration() => setState(() => durationMin = clampFeedDuration(durationMin + kFeedDurationStepMin));
+  void _decDuration() => setState(() => durationMin = clampFeedDuration(durationMin - kFeedDurationStepMin));
+
+  /// Opens a small dialog to type the duration in minutes directly — the fast
+  /// path for an exact long duration without tapping the stepper repeatedly.
+  Future<void> _editDurationDirect() async {
+    final controller = TextEditingController(text: durationMin > 0 ? '$durationMin' : '');
+    final entered = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Duration (minutes)',
+            style: TextStyle(fontFamily: balooFamily, fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontFamily: balooFamily, fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            hintText: '0',
+            suffixText: 'min',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          onSubmitted: (v) => Navigator.of(context).pop(int.tryParse(v.trim())),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(int.tryParse(controller.text.trim())),
+            child: const Text('Set', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (entered != null) {
+      setState(() => durationMin = clampFeedDuration(entered));
+    }
+  }
 
   String _timeStr(TimeOfDay t) => '${pad2(t.hour)}:${pad2(t.minute)}';
 
@@ -148,7 +198,9 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
     final unitPref = widget.appState.unitPref;
     final amountDisplay = unitPref == 'oz' ? '${(amountMl / mlPerOz).toStringAsFixed(1)} oz' : '$amountMl ml';
     final durationLabel = type == FeedType.breastfeeding ? 'DURATION (MIN)' : 'DURATION (OPTIONAL)';
-    final durationHint = type == FeedType.breastfeeding ? 'How long the feed took' : 'How long the feed took, if you tracked it';
+    final durationHint = type == FeedType.breastfeeding
+        ? 'Tap ± for 5 min, or tap the number to type'
+        : 'How long the feed took, if you tracked it';
 
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
@@ -281,12 +333,20 @@ class _LogFeedSheetState extends State<LogFeedSheet> {
                     Row(
                       children: [
                         _StepperButton(label: '–', size: 36, bg: AppColors.surfaceSecondary, fg: AppColors.textPrimary, onTap: _decDuration, fontSize: 18),
-                        SizedBox(
-                          width: 56,
-                          child: Text(
-                            '$durationMin m',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        // Tap the value to type an exact duration.
+                        InkWell(
+                          onTap: _editDurationDirect,
+                          borderRadius: BorderRadius.circular(10),
+                          child: SizedBox(
+                            width: 56,
+                            height: 36,
+                            child: Center(
+                              child: Text(
+                                '$durationMin m',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontFamily: balooFamily, fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                              ),
+                            ),
                           ),
                         ),
                         _StepperButton(label: '+', size: 36, bg: AppColors.surfaceSecondary, fg: AppColors.textPrimary, onTap: _incDuration, fontSize: 18),
