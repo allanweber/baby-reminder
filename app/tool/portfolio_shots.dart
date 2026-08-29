@@ -10,7 +10,6 @@
 //
 // Review build/shots/, then copy the ones you want into portfolio/images/.
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -185,6 +184,7 @@ void _shot(String name, {bool dark = false, Future<void> Function(WidgetTester)?
   testWidgets(name, (WidgetTester t) async {
     await _loadFonts();
     await t.binding.setSurfaceSize(const Size(_w, _h));
+    // ignore: invalid_use_of_visible_for_testing_member
     SharedPreferences.setMockInitialValues({});
     final storage = (await t.runAsync(() => StorageService.create()))!;
 
