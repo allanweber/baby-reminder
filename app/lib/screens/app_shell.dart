@@ -19,11 +19,12 @@ import 'report_screen.dart';
 import 'weight_screen.dart';
 
 /// Persistent shell: bottom tab bar + FAB stay put while Reminders / Weight /
-/// Feed / Diapers / Home (the daily report) swap underneath. The app opens on
-/// Home; "Feed" stays the primary (emphasized) quick-log tab. The FAB is
-/// context-aware (bottle on Feed, bell on Reminders, dial-gauge on Weight,
-/// folded diaper on Diapers, quick-log plus on Home). The Weight tab uses its
-/// own sage accent so it never reads as another feature's entry.
+/// Home (the daily report) / Feed / Diapers swap underneath. The app opens on
+/// Home, which sits in the centre of the bar; "Feed" stays the emphasized
+/// quick-log tab. The FAB is context-aware (quick-log plus on Home, bottle on
+/// Feed, bell on Reminders, dial-gauge on Weight, folded diaper on Diapers).
+/// The Weight tab uses its own sage accent so it never reads as another
+/// feature's entry.
 class AppShell extends StatefulWidget {
   final AppState appState;
   const AppShell({super.key, required this.appState});
@@ -33,9 +34,9 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  // 0 = Reminders, 1 = Weight, 2 = Feed (primary), 3 = Diapers,
-  // 4 = Home (daily report, default landing).
-  int _tabIndex = 4;
+  // 0 = Reminders, 1 = Weight, 2 = Home (daily report, centred default landing),
+  // 3 = Feed (emphasized), 4 = Diapers.
+  int _tabIndex = 2;
   // Which sub-tab the Reminders tab is showing: 0 = Reminders, 1 = Appointments.
   // Lifted here so the FAB can switch between "add reminder" and "add appointment".
   int _remindersSubTab = 0;
@@ -96,13 +97,13 @@ class _AppShellState extends State<AppShell> {
         onTap: () => showLogWeightSheet(context, widget.appState),
       );
     }
-    if (_tabIndex == 2) {
+    if (_tabIndex == 3) {
       return FeedFab(
         accentColor: accent,
         onTap: () => showLogFeedSheet(context, widget.appState),
       );
     }
-    if (_tabIndex == 3) {
+    if (_tabIndex == 4) {
       return FeedFab(
         accentColor: AppColors.diaperAccent,
         icon: AppIcons.diaper(size: 24, color: Colors.white, strokeWidth: 1.9),
@@ -130,9 +131,9 @@ class _AppShellState extends State<AppShell> {
             onSubTabChanged: (i) => setState(() => _remindersSubTab = i),
           ),
           WeightScreen(appState: widget.appState),
+          ReportScreen(appState: widget.appState),
           HomeScreen(appState: widget.appState),
           DiapersScreen(appState: widget.appState),
-          ReportScreen(appState: widget.appState),
         ],
       ),
       floatingActionButton: _buildFab(context),
@@ -167,29 +168,29 @@ class _AppShellState extends State<AppShell> {
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.bottle(size: 24, color: _tabIndex == 2 ? accent : AppColors.textMuted),
-                  label: 'Feed',
+                  icon: AppIcons.house(size: 22, color: _tabIndex == 2 ? accent : AppColors.textMuted),
+                  label: 'Home',
                   active: _tabIndex == 2,
                   accent: accent,
-                  primary: true,
                   onTap: () => setState(() => _tabIndex = 2),
                 ),
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.diaper(size: 20, color: _tabIndex == 3 ? AppColors.diaperAccent : AppColors.textMuted),
-                  label: 'Diapers',
+                  icon: AppIcons.bottle(size: 24, color: _tabIndex == 3 ? accent : AppColors.textMuted),
+                  label: 'Feed',
                   active: _tabIndex == 3,
-                  accent: AppColors.diaperAccent,
+                  accent: accent,
+                  primary: true,
                   onTap: () => setState(() => _tabIndex = 3),
                 ),
               ),
               Expanded(
                 child: _TabButton(
-                  icon: AppIcons.house(size: 22, color: _tabIndex == 4 ? accent : AppColors.textMuted),
-                  label: 'Home',
+                  icon: AppIcons.diaper(size: 20, color: _tabIndex == 4 ? AppColors.diaperAccent : AppColors.textMuted),
+                  label: 'Diapers',
                   active: _tabIndex == 4,
-                  accent: accent,
+                  accent: AppColors.diaperAccent,
                   onTap: () => setState(() => _tabIndex = 4),
                 ),
               ),
