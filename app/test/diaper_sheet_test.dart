@@ -25,12 +25,11 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     final appState = await _loadedState();
-    addTearDown(appState.dispose);
 
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(body: LogDiaperSheet(appState: appState)),
     ));
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     // No error before the user does anything (default type is Pee).
     expect(find.text('Pick a colour'), findsNothing);
@@ -47,5 +46,10 @@ void main() {
     await tester.tap(find.text('Yellow'));
     await tester.pump();
     expect(find.text('Pick a colour'), findsNothing);
+
+    // Dispose inside the body so AppState's periodic ticker is cancelled before
+    // the test framework checks for pending timers (an addTearDown would run too
+    // late and trip the "Timer still pending" invariant).
+    appState.dispose();
   });
 }
