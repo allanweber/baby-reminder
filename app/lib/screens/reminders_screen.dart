@@ -108,7 +108,13 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   Widget _buildReminders(BuildContext context) {
     final due = appState.dueReminders;
-    final all = [...appState.reminders]..sort((a, b) => a.nextDueAt.compareTo(b.nextDueAt));
+    // A reminder that's due right now is surfaced as a "due now" card above, so
+    // keep it out of the list below — otherwise a past-due reminder (e.g. a
+    // daily vitamin whose time has passed) would appear twice.
+    final dueIds = due.map((r) => r.id).toSet();
+    final scheduled = appState.reminders.where((r) => !dueIds.contains(r.id)).toList()
+      ..sort((a, b) => a.nextDueAt.compareTo(b.nextDueAt));
+    final hasReminders = appState.reminders.isNotEmpty;
 
     return SingleChildScrollView(
       child: Column(
@@ -159,7 +165,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
-            child: all.isEmpty
+            child: !hasReminders
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 10),
                     child: Center(
@@ -167,21 +173,29 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
                     ),
                   )
-                : Column(
-                    children: all
-                        .map((r) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: ReminderListItem(
-                                reminder: r,
-                                now: appState.now,
-                                missed: appState.isMissedNow(r),
-                                onMarkDoneLate: () => _handleMarkDoneLate(context, r),
-                                onEdit: () => showReminderSheet(context, appState, existing: r),
-                                onDelete: () => _handleDelete(context, r.id),
-                              ),
-                            ))
-                        .toList(),
-                  ),
+                : scheduled.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 10),
+                        child: Center(
+                          child: Text('Everything is due right now — see the cards above.',
+                              style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
+                        ),
+                      )
+                    : Column(
+                        children: scheduled
+                            .map((r) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: ReminderListItem(
+                                    reminder: r,
+                                    now: appState.now,
+                                    missed: appState.isMissedNow(r),
+                                    onMarkDoneLate: () => _handleMarkDoneLate(context, r),
+                                    onEdit: () => showReminderSheet(context, appState, existing: r),
+                                    onDelete: () => _handleDelete(context, r.id),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
           ),
         ],
       ),
